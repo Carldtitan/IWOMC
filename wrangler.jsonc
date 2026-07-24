@@ -56,7 +56,8 @@
   "hyperdrive": [
     {
       "binding": "DATABASE",
-      "id": "cfd633b0faec48ff93e4859f5c6a42ef"
+      "id": "cfd633b0faec48ff93e4859f5c6a42ef",
+      "localConnectionString": "postgresql://reconciler:reconciler@127.0.0.1:5432/reconciler"
     }
   ],
   "observability": {
