@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit -p tsconfig.json",
     "clean": "rimraf dist",
+    "db:migrate": "node --env-file=../../.env scripts/migrate-database.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
