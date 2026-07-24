@@ -34,6 +34,10 @@ export interface DemoSponsorRunExecutor {
   run(input: { readonly signal: AbortSignal }): Promise<DemoSponsorRunResponse>;
 }
 
+interface SponsorProofRateLimiter {
+  limit(input: { readonly key: string }): Promise<{ readonly success: boolean }>;
+}
+
 export interface DemoSponsorRunEnvironment {
   readonly BRAINTRUST_API_KEY: string;
   readonly BRAINTRUST_API_URL: string;
@@ -43,7 +47,7 @@ export interface DemoSponsorRunEnvironment {
   readonly DAYTONA_API_URL: string;
   readonly DAYTONA_TARGET: string;
   readonly FIREWORKS_API_KEY: string;
-  readonly SPONSOR_PROOF_RATE_LIMITER?: RateLimit;
+  readonly SPONSOR_PROOF_RATE_LIMITER?: SponsorProofRateLimiter;
 }
 
 export type DemoSponsorRunExecutorFactory = (
@@ -114,7 +118,7 @@ export function createDemoSponsorRunRoutes(
 
 function sponsorProofRateLimiter(
   environment: DemoSponsorRunEnvironment | undefined
-): RateLimit | undefined {
+): SponsorProofRateLimiter | undefined {
   return environment?.SPONSOR_PROOF_RATE_LIMITER;
 }
 
