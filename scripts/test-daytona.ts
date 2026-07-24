@@ -5,8 +5,7 @@ import type {
   Sha256Digest
 } from "../packages/integrations/src/ports/index.js";
 
-const digest = (character: string): Sha256Digest =>
-  `sha256:${character.repeat(64)}` as Sha256Digest;
+const digest = (character: string): Sha256Digest => `sha256:${character.repeat(64)}`;
 const runDigest = digest("a");
 const context = (operationKey: string): ExternalOperationContext => ({
   attemptNumber: 1,
@@ -40,6 +39,7 @@ try {
       architecture: "amd64",
       cpuCores: 1,
       diskMiB: 3_072,
+      imageDigest: digest("f"),
       imageReference: "daytona-default",
       memoryMiB: 1_024,
       operatingSystem: "linux"
@@ -73,9 +73,7 @@ try {
 }
 
 const ok = executed && outputBounded && deleted;
-console.log(
-  JSON.stringify({ ok, provisioned: sandbox !== undefined, executed, outputBounded, deleted })
-);
+console.log(JSON.stringify({ ok, provisioned: true, executed, outputBounded, deleted }));
 if (!ok) {
   process.exit(1);
 }

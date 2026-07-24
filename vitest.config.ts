@@ -6,6 +6,9 @@ process.env.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_DATABASE ??=
 
 export default defineConfig({
   test: {
+    // Cloudflare isolates, PGlite, and clean package-manager fixtures are all
+    // resource-heavy. Bound concurrency so subprocesses do not false-timeout.
+    maxWorkers: 4,
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"]

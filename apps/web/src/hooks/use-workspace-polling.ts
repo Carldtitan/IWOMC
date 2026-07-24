@@ -8,13 +8,7 @@ import {
   type WorkspaceUpdatePage
 } from "../api/workspace-client.js";
 
-export type WorkspacePollingPhase =
-  | "demo"
-  | "loading"
-  | "live"
-  | "partial"
-  | "stale"
-  | "error";
+export type WorkspacePollingPhase = "demo" | "loading" | "live" | "partial" | "stale" | "error";
 
 export interface WorkspacePollingState {
   readonly cursor?: string;
@@ -82,8 +76,7 @@ export function useWorkspacePolling(options: WorkspacePollingOptions): Workspace
     let timer: number | undefined;
     let hasApiData = false;
     const pollingInterval = options.pollingIntervalMilliseconds ?? DEFAULT_POLL_INTERVAL;
-    const maximumBackoff =
-      options.maximumBackoffMilliseconds ?? DEFAULT_MAXIMUM_BACKOFF;
+    const maximumBackoff = options.maximumBackoffMilliseconds ?? DEFAULT_MAXIMUM_BACKOFF;
     const jitterRatio = options.jitterRatio ?? DEFAULT_JITTER_RATIO;
     const random = options.random ?? Math.random;
 

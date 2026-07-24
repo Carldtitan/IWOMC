@@ -1,35 +1,31 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  HttpWorkspaceApiClient,
-  WorkspaceApiError
-} from "./workspace-client.js";
+import { HttpWorkspaceApiClient, type WorkspaceApiError } from "./workspace-client.js";
 
 describe("HttpWorkspaceApiClient", () => {
   it("sends the cursor and ETag and returns the next typed page", async () => {
-    const fetchImplementation = vi.fn(
-      (_input: RequestInfo | URL, _init?: RequestInit) =>
-        Promise.resolve(
-          Response.json(
-            {
-              cursor: "cursor-2",
-              partial: false,
-              systemStatus: {
-                health: "operational",
-                summary: "Operational within current coverage",
-                updatedAt: "2026-07-24T20:00:00Z"
-              },
-              updates: [
-                {
-                  id: "update-1",
-                  kind: "finding",
-                  occurredAt: "2026-07-24T20:00:00Z"
-                }
-              ]
+    const fetchImplementation = vi.fn<typeof fetch>(() =>
+      Promise.resolve(
+        Response.json(
+          {
+            cursor: "cursor-2",
+            partial: false,
+            systemStatus: {
+              health: "operational",
+              summary: "Operational within current coverage",
+              updatedAt: "2026-07-24T20:00:00Z"
             },
-            { headers: { etag: '"revision-2"' } }
-          )
+            updates: [
+              {
+                id: "update-1",
+                kind: "finding",
+                occurredAt: "2026-07-24T20:00:00Z"
+              }
+            ]
+          },
+          { headers: { etag: '"revision-2"' } }
         )
+      )
     );
     const client = new HttpWorkspaceApiClient("https://example.test", fetchImplementation);
     const result = await client.poll({
@@ -46,7 +42,8 @@ describe("HttpWorkspaceApiClient", () => {
       page: { cursor: "cursor-2", partial: false }
     });
     const [url, init] = fetchImplementation.mock.calls[0]!;
-    expect(String(url)).toContain(
+    const urlText = url instanceof URL ? url.href : typeof url === "string" ? url : url.url;
+    expect(urlText).toContain(
       "/api/workspaces/workspace%201/projects/project%2F1/updates?cursor=cursor-1"
     );
     expect(new Headers(init?.headers).get("if-none-match")).toBe('"revision-1"');

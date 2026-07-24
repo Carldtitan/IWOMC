@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  CompanionController,
-  CompanionError,
-  type ManagedChild
-} from "./controller.js";
+import { CompanionController, type CompanionError, type ManagedChild } from "./controller.js";
 
 class FakeChild implements ManagedChild {
   exitCode: number | null = null;
@@ -48,9 +44,7 @@ class FakeChild implements ManagedChild {
 describe("CompanionController", () => {
   it("rejects a missing packaged binary before spawning", () => {
     const controller = new CompanionController({ fileExists: () => false });
-    expect(() =>
-      controller.start({ binaryPath: "/missing", dataDirectory: "/data" })
-    ).toThrowError(
+    expect(() => controller.start({ binaryPath: "/missing", dataDirectory: "/data" })).toThrowError(
       expect.objectContaining<Partial<CompanionError>>({ code: "missing_binary" })
     );
   });

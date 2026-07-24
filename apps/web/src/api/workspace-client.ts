@@ -9,13 +9,7 @@ export interface WorkspaceSystemStatus {
 export interface WorkspaceUpdate {
   readonly id: string;
   readonly kind:
-    | "capability"
-    | "session"
-    | "capture_gap"
-    | "finding"
-    | "candidate"
-    | "validation"
-    | "system";
+    "capability" | "session" | "capture_gap" | "finding" | "candidate" | "validation" | "system";
   readonly occurredAt: string;
 }
 
@@ -49,11 +43,7 @@ export interface WorkspaceApiClient {
   poll(request: WorkspacePollRequest): Promise<WorkspacePollResult>;
 }
 
-export type WorkspaceApiErrorCode =
-  | "aborted"
-  | "invalid_response"
-  | "network"
-  | "request_failed";
+export type WorkspaceApiErrorCode = "aborted" | "invalid_response" | "network" | "request_failed";
 
 export class WorkspaceApiError extends Error {
   readonly code: WorkspaceApiErrorCode;
@@ -131,9 +121,7 @@ export class HttpWorkspaceApiClient implements WorkspaceApiClient {
       throw new WorkspaceApiError("invalid_response", { retryable: true });
     }
     const page = parseWorkspaceUpdatePage(payload);
-    return etag === undefined
-      ? { kind: "updated", page }
-      : { etag, kind: "updated", page };
+    return etag === undefined ? { kind: "updated", page } : { etag, kind: "updated", page };
   }
 }
 

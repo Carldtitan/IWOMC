@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   CompanionIpcClient,
-  CompanionIpcError,
   JsonFrameDecoder,
   createHandshakeMac,
   deriveCompanionEndpoint,
   encodeJsonFrame,
+  type CompanionIpcError,
   validateLocalEndpoint
 } from "./ipc.js";
 
@@ -27,9 +27,7 @@ describe("Companion IPC endpoint security", () => {
       userId: 1_000
     });
 
-    expect(windows).toMatch(
-      /^\\\\\.\\pipe\\environment-reconciler-[a-f0-9]{32}$/u
-    );
+    expect(windows).toMatch(/^\\\\\.\\pipe\\environment-reconciler-[a-f0-9]{32}$/u);
     expect(unix).toMatch(
       /^\/run\/user\/1000\/environment-reconciler\/companion-[a-f0-9]{24}\.sock$/u
     );
@@ -37,13 +35,15 @@ describe("Companion IPC endpoint security", () => {
   });
 
   it("requires a private same-user Unix socket and parent directory", async () => {
-    const secureStat = (socketMode: number, socketUserId = 1_000) => (target: string) =>
-      Promise.resolve({
-        isDirectory: () => !target.endsWith(".sock"),
-        isSocket: () => target.endsWith(".sock"),
-        mode: target.endsWith(".sock") ? socketMode : 0o700,
-        uid: target.endsWith(".sock") ? socketUserId : 1_000
-      });
+    const secureStat =
+      (socketMode: number, socketUserId = 1_000) =>
+      (target: string) =>
+        Promise.resolve({
+          isDirectory: () => !target.endsWith(".sock"),
+          isSocket: () => target.endsWith(".sock"),
+          mode: target.endsWith(".sock") ? socketMode : 0o700,
+          uid: target.endsWith(".sock") ? socketUserId : 1_000
+        });
 
     await expect(
       validateLocalEndpoint("/run/user/1000/companion.sock", {
@@ -98,9 +98,7 @@ describe("bounded IPC framing", () => {
     expect(() => decoder.push(oversizedHeader)).toThrowError(
       expect.objectContaining<Partial<CompanionIpcError>>({ code: "invalid_frame" })
     );
-    expect(() =>
-      encodeJsonFrame({ value: "x".repeat(300) }, 256)
-    ).toThrowError(
+    expect(() => encodeJsonFrame({ value: "x".repeat(300) }, 256)).toThrowError(
       expect.objectContaining<Partial<CompanionIpcError>>({ code: "invalid_frame" })
     );
   });
@@ -120,11 +118,7 @@ describe("CompanionIpcClient", () => {
     const response = await client.request<{ readonly state: string }>("status.get");
 
     expect(response).toEqual({ state: "observing" });
-    expect(server.requestTypes).toEqual([
-      "handshake.challenge",
-      "handshake.proof",
-      "status.get"
-    ]);
+    expect(server.requestTypes).toEqual(["handshake.challenge", "handshake.proof", "status.get"]);
     client.close();
   });
 
@@ -220,12 +214,7 @@ class FakeCompanionServer {
       } else if (type === "handshake.proof") {
         const clientNonce = String(payload.clientNonce);
         const serverNonce = String(payload.serverNonce);
-        const expected = createHandshakeMac(
-          this.#secret,
-          "client",
-          clientNonce,
-          serverNonce
-        );
+        const expected = createHandshakeMac(this.#secret, "client", clientNonce, serverNonce);
         this.#respond({
           ok: payload.mac === expected,
           payload: { accepted: payload.mac === expected },

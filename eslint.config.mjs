@@ -11,6 +11,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/.wrangler/**",
       "**/coverage/**",
+      "skills/**",
       "worker-configuration.d.ts"
     ]
   },

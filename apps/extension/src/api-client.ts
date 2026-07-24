@@ -80,7 +80,7 @@ export class HttpExtensionApiClient implements ExtensionApiClient {
       repositoryPath: input.repositoryPath,
       workspaceId: input.workspaceId
     });
-    return this.#request<readonly ProjectSummary[]>(`/api/extension/projects?${query}`, {
+    return this.#request<readonly ProjectSummary[]>(`/api/extension/projects?${query.toString()}`, {
       headers: { authorization: `Bearer ${input.credential}` },
       method: "GET"
     });

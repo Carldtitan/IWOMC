@@ -2,13 +2,7 @@ export const STATE_KEY = "environmentReconciler.state.v1";
 export const DEVICE_CREDENTIAL_KEY = "environmentReconciler.deviceCredential.v1";
 
 export type ExtensionStatus =
-  | "disconnected"
-  | "observing"
-  | "capture_gap"
-  | "finding"
-  | "validating"
-  | "verified"
-  | "error";
+  "disconnected" | "observing" | "capture_gap" | "finding" | "validating" | "verified" | "error";
 
 export interface DeviceConnection {
   readonly deviceId: string;

@@ -227,7 +227,9 @@ export function invalidateBehaviorContract(
   sourceIds: readonly string[]
 ): ProjectBehaviorContract {
   const invalidatedBySourceIds = [...new Set(sourceIds)].sort();
-  const { acceptedAt: _acceptedAt, acceptedBy: _acceptedBy, ...unaccepted } = contract;
+  const unaccepted = { ...contract };
+  delete unaccepted.acceptedAt;
+  delete unaccepted.acceptedBy;
   return {
     ...unaccepted,
     invalidatedBySourceIds,
