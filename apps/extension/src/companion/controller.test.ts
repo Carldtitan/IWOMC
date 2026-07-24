@@ -164,6 +164,71 @@ describe("CompanionController", () => {
     expect(controller.running).toBe(true);
     expect(nextChild).toBe(2);
   });
+
+  it("passes an ephemeral IPC launch secret and persists only authenticated Companion results", async () => {
+    const child = new FakeChild();
+    const launchedEnvironments: NodeJS.ProcessEnv[] = [];
+    const requests: { readonly payload: Record<string, unknown>; readonly type: string }[] = [];
+    const controller = new CompanionController({
+      fileExists: () => true,
+      ipcConnector: () =>
+        Promise.resolve({
+          close: () => undefined,
+          request: <T>(type: string, payload: Record<string, unknown> = {}) => {
+            requests.push({ payload, type });
+            return Promise.resolve(
+              (type === "observation.start"
+                ? {
+                    coverage: coveredFixture(),
+                    sessionId: "session-real",
+                    startedAtEpochSeconds: 500
+                  }
+                : {
+                    checkpointId: "checkpoint-real",
+                    coverage: coveredFixture(),
+                    createdAtEpochSeconds: 510,
+                    localSequence: 2,
+                    reason: "manual",
+                    sessionId: "session-real"
+                  }) as T
+            );
+          }
+        }),
+      launcher: (_binary, environment) => {
+        launchedEnvironments.push(environment);
+        return child;
+      }
+    });
+    const launchSecret = new Uint8Array(32).fill(7);
+
+    controller.start({
+      binaryPath: "/companion",
+      dataDirectory: "/data",
+      integrity: { kind: "development_override" },
+      ipc: {
+        endpoint: "\\\\.\\pipe\\environment-reconciler-0123456789abcdef0123456789abcdef",
+        scopeId: "launch-scope",
+        secret: launchSecret
+      }
+    });
+    const observation = await controller.startObservation("project-1", "Codex local hook");
+    const checkpoint = await controller.createCheckpoint("manual");
+
+    expect(launchedEnvironments[0]).toMatchObject({
+      ER_COMPANION_IPC_SCOPE: "launch-scope",
+      ER_COMPANION_IPC_SECRET: Buffer.alloc(32, 7).toString("base64url")
+    });
+    expect(launchSecret).toEqual(new Uint8Array(32));
+    expect(observation.sessionId).toBe("session-real");
+    expect(checkpoint).toMatchObject({ checkpointId: "checkpoint-real", localSequence: 2 });
+    expect(requests).toEqual([
+      {
+        payload: { projectId: "project-1", providerSurface: "Codex local hook" },
+        type: "observation.start"
+      },
+      { payload: { reason: "manual" }, type: "checkpoint.create" }
+    ]);
+  });
 });
 
 function manifestBytes(binary: Buffer): Buffer {
@@ -180,4 +245,27 @@ function manifestBytes(binary: Buffer): Buffer {
       schemaVersion: 1
     })
   );
+}
+
+function coveredFixture() {
+  return {
+    adapters: [],
+    generatedAtEpochSeconds: 500,
+    permission: {
+      condition: "covered",
+      gaps: [],
+      grantedCapabilities: [],
+      profile: "repository_scoped"
+    },
+    provider: {
+      capabilities: [],
+      condition: "covered",
+      gaps: [],
+      providerId: "codex",
+      sessionBoundary: "automatic",
+      surface: "Codex local hook"
+    },
+    realms: [],
+    upload: { gaps: [], state: "online" }
+  } as const;
 }

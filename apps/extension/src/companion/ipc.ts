@@ -234,7 +234,16 @@ export class CompanionIpcClient {
     }
     const response = await this.#exchange(type, payload);
     if (response.ok !== true) {
-      throw new CompanionIpcError("remote_error", "The Companion rejected the IPC request.");
+      const remotePayload = isObject(response.payload) ? response.payload : {};
+      const remoteCode =
+        typeof remotePayload.code === "string" &&
+        /^[a-z][a-z0-9_]{0,63}$/u.test(remotePayload.code)
+          ? remotePayload.code
+          : "unknown";
+      throw new CompanionIpcError(
+        "remote_error",
+        `The Companion rejected the IPC request (${remoteCode}).`
+      );
     }
     return response.payload as T;
   }
@@ -279,7 +288,10 @@ export class CompanionIpcClient {
         throw authenticationFailure();
       }
     } catch (error) {
-      if (error instanceof CompanionIpcError && error.code === "timeout") {
+      if (
+        error instanceof CompanionIpcError &&
+        ["closed", "invalid_frame", "timeout"].includes(error.code)
+      ) {
         throw error;
       }
       throw authenticationFailure();

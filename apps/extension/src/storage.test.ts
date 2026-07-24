@@ -66,10 +66,26 @@ describe("ExtensionStateStore", () => {
       sessionId: "session-1",
       startedAtEpochSeconds: 100
     });
+    const coverage = store.load().capture?.coverage;
+    if (coverage === undefined) {
+      throw new Error("fixture coverage missing");
+    }
+    await store.saveCheckpoint({
+      checkpointId: "checkpoint-1",
+      coverage,
+      createdAtEpochSeconds: 110,
+      localSequence: 2,
+      reason: "manual",
+      sessionId: "session-1"
+    });
 
     expect(JSON.stringify(memento.values.get(STATE_KEY))).not.toContain(credential);
     expect(secrets.values.get(DEVICE_CREDENTIAL_KEY)).toBe(credential);
     expect(store.load().capture?.sessionId).toBe("session-1");
+    expect(store.load().lastCheckpoint).toMatchObject({
+      checkpointId: "checkpoint-1",
+      localSequence: 2
+    });
     expect(store.load().capture?.coverage).toMatchObject({
       permission: { condition: "unknown" },
       provider: { providerId: "codex" },

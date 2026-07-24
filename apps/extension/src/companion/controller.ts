@@ -3,6 +3,9 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 
+import type { CaptureCoverage } from "../coverage.js";
+import { CompanionIpcClient, CompanionIpcError, type CompanionIpcConnectOptions } from "./ipc.js";
+
 export type CompanionErrorCode =
   | "already_running"
   | "binary_hash_mismatch"
@@ -10,6 +13,7 @@ export type CompanionErrorCode =
   | "invalid_manifest"
   | "missing_binary"
   | "missing_manifest"
+  | "not_connected"
   | "spawn_failed";
 
 export class CompanionError extends Error {
@@ -25,6 +29,11 @@ export class CompanionError extends Error {
 export interface CompanionLaunchOptions {
   readonly binaryPath: string;
   readonly dataDirectory: string;
+  readonly ipc?: {
+    readonly endpoint: string;
+    readonly scopeId: string;
+    readonly secret: Uint8Array;
+  };
   readonly integrity:
     | {
         readonly kind: "development_override";
@@ -51,10 +60,41 @@ export type CompanionLauncher = (
   environment: NodeJS.ProcessEnv
 ) => ManagedChild;
 
+interface CompanionIpcSession {
+  close(): void;
+  request<T>(type: string, payload?: Record<string, unknown>): Promise<T>;
+}
+
+type CompanionIpcConnector = (options: CompanionIpcConnectOptions) => Promise<CompanionIpcSession>;
+
 export interface CompanionLifecycle {
   readonly running: boolean;
+  createCheckpoint(reason: "manual" | "session_end"): Promise<CompanionCheckpoint>;
   start(options: CompanionLaunchOptions): void;
+  startObservation(projectId: string, providerSurface: string): Promise<CompanionObservation>;
+  status(): Promise<CompanionStatus>;
   stop(): Promise<void>;
+  stopObservation(sessionId: string): Promise<CompanionCheckpoint>;
+}
+
+export interface CompanionObservation {
+  readonly coverage: CaptureCoverage;
+  readonly sessionId: string;
+  readonly startedAtEpochSeconds: number;
+}
+
+export interface CompanionCheckpoint {
+  readonly checkpointId: string;
+  readonly coverage: CaptureCoverage;
+  readonly createdAtEpochSeconds: number;
+  readonly localSequence: number;
+  readonly reason: "manual" | "session_end";
+  readonly sessionId: string;
+}
+
+export interface CompanionStatus {
+  readonly activeSessionId?: string;
+  readonly state: "ready" | "observing";
 }
 
 const defaultLauncher: CompanionLauncher = (binaryPath, environment) =>
@@ -66,18 +106,28 @@ const defaultLauncher: CompanionLauncher = (binaryPath, environment) =>
 
 export class CompanionController implements CompanionLifecycle {
   readonly #fileExists: (path: string) => boolean;
+  readonly #ipcConnector: CompanionIpcConnector;
   readonly #launcher: CompanionLauncher;
   readonly #readFile: (path: string) => Buffer;
   readonly #shutdownTimeoutMilliseconds: number;
   #child: ManagedChild | undefined;
+  #ipc:
+    | {
+        readonly endpoint: string;
+        readonly secret: Uint8Array;
+      }
+    | undefined;
 
   constructor(options?: {
     readonly fileExists?: (path: string) => boolean;
+    readonly ipcConnector?: CompanionIpcConnector;
     readonly launcher?: CompanionLauncher;
     readonly readFile?: (path: string) => Buffer;
     readonly shutdownTimeoutMilliseconds?: number;
   }) {
     this.#fileExists = options?.fileExists ?? existsSync;
+    this.#ipcConnector =
+      options?.ipcConnector ?? ((connectOptions) => CompanionIpcClient.connect(connectOptions));
     this.#launcher = options?.launcher ?? defaultLauncher;
     this.#readFile = options?.readFile ?? readFileSync;
     this.#shutdownTimeoutMilliseconds = options?.shutdownTimeoutMilliseconds ?? 3_000;
@@ -104,28 +154,90 @@ export class CompanionController implements CompanionLifecycle {
     try {
       child = this.#launcher(options.binaryPath, {
         ...process.env,
-        ER_COMPANION_DATA_DIR: options.dataDirectory
+        ER_COMPANION_DATA_DIR: options.dataDirectory,
+        ...(options.ipc === undefined
+          ? {}
+          : {
+              ER_COMPANION_IPC_SCOPE: options.ipc.scopeId,
+              ER_COMPANION_IPC_SECRET: Buffer.from(options.ipc.secret).toString("base64url")
+            })
       });
     } catch {
       throw new CompanionError("spawn_failed", "The Companion could not be started.");
     }
     this.#child = child;
+    this.#ipc =
+      options.ipc === undefined
+        ? undefined
+        : {
+            endpoint: options.ipc.endpoint,
+            secret: new Uint8Array(options.ipc.secret)
+          };
+    options.ipc?.secret.fill(0);
     child.once("error", () => {
       if (this.#child === child) {
         this.#child = undefined;
+        this.#clearIpc();
       }
     });
     child.once("exit", () => {
       if (this.#child === child) {
         this.#child = undefined;
+        this.#clearIpc();
       }
     });
+  }
+
+  async status(): Promise<CompanionStatus> {
+    const result = await this.#request<unknown>("status.get", {});
+    if (
+      !isRecord(result) ||
+      !["ready", "observing"].includes(String(result.state)) ||
+      (result.activeSessionId !== undefined && !validIdentifier(result.activeSessionId))
+    ) {
+      throw invalidCompanionResponse();
+    }
+    return {
+      ...(result.activeSessionId === undefined ? {} : { activeSessionId: result.activeSessionId }),
+      state: result.state as CompanionStatus["state"]
+    };
+  }
+
+  async startObservation(
+    projectId: string,
+    providerSurface: string
+  ): Promise<CompanionObservation> {
+    const result = await this.#request<CompanionObservation>("observation.start", {
+      projectId,
+      providerSurface
+    });
+    if (
+      !validIdentifier(result.sessionId) ||
+      !validEpochSeconds(result.startedAtEpochSeconds) ||
+      !isCaptureCoverage(result.coverage)
+    ) {
+      throw invalidCompanionResponse();
+    }
+    return result;
+  }
+
+  async createCheckpoint(reason: "manual" | "session_end"): Promise<CompanionCheckpoint> {
+    return this.#checkpointResponse(
+      await this.#request<CompanionCheckpoint>("checkpoint.create", { reason })
+    );
+  }
+
+  async stopObservation(sessionId: string): Promise<CompanionCheckpoint> {
+    return this.#checkpointResponse(
+      await this.#request<CompanionCheckpoint>("observation.stop", { sessionId })
+    );
   }
 
   async stop(): Promise<void> {
     const child = this.#child;
     if (child?.exitCode !== null) {
       this.#child = undefined;
+      this.#clearIpc();
       return;
     }
     child.kill("SIGTERM");
@@ -137,6 +249,59 @@ export class CompanionController implements CompanionLifecycle {
     if (this.#child === child) {
       this.#child = undefined;
     }
+    this.#clearIpc();
+  }
+
+  #checkpointResponse(result: CompanionCheckpoint): CompanionCheckpoint {
+    if (
+      !validIdentifier(result.checkpointId) ||
+      !validIdentifier(result.sessionId) ||
+      !validEpochSeconds(result.createdAtEpochSeconds) ||
+      !Number.isSafeInteger(result.localSequence) ||
+      result.localSequence < 1 ||
+      !["manual", "session_end"].includes(result.reason) ||
+      !isCaptureCoverage(result.coverage)
+    ) {
+      throw invalidCompanionResponse();
+    }
+    return result;
+  }
+
+  async #request<T>(type: string, payload: Record<string, unknown>): Promise<T> {
+    const ipc = this.#ipc;
+    if (ipc === undefined || !this.running) {
+      throw new CompanionError("not_connected", "The Companion local IPC service is not running.");
+    }
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      let client: CompanionIpcSession | undefined;
+      try {
+        client = await this.#ipcConnector({
+            endpoint: ipc.endpoint,
+            requestTimeoutMilliseconds: 1_000,
+            secret: ipc.secret
+          });
+        return await client.request<T>(type, payload);
+      } catch (error) {
+        lastError = error;
+        if (
+          !(error instanceof CompanionIpcError) ||
+          !["closed", "peer_validation_failed"].includes(error.code) ||
+          attempt === 19
+        ) {
+          throw error;
+        }
+        await boundedDelay(50);
+      } finally {
+        client?.close();
+      }
+    }
+    throw lastError;
+  }
+
+  #clearIpc(): void {
+    this.#ipc?.secret.fill(0);
+    this.#ipc = undefined;
   }
 }
 
@@ -330,4 +495,38 @@ function waitForExit(child: ManagedChild, timeoutMilliseconds: number): Promise<
       }
     });
   });
+}
+
+function boundedDelay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, milliseconds);
+    timer.unref();
+  });
+}
+
+function validIdentifier(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/u.test(value);
+}
+
+function validEpochSeconds(value: unknown): value is number {
+  return Number.isSafeInteger(value) && Number(value) >= 0;
+}
+
+function isCaptureCoverage(value: unknown): value is CaptureCoverage {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.adapters) &&
+    validEpochSeconds(value.generatedAtEpochSeconds) &&
+    isRecord(value.permission) &&
+    isRecord(value.provider) &&
+    Array.isArray(value.realms) &&
+    isRecord(value.upload)
+  );
+}
+
+function invalidCompanionResponse(): CompanionError {
+  return new CompanionError(
+    "integrity_check_failed",
+    "The Companion returned an invalid IPC response."
+  );
 }

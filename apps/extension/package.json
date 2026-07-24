@@ -93,7 +93,8 @@
   "scripts": {
     "build": "esbuild ./src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
     "clean": "rimraf dist",
-    "package": "pnpm run build && vsce package --no-dependencies --out dist/environment-reconciler.vsix",
+    "companion:embed": "node ../../scripts/embed-companion.mjs",
+    "package": "pnpm run companion:embed && pnpm run build && vsce package --no-dependencies --out dist/environment-reconciler.vsix",
     "test": "pnpm --dir ../.. exec vitest run --config apps/extension/vitest.config.ts --configLoader runner",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
