@@ -9,10 +9,19 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "rimraf dist",
+    "generate": "drizzle-kit generate",
+    "test": "vitest run --root ../.. --config vitest.config.ts packages/db/src/persistence.integration.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
+  "dependencies": {
+    "drizzle-orm": "0.45.2"
+  },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.4",
+    "@types/node": "26.1.1",
+    "drizzle-kit": "0.31.10",
     "rimraf": "^6.0.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.0"
   }
 }
