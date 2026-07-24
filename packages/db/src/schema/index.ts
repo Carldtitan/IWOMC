@@ -59,6 +59,16 @@ export const browserSessions = pgTable(
   ]
 );
 
+export const githubUserCredentials = pgTable("github_user_credentials", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  encryptedCredentials: text("encrypted_credentials").notNull(),
+  tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt()
+});
+
 export const oauthStates = pgTable(
   "oauth_states",
   {

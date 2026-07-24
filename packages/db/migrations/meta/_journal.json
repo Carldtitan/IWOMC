@@ -29,6 +29,13 @@
       "when": 1784941200000,
       "tag": "0003_collaboration_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784944800000,
+      "tag": "0004_github_user_credentials",
+      "breakpoints": true
     }
   ]
 }

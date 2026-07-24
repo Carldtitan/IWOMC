@@ -10,6 +10,12 @@ import {
   createCollaborationRoutes
 } from "./api/collaboration/index.js";
 import { BrowserSessionService } from "./auth/browser-session.js";
+import {
+  handleGitHubLogout,
+  handleGitHubOAuthCallback,
+  handleGitHubOAuthStart
+} from "./auth/github/routes.js";
+import { PostgresGitHubIdentityStore } from "./auth/github/postgres-identity-store.js";
 import { PostgresBrowserSessionRepository } from "./auth/postgres-browser-session.js";
 import { CSRF_COOKIE, PRODUCT_SESSION_COOKIE, cookieValue } from "./auth/session.js";
 import { constantTimeEqual } from "./security/crypto.js";
@@ -173,32 +179,39 @@ app.route(
 );
 app.route("/", createUnavailableIntegrationStatusRoutes());
 
-app.get("/v1/auth/github/start", (context) =>
-  context.json(
-    {
-      error: "github_app_not_configured",
-      message: "Configure the GitHub App credentials before starting OAuth."
-    },
-    503
-  )
-);
+app.get("/v1/auth/github/start", (context) => handleGitHubOAuthStart(context.env));
 
-app.get("/v1/auth/github/callback", (context) =>
-  context.json(
-    {
-      error: "github_app_not_configured",
-      message: "The callback route is reserved and awaiting GitHub App credentials."
-    },
-    503
-  )
-);
+app.get("/v1/auth/github/callback", (context) => {
+  const connections = new HyperdrivePostgresConnectionFactory(
+    context.env.DATABASE.connectionString
+  );
+  return handleGitHubOAuthCallback(
+    context.req.raw,
+    context.env,
+    new PostgresGitHubIdentityStore(connections)
+  );
+});
 
-app.get("/v1/auth/github/setup", (context) =>
-  context.json({
-    ok: true,
-    message: "GitHub App installation setup route is reserved."
-  })
-);
+app.post("/v1/auth/logout", (context) => {
+  const connections = new HyperdrivePostgresConnectionFactory(
+    context.env.DATABASE.connectionString
+  );
+  return handleGitHubLogout(
+    context.req.raw,
+    context.env,
+    new PostgresBrowserSessionRepository(connections)
+  );
+});
+
+app.get("/v1/auth/github/setup", (context) => {
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,98}[A-Za-z0-9])?$/u.test(context.env.GITHUB_APP_SLUG)) {
+    return context.json({ error: "github_app_not_configured" }, 503);
+  }
+  return context.redirect(
+    `https://github.com/apps/${encodeURIComponent(context.env.GITHUB_APP_SLUG)}/installations/new`,
+    302
+  );
+});
 
 app.post("/v1/github/webhook", (context) =>
   context.json(
