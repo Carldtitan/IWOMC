@@ -167,14 +167,7 @@ async function runFireworksProof(
   }
   const content = payload.choices?.[0]?.message?.content;
   if (content === undefined) throw new Error("Fireworks returned no structured output");
-  const structuredMatch = /\{[\s\S]*\}/u.exec(content);
-  const analysis =
-    structuredMatch === null
-      ? undefined
-      : (JSON.parse(structuredMatch[0]) as {
-          readonly action?: unknown;
-          readonly reason?: unknown;
-        });
+  const analysis = parseFirstJsonObject(content);
   const selectedDeclaration =
     analysis?.action === "declare_dependency" ||
     /\b(declare_dependency|declare (?:the )?dependency|add (?:the )?dependency)\b/iu.test(content);
@@ -187,6 +180,41 @@ async function runFireworksProof(
         : "declare dependency — live model selected the smallest manifest correction",
     status: "live"
   };
+}
+
+function parseFirstJsonObject(
+  content: string
+): { readonly action?: unknown; readonly reason?: unknown } | undefined {
+  for (let start = content.indexOf("{"); start >= 0; start = content.indexOf("{", start + 1)) {
+    let depth = 0;
+    let escaped = false;
+    let inString = false;
+    for (let index = start; index < content.length; index += 1) {
+      const character = content[index]!;
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === '"') inString = false;
+        continue;
+      }
+      if (character === '"') inString = true;
+      else if (character === "{") depth += 1;
+      else if (character === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          try {
+            const parsed: unknown = JSON.parse(content.slice(start, index + 1));
+            if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+              return parsed;
+            }
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+  return undefined;
 }
 
 function loadProjectEnvironment(): ReadonlyMap<string, string> {
