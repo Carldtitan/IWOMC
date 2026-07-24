@@ -243,6 +243,16 @@ nav {
   font-size: 10px;
 }
 
+.integration-dot-unknown {
+  background: var(--faint);
+  box-shadow: 0 0 0 3px rgb(100 112 105 / 9%);
+}
+
+.integration-dot-unavailable {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px rgb(228 189 117 / 9%);
+}
+
 .integration-logo {
   display: grid;
   width: 18px;
@@ -1487,6 +1497,21 @@ code {
   margin-bottom: 18px;
   color: var(--muted);
   font-size: 10px;
+}
+
+@media (min-width: 1200px) {
+  .sidebar {
+    display: flex;
+  }
+
+  .main-content {
+    width: calc(100% - 224px);
+    margin-left: 224px;
+  }
+
+  .compact-brand {
+    display: none;
+  }
 }
 
 @media (max-width: 1050px) {

@@ -141,11 +141,68 @@ function SystemStatus({ polling }: { readonly polling: WorkspacePollingState }) 
 
 function Sidebar({
   current,
-  onNavigate
+  onNavigate,
+  sponsorRun
 }: {
   readonly current: View;
   readonly onNavigate: (view: View) => void;
+  readonly sponsorRun: SponsorRunState;
 }) {
+  const liveResult = sponsorRun.phase === "complete" ? sponsorRun.result : undefined;
+  const integrations = [
+    {
+      className: "daytona",
+      label: "Daytona",
+      mark: "D",
+      status:
+        liveResult === undefined
+          ? "Not tested in this page session"
+          : liveResult.daytona.status === "succeeded" && liveResult.daytona.cleanupConfirmed
+            ? "Confirmed by live proof"
+            : `Live proof: ${liveResult.daytona.status}`,
+      tone:
+        liveResult === undefined
+          ? "unknown"
+          : liveResult.daytona.status === "succeeded" && liveResult.daytona.cleanupConfirmed
+            ? "confirmed"
+            : "unavailable"
+    },
+    {
+      className: "fireworks",
+      label: "Fireworks",
+      mark: "F",
+      status:
+        liveResult === undefined
+          ? "Not tested in this page session"
+          : liveResult.fireworks.status === "live"
+            ? "Confirmed by live proof"
+            : "Unavailable for the latest proof",
+      tone:
+        liveResult === undefined
+          ? "unknown"
+          : liveResult.fireworks.status === "live"
+            ? "confirmed"
+            : "unavailable"
+    },
+    {
+      className: "braintrust",
+      label: "Braintrust",
+      mark: "B",
+      status:
+        liveResult === undefined
+          ? "Not tested in this page session"
+          : liveResult.braintrust.status === "exported"
+            ? "Confirmed by live proof"
+            : "Trace export deferred",
+      tone:
+        liveResult === undefined
+          ? "unknown"
+          : liveResult.braintrust.status === "exported"
+            ? "confirmed"
+            : "unavailable"
+    }
+  ] as const;
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -183,21 +240,17 @@ function Sidebar({
 
       <div className="sidebar-bottom">
         <p className="nav-label">Integrations</p>
-        <div className="integration-line">
-          <span className="integration-logo daytona">D</span>
-          Daytona
-          <span className="live-dot" title="Connected" />
-        </div>
-        <div className="integration-line">
-          <span className="integration-logo fireworks">F</span>
-          Fireworks
-          <span className="live-dot" title="API authenticated" />
-        </div>
-        <div className="integration-line">
-          <span className="integration-logo braintrust">B</span>
-          Braintrust
-          <span className="live-dot" title="Connected" />
-        </div>
+        {integrations.map((integration) => (
+          <div className="integration-line" key={integration.label}>
+            <span className={`integration-logo ${integration.className}`}>{integration.mark}</span>
+            {integration.label}
+            <span
+              aria-label={`${integration.label}: ${integration.status}`}
+              className={`live-dot integration-dot-${integration.tone}`}
+              title={integration.status}
+            />
+          </div>
+        ))}
         <div className="user-card">
           <span className="user-avatar">CP</span>
           <span>
@@ -829,7 +882,7 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <Sidebar current={view} onNavigate={setView} />
+      <Sidebar current={view} onNavigate={setView} sponsorRun={sponsorRun} />
       <main className="main-content">
         <header className="topbar">
           <div className="compact-brand">
