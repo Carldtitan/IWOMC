@@ -51,7 +51,6 @@ Prerequisites: Node.js 22+, pnpm 10.24, and Rust from `rust-toolchain.toml`.
 ```bash
 pnpm install
 cp .env.example .env
-cp .dev.vars.example .dev.vars
 pnpm env:check
 pnpm dev
 ```
