@@ -1,0 +1,16 @@
+.env
+.dev.vars
+.git
+.npm-cache
+.pnpm-store
+.wrangler
+coverage
+dist
+node_modules
+target
+worker-configuration.d.ts
+fairy
+Md files
+requirements.md
+design.md
+tasks.md
