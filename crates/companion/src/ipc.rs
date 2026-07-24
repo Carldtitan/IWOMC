@@ -117,7 +117,7 @@ pub trait IpcAcceptor {
     fn accept(&self) -> io::Result<Self::Connection>;
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CheckpointReason {
     Manual,
@@ -391,28 +391,132 @@ mod unix {
 pub use unix::SecureUnixListener;
 
 #[cfg(windows)]
-pub trait WindowsNamedPipeAcceptor {
-    type Connection: IpcTransport;
+mod windows {
+    use std::{
+        io::{self, Read, Write},
+        sync::Mutex,
+        thread,
+        time::{Duration, Instant},
+    };
 
-    /// Accept a connection from a platform named-pipe implementation.
-    ///
-    /// # Errors
-    ///
-    /// Returns an I/O error if the platform named-pipe server cannot accept a client.
-    fn accept_named_pipe(&self) -> io::Result<Self::Connection>;
-}
+    use interprocess::local_socket::{
+        GenericNamespaced, Listener, ListenerOptions, Stream, prelude::*,
+    };
 
-#[cfg(windows)]
-pub struct NamedPipeAcceptorAdapter<T>(pub T);
+    use super::{IpcAcceptor, IpcError, IpcErrorCode, IpcTransport, windows_named_pipe_path};
 
-#[cfg(windows)]
-impl<T: WindowsNamedPipeAcceptor> IpcAcceptor for NamedPipeAcceptorAdapter<T> {
-    type Connection = T::Connection;
+    pub struct SecureWindowsNamedPipeListener {
+        listener: Listener,
+    }
 
-    fn accept(&self) -> io::Result<Self::Connection> {
-        self.0.accept_named_pipe()
+    impl SecureWindowsNamedPipeListener {
+        /// Bind the scope-derived Windows named pipe used by the extension.
+        ///
+        /// The unguessable per-launch scope and the protocol HMAC provide peer authentication;
+        /// the raw scope is never included in the pipe name.
+        ///
+        /// # Errors
+        ///
+        /// Returns an invalid-endpoint or I/O error if the pipe cannot be created.
+        pub fn bind(scope_id: &str) -> Result<Self, IpcError> {
+            let path = windows_named_pipe_path(scope_id)?;
+            let pipe_name = path
+                .strip_prefix(r"\\.\pipe\")
+                .ok_or_else(|| IpcError::new(IpcErrorCode::InvalidEndpoint))?;
+            let name = pipe_name
+                .to_ns_name::<GenericNamespaced>()
+                .map_err(|_| IpcError::new(IpcErrorCode::InvalidEndpoint))?;
+            let listener = ListenerOptions::new()
+                .name(name)
+                .create_sync()
+                .map_err(|_| IpcError::new(IpcErrorCode::Io))?;
+            Ok(Self { listener })
+        }
+    }
+
+    impl IpcAcceptor for SecureWindowsNamedPipeListener {
+        type Connection = BoundedWindowsPipe;
+
+        fn accept(&self) -> io::Result<Self::Connection> {
+            let stream = self.listener.accept()?;
+            stream.set_nonblocking(true)?;
+            Ok(BoundedWindowsPipe {
+                stream,
+                timeout: Mutex::new(Duration::from_secs(5)),
+            })
+        }
+    }
+
+    pub struct BoundedWindowsPipe {
+        stream: Stream,
+        timeout: Mutex<Duration>,
+    }
+
+    impl Read for BoundedWindowsPipe {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            retry_until_timeout(self.timeout(), || match self.stream.read(buffer) {
+                Ok(0) if !buffer.is_empty() => Err(io::Error::new(
+                    io::ErrorKind::WouldBlock,
+                    "local IPC peer has no data available yet",
+                )),
+                result => result,
+            })
+        }
+    }
+
+    impl Write for BoundedWindowsPipe {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            retry_until_timeout(self.timeout(), || self.stream.write(buffer))
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            self.stream.flush()
+        }
+    }
+
+    impl BoundedWindowsPipe {
+        fn timeout(&self) -> Duration {
+            *self
+                .timeout
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+        }
+    }
+
+    impl IpcTransport for BoundedWindowsPipe {
+        fn set_io_timeout(&self, timeout: Duration) -> io::Result<()> {
+            *self
+                .timeout
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner) = timeout;
+            Ok(())
+        }
+    }
+
+    fn retry_until_timeout<T>(
+        timeout: Duration,
+        mut operation: impl FnMut() -> io::Result<T>,
+    ) -> io::Result<T> {
+        let deadline = Instant::now() + timeout;
+        loop {
+            match operation() {
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                    if Instant::now() >= deadline {
+                        return Err(io::Error::new(
+                            io::ErrorKind::TimedOut,
+                            "local IPC operation timed out",
+                        ));
+                    }
+                    thread::sleep(Duration::from_millis(2));
+                }
+                result => return result,
+            }
+        }
     }
 }
+
+#[cfg(windows)]
+pub use windows::SecureWindowsNamedPipeListener;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]

@@ -7,21 +7,54 @@ import { DEVICE_CREDENTIAL_KEY, STATE_KEY, type PersistentExtensionState } from 
 import { commands, testVscode, Uri } from "./test/vscode.js";
 import type { ExtensionApiClient } from "./api-client.js";
 import type { CompanionLaunchOptions, CompanionLifecycle } from "./companion/controller.js";
+import type {
+  CompanionCheckpoint,
+  CompanionObservation,
+  CompanionStatus
+} from "./companion/controller.js";
+import type { CaptureCoverage } from "./coverage.js";
 
 class FakeCompanion implements CompanionLifecycle {
   readonly launchOptions: CompanionLaunchOptions[] = [];
   running = false;
   stopCalls = 0;
 
+  createCheckpoint(): Promise<CompanionCheckpoint> {
+    return Promise.reject(new Error("Unexpected createCheckpoint call."));
+  }
+
   start(options: CompanionLaunchOptions): void {
     this.launchOptions.push(options);
     this.running = true;
+  }
+
+  startObservation(): Promise<CompanionObservation> {
+    return Promise.resolve({
+      coverage: companionCoverage,
+      sessionId: "session-from-companion",
+      startedAtEpochSeconds: 123
+    });
+  }
+
+  status(): Promise<CompanionStatus> {
+    return Promise.resolve({ state: this.running ? "observing" : "ready" });
   }
 
   stop(): Promise<void> {
     this.stopCalls += 1;
     this.running = false;
     return Promise.resolve();
+  }
+
+  stopObservation(): Promise<CompanionCheckpoint> {
+    return Promise.resolve({
+      checkpointId: "checkpoint-from-companion",
+      coverage: companionCoverage,
+      createdAtEpochSeconds: 150,
+      localSequence: 2,
+      reason: "session_end",
+      sessionId: "session-from-companion"
+    });
   }
 }
 
@@ -153,4 +186,76 @@ describe("extension activation", () => {
     expect(testVscode.statusBarItems[0]?.text).toBe("$(warning) Reconciler: coverage gap");
     expect(testVscode.errorMessages).toHaveLength(0);
   });
+
+  it("starts authenticated Companion observation and persists its session and coverage", async () => {
+    const initialState: PersistentExtensionState = {
+      connection: {
+        deviceId: "device-1",
+        expiresAtEpochSeconds: 1_000,
+        workspaceId: "workspace-1"
+      },
+      project: {
+        projectId: "project-1",
+        projectName: "Fixture",
+        repositoryPath: path.resolve("/repository")
+      },
+      schemaVersion: 1
+    };
+    const harness = new ExtensionContextHarness(initialState, "device-REDACTED");
+    const companion = new FakeCompanion();
+    testVscode.queueWarningResponse("Start observation");
+    testVscode.queueQuickPickResponse("Codex local hook");
+    activate(harness.context, { apiClient, companion, nowEpochSeconds: () => 100 });
+
+    await commands.executeCommand("environmentReconciler.startCapture");
+
+    expect(companion.launchOptions).toHaveLength(1);
+    const launchIpc = companion.launchOptions[0]?.ipc;
+    expect(launchIpc?.endpoint).toMatch(/^\\\\\.\\pipe\\environment-REDACTED-[a-f0-9]{32}$/u);
+    expect(typeof launchIpc?.scopeId).toBe("string");
+    expect(launchIpc?.REDACTED).toBeInstanceOf(REDACTED);
+    expect(harness.state()?.capture).toEqual({
+      coverage: companionCoverage,
+      providerSurface: "Codex local hook",
+      sessionId: "session-from-companion",
+      startedAtEpochSeconds: 123
+    });
+  });
 });
+
+const companionCoverage: CaptureCoverage = {
+  adapters: [
+    {
+      adapterId: "npm",
+      condition: "covered",
+      ecosystem: "javascript",
+      gaps: [],
+      supportLevel: "full_native"
+    }
+  ],
+  generatedAtEpochSeconds: 123,
+  permission: {
+    condition: "covered",
+    gaps: [],
+    grantedCapabilities: ["repository_metadata"],
+    profile: "repository_scoped"
+  },
+  provider: {
+    capabilities: ["session_boundary"],
+    condition: "covered",
+    gaps: [],
+    providerId: "codex",
+    sessionBoundary: "automatic",
+    surface: "Codex local hook"
+  },
+  realms: [
+    {
+      condition: "covered",
+      gaps: [],
+      label: "local extension host",
+      realmId: "extension-host",
+      realmKind: "host"
+    }
+  ],
+  upload: { gaps: [], pendingBatches: 0, state: "online" }
+};

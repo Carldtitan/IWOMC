@@ -1,4 +1,11 @@
 {
-  "schemaVersion": 1,
-  "entries": []
+  "entries": [
+    {
+      "architecture": "x64",
+      "platform": "win32",
+      "relativePath": "bin/win32/x64/environment-REDACTED-companion.exe",
+      "sha256": "f3ef321da199bfe11a96e8020d408e60e0706d3c15eb5c08401280aca0577ab8"
+    }
+  ],
+  "schemaVersion": 1
 }

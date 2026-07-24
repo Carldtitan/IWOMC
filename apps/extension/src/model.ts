@@ -32,11 +32,21 @@ export interface ActiveCapture {
   readonly startedAtEpochSeconds: number;
 }
 
+export interface LocalCheckpoint {
+  readonly checkpointId: string;
+  readonly coverage: CaptureCoverage;
+  readonly createdAtEpochSeconds: number;
+  readonly localSequence: number;
+  readonly reason: "manual" | "session_end";
+  readonly sessionId: string;
+}
+
 export interface PersistentExtensionState {
   readonly schemaVersion: 1;
   readonly connection?: DeviceConnection;
   readonly project?: LinkedProject;
   readonly capture?: ActiveCapture;
+  readonly lastCheckpoint?: LocalCheckpoint;
 }
 
 export const emptyState = (): PersistentExtensionState => ({ schemaVersion: 1 });

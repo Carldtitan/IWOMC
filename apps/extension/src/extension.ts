@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import * as path from "node:path";
 import * as vscode from "vscode";
 
@@ -12,6 +12,7 @@ import {
   type CompanionLaunchOptions,
   type CompanionLifecycle
 } from "./companion/controller.js";
+import { deriveCompanionEndpoint } from "./companion/ipc.js";
 import {
   isEnrollmentExpired,
   statusForState,
@@ -19,12 +20,7 @@ import {
   type PersistentExtensionState
 } from "./model.js";
 import { ExtensionStateStore } from "./storage.js";
-import {
-  assessCoverage,
-  formatCoverageReport,
-  unconfirmedCaptureCoverage,
-  type RealmKind
-} from "./coverage.js";
+import { assessCoverage, formatCoverageReport } from "./coverage.js";
 
 const commandIds = {
   connectWorkspace: "environmentReconciler.connectWorkspace",
@@ -262,20 +258,18 @@ export class ExtensionRuntime {
         title: "Starting local observation"
       },
       async () => {
-        const startedAtEpochSeconds = this.#nowEpochSeconds();
-        const realm = currentExtensionRealm();
-        this.#companion.start(this.#companionLaunchOptions());
+        const launchOptions = this.#companionLaunchOptions();
+        this.#companion.start(launchOptions);
         try {
+          const observation = await this.#companion.startObservation(
+            state.project.projectId,
+            providerSurface
+          );
           await this.#store.saveCapture({
-            coverage: unconfirmedCaptureCoverage({
-              generatedAtEpochSeconds: startedAtEpochSeconds,
-              providerSurface,
-              realmKind: realm.kind,
-              realmLabel: realm.label
-            }),
+            coverage: observation.coverage,
             providerSurface,
-            sessionId: randomUUID(),
-            startedAtEpochSeconds
+            sessionId: observation.sessionId,
+            startedAtEpochSeconds: observation.startedAtEpochSeconds
           });
         } catch (error) {
           await this.#companion.stop();
@@ -296,8 +290,16 @@ export class ExtensionRuntime {
         title: "Ending observation and draining the Companion"
       },
       async () => {
-        await this.#companion.stop();
-        await this.#store.saveCapture(undefined);
+        const capture = this.#store.load().capture;
+        try {
+          if (capture !== undefined && this.#companion.running) {
+            const checkpoint = await this.#companion.stopObservation(capture.sessionId);
+            await this.#store.saveCheckpoint(checkpoint);
+          }
+        } finally {
+          await this.#companion.stop();
+          await this.#store.saveCapture(undefined);
+        }
       }
     );
     this.#setStatus("capture_gap");
@@ -314,11 +316,20 @@ export class ExtensionRuntime {
         location: vscode.ProgressLocation.Notification,
         title: "Creating a manual environment checkpoint"
       },
-      () =>
-        this.#apiClient.createCheckpoint({
+      async () => {
+        if (state.capture !== undefined && this.#companion.running) {
+          const checkpoint = await this.#companion.createCheckpoint("manual");
+          await this.#store.saveCheckpoint(checkpoint);
+          await this.#store.saveCapture({
+            ...state.capture,
+            coverage: checkpoint.coverage
+          });
+        }
+        await this.#apiClient.createCheckpoint({
           REDACTED,
           projectId: state.project.projectId
-        })
+        });
+      }
     );
     await vscode.window.showInformationMessage("Manual checkpoint requested.");
   }
@@ -444,6 +455,22 @@ export class ExtensionRuntime {
   }
 
   #companionLaunchOptions(): CompanionLaunchOptions {
+    const scopeId = randomUUID();
+    const REDACTED = REDACTED;
+    const ipc = {
+      endpoint: deriveCompanionEndpoint({
+        ...(process.platform === "win32"
+          ? {}
+          : {
+              runtimeDirectory: path
+                .join(this.#context.globalStorageUri.fsPath, "ipc")
+                .replaceAll("\\", "/")
+            }),
+        scopeId
+      }),
+      scopeId,
+      REDACTED
+    };
     const configured = vscode.workspace
       .getConfiguration("environmentReconciler")
       .get<string>("companionPath", "")
@@ -452,7 +479,8 @@ export class ExtensionRuntime {
       return {
         binaryPath: configured,
         dataDirectory: this.#context.globalStorageUri.fsPath,
-        integrity: { kind: "development_override" }
+        integrity: { kind: "development_override" },
+        ipc
       };
     }
     const binaryName =
@@ -465,6 +493,7 @@ export class ExtensionRuntime {
         path.join("bin", process.platform, process.arch, binaryName)
       ),
       dataDirectory: this.#context.globalStorageUri.fsPath,
+      ipc,
       integrity: {
         architecture: process.arch,
         kind: "embedded_manifest",
@@ -509,22 +538,4 @@ export async function deactivate(): Promise<void> {
   const runtime = activeRuntime;
   activeRuntime = undefined;
   await runtime?.dispose();
-}
-
-function currentExtensionRealm(): { readonly kind: RealmKind; readonly label: string } {
-  const remoteName = vscode.env.remoteName;
-  if (remoteName === undefined) {
-    return { kind: "host", label: "local extension host" };
-  }
-  const normalized = remoteName.toLowerCase();
-  if (normalized.includes("wsl")) {
-    return { kind: "wsl", label: `${remoteName} extension host` };
-  }
-  if (normalized.includes("container")) {
-    return { kind: "dev_container", label: `${remoteName} extension host` };
-  }
-  if (normalized.includes("ssh")) {
-    return { kind: "remote_host", label: `${remoteName} extension host` };
-  }
-  return { kind: "extension_host", label: `${remoteName} extension host` };
 }

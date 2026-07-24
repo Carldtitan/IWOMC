@@ -57,7 +57,8 @@ export class ExtensionStateStore {
     const state: PersistentExtensionState = {
       schemaVersion: 1,
       connection: current.connection,
-      project
+      project,
+      ...(current.lastCheckpoint === undefined ? {} : { lastCheckpoint: current.lastCheckpoint })
     };
     await this.#memento.update(STATE_KEY, state);
     return state;
@@ -72,14 +73,33 @@ export class ExtensionStateStore {
         ? {
             schemaVersion: 1,
             ...(current.connection === undefined ? {} : { connection: current.connection }),
-            ...(current.project === undefined ? {} : { project: current.project })
+            ...(current.project === undefined ? {} : { project: current.project }),
+            ...(current.lastCheckpoint === undefined
+              ? {}
+              : { lastCheckpoint: current.lastCheckpoint })
           }
         : {
             schemaVersion: 1,
             ...(current.connection === undefined ? {} : { connection: current.connection }),
             ...(current.project === undefined ? {} : { project: current.project }),
+            ...(current.lastCheckpoint === undefined
+              ? {}
+              : { lastCheckpoint: current.lastCheckpoint }),
             capture
           };
+    await this.#memento.update(STATE_KEY, state);
+    return state;
+  }
+
+  async saveCheckpoint(
+    checkpoint: NonNullable<PersistentExtensionState["lastCheckpoint"]>
+  ): Promise<PersistentExtensionState> {
+    const current = this.load();
+    const state: PersistentExtensionState = {
+      ...current,
+      lastCheckpoint: checkpoint,
+      schemaVersion: 1
+    };
     await this.#memento.update(STATE_KEY, state);
     return state;
   }
