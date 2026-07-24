@@ -18,7 +18,8 @@ const binaryName =
   process.platform === "win32"
     ? "environment-reconciler-companion.exe"
     : "environment-reconciler-companion";
-const binaryPath = path.resolve("target", "debug", binaryName);
+const binaryPath =
+  process.env.IWOMC_COMPANION_BINARY ?? path.resolve("target", "debug", binaryName);
 const controller = new CompanionController({
   ipcConnector: (options) => CompanionIpcClient.connect(options),
   launcher: (binary, environment) =>
