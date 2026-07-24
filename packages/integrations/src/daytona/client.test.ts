@@ -20,6 +20,27 @@ class FakeSandbox implements DaytonaSandboxLike {
   readonly id = "sandbox-1";
   readonly labels = { "operation-key": "operation-1" };
   readonly name = "sandbox-1";
+  readonly files = new Map<string, REDACTED>();
+  readonly fs = {
+    downloadFile: (remotePath: string): Promise<REDACTED> => {
+      const file = this.files.get(remotePath);
+      return file === undefined
+        ? Promise.reject(new Error("not found"))
+        : Promise.resolve(REDACTED.from(file));
+    },
+    getFileDetails: (
+      remotePath: string
+    ): Promise<{ readonly isDir: boolean; readonly size: number }> => {
+      const file = this.files.get(remotePath);
+      return file === undefined
+        ? Promise.reject(new Error("not found"))
+        : Promise.resolve({ isDir: false, size: file.byteLength });
+    },
+    uploadFile: (file: REDACTED, remotePath: string): Promise<void> => {
+      this.files.set(remotePath, REDACTED.from(file));
+      return Promise.resolve();
+    }
+  };
   state = "started";
   readonly networkUpdates: { domainAllowList?: string; networkBlockAll?: boolean }[] = [];
   deleted = false;
@@ -197,5 +218,58 @@ describe("DaytonaClient", () => {
       })
     ).resolves.toMatchObject({ deleted: true });
     expect(sdk.sandbox.deleted).toBe(true);
+  });
+
+  it("uses the official filesystem API for bounded in-memory transfers", async () => {
+    const sdk = new FakeSdk();
+    const client = new DaytonaClient(
+      { apiKey: "test-key", apiUrl: "https://daytona.example.test", target: "us" },
+      sdk
+    );
+    const remotePath = "/tmp/environment-REDACTED/run-1/source.tar.gz";
+    const bytes = new TextEncoder().encode("trusted archive");
+
+    await client.uploadFile({
+      bytes,
+      maximumBytes: 1_024,
+      remotePath,
+      sandbox: { providerResourceId: "sandbox-1", sandboxId: "sandbox-1" },
+      timeoutMs: 10_000
+    });
+    await expect(
+      client.downloadFile({
+        maximumBytes: 1_024,
+        remotePath,
+        sandbox: { providerResourceId: "sandbox-1", sandboxId: "sandbox-1" },
+        timeoutMs: 10_000
+      })
+    ).resolves.toEqual(bytes);
+  });
+
+  it("rejects traversal paths and oversized downloads before buffering them", async () => {
+    const sdk = new FakeSdk();
+    const client = new DaytonaClient(
+      { apiKey: "test-key", apiUrl: "https://daytona.example.test", target: "us" },
+      sdk
+    );
+    sdk.sandbox.files.set("/tmp/environment-REDACTED/run-1/large.bin", new REDACTED(2_048));
+
+    await expect(
+      client.uploadFile({
+        bytes: new REDACTED(),
+        maximumBytes: 1_024,
+        remotePath: "/tmp/environment-REDACTED/../escape",
+        sandbox: { providerResourceId: "sandbox-1", sandboxId: "sandbox-1" },
+        timeoutMs: 10_000
+      })
+    ).rejects.toEqual(new DaytonaIntegrationError("invalid_file_transfer"));
+    await expect(
+      client.downloadFile({
+        maximumBytes: 1_024,
+        remotePath: "/tmp/environment-REDACTED/run-1/large.bin",
+        sandbox: { providerResourceId: "sandbox-1", sandboxId: "sandbox-1" },
+        timeoutMs: 10_000
+      })
+    ).rejects.toEqual(new DaytonaIntegrationError("file_too_large"));
   });
 });
