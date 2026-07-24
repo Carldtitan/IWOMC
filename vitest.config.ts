@@ -19,7 +19,8 @@ export default defineConfig({
             "packages/**/*.test.ts",
             "scripts/**/*.test.ts",
             "tests/contract/**/*.test.ts",
-            "tests/integration/**/*.test.ts"
+            "tests/integration/**/*.test.ts",
+            "tests/e2e/**/*.spec.ts"
           ]
         }
       },

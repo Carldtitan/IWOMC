@@ -153,13 +153,13 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - `POST /v1/projects/:id/capabilities`
     - `POST /v1/projects/:id/chain-anchors`
     - `GET /v1/devices/:id/status`
-  - [ ] 7.3 Verify request size, schema, workspace/project/device authorization, event chain, stream sequence, and replay protection before accepting a batch.
-  - [ ] 7.4 Add a server-side defense-in-depth secret guard before R2, Queue, Neon, Fireworks, Braintrust, or logs.
-  - [ ] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
-  - [ ] 7.6 Enqueue only a content-addressed pointer after durable object storage succeeds.
+  - [x] 7.3 Verify request size, schema, workspace/project/device authorization, event chain, stream sequence, and replay protection before accepting a batch.
+  - [x] 7.4 Add a server-side defense-in-depth secret guard before R2, Queue, Neon, Fireworks, Braintrust, or logs.
+  - [x] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
+  - [x] 7.6 Enqueue only a content-addressed pointer after durable object storage succeeds.
   - [ ] 7.7 Implement `apps/worker/src/queues/event-consumer.ts` to normalize event headers, snapshots, capability reports, and capture gaps.
   - [ ] 7.8 Implement DLQ handling and a reconciliation job for `stored_not_enqueued` or stalled batches.
-  - [ ] 7.9 Return a signed chain-anchor receipt to the Companion.
+  - [x] 7.9 Return a signed chain-anchor receipt to the Companion.
   - [ ] 7.10 Test duplicate batches, out-of-order delivery, missing sequence, bad chain/signature, oversized input, R2 failure, Queue failure, Neon failure, Worker restart, and DLQ replay.
   - [ ] 7.11 Implement large-object envelope encryption, direct upload, and finalize verification: uploader ephemeral X25519 key, random per-object AES-256-GCM key/nonce, server-master wrapped key, authenticated metadata, expected size/digests, shortest-practical object authorization, one-time sealed-key exchange for trusted Daytona bootstrap, and a rule that URLs/tokens/keys never enter durable Workflow state, logs, model traces, command arguments, or cache keys.
   - [ ] 7.12 Publish a versioned, idempotent internal `checkpoint.reconcile_requested` message only after the checkpoint's event/snapshot/source references are durable; support material-action-stabilized, session-end, PR-update, and manual-scan reasons and define its consumer contract for Task 12.
@@ -330,11 +330,11 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - _Requirements: R18, R20.6, R21.8-R21.9_
 
 - [ ] 17. Prove the first complete vertical slice
-  - [ ] 17.1 Add `tests/e2e/vertical-slice.spec.ts` around `fixtures/e2e/npm-undeclared-used/`.
+  - [x] 17.1 Add `tests/e2e/vertical-slice.spec.ts` around `fixtures/e2e/npm-undeclared-used/`.
   - [ ] 17.2 Pair the extension and Companion with a test project and start a Codex-observed session.
-  - [ ] 17.3 Observe an npm installation/use that makes the mutable environment succeed but is absent from repository intent.
-  - [ ] 17.4 Prove provider intent, process ancestry, action outcome, installed-state delta, used evidence, and manifest/lock absence are separately present.
-  - [ ] 17.5 Prove deterministic reconciliation creates the expected finding with no LLM call in the truth decision.
+  - [x] 17.3 Observe an npm installation/use that makes the mutable environment succeed but is absent from repository intent.
+  - [x] 17.4 Prove provider intent, process ancestry, action outcome, installed-state delta, used evidence, and manifest/lock absence are separately present.
+  - [x] 17.5 Prove deterministic reconciliation creates the expected finding with no LLM call in the truth decision.
   - [ ] 17.6 Generate an allowed Fireworks candidate and materialize the exact package/lock patch through npm in Daytona.
   - [ ] 17.7 Validate the baseline and candidate in separate clean Daytona sandboxes against the accepted behavior contract.
   - [ ] 17.8 Display exact evidence, gaps, patch, target, phases, cleanup, and scoped verified result in the web workspace.
