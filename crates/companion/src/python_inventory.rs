@@ -150,7 +150,9 @@ pub fn parse_python_inventory(
             name: package.name,
             version: package.version,
             environment_scope,
-            editable_project_location: package.editable_project_location,
+            editable_project_location: package
+                .editable_project_location
+                .map(|_| "<redacted-local-reference>".to_owned()),
         })
         .collect();
     packages.sort_by(|left, right| left.normalized_name.cmp(&right.normalized_name));
@@ -233,7 +235,7 @@ mod tests {
         assert_eq!(result.packages[0].normalized_name, "my-package-name");
         assert_eq!(
             result.packages[0].editable_project_location.as_deref(),
-            Some("/repo")
+            Some("<redacted-local-reference>")
         );
     }
 }

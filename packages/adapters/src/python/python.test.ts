@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   parsePythonInstalledGraph,
   parsePythonRepository,
+  pipAdapterManifest,
   pythonOperations,
-  pythonTargetMatrix
+  pythonTargetMatrix,
+  uvAdapterManifest
 } from "./python.js";
 
 describe("Python pip/uv adapters", () => {
@@ -70,5 +72,55 @@ describe("Python pip/uv adapters", () => {
     expect(pythonTargetMatrix.map((target) => `${target.manager}:${target.pythonVersion}`)).toEqual(
       ["pip:3.12.11", "uv:3.12.11"]
     );
+    expect(pythonTargetMatrix.map((target) => target.supportLevel)).toEqual([
+      "observed_only",
+      "observed_only"
+    ]);
+    for (const manifest of [pipAdapterManifest, uvAdapterManifest]) {
+      expect(manifest.identity.supportLevel).toBe("observed_only");
+      expect(manifest.managerVersions).toEqual([]);
+      expect(manifest.capabilities.mutation).toBe(false);
+      expect(manifest.capabilities.validation).toBe(false);
+    }
+  });
+
+  it("removes credentials from direct references, diagnostics, and installed inventory", () => {
+    const snapshot = parsePythonRepository(
+      [
+        {
+          path: "requirements.txt",
+          content:
+            "private-lib @ https://user:password@example.invalid/private.whl?token=secret#fragment\n--find-links https://other:credential@example.invalid/simple\n"
+        },
+        {
+          path: "pyproject.toml",
+          content:
+            '[tool.uv.sources]\nother-lib = { git = "git+https://oauth:token@git.example.invalid/team/repo.git?access_token=secret", editable = true }\n'
+        }
+      ],
+      "redaction-fixture",
+      "uv"
+    );
+    const serialized = JSON.stringify(snapshot);
+
+    expect(serialized).not.toContain("password");
+    expect(serialized).not.toContain("credential");
+    expect(serialized).not.toContain("access_token");
+    expect(serialized).not.toContain("oauth");
+    expect(serialized).not.toContain("secret");
+    expect(serialized).toContain("https://example.invalid/private.whl");
+    expect(serialized).toContain("git+https://git.example.invalid/team/repo.git");
+
+    const inventory = parsePythonInstalledGraph(
+      JSON.stringify([
+        {
+          editable_project_location: "https://user:password@example.invalid/editable?token=secret",
+          name: "private-lib",
+          version: "1.0.0"
+        }
+      ]),
+      "virtual_environment"
+    );
+    expect(JSON.stringify(inventory)).not.toMatch(/user|password|token=secret/u);
   });
 });
