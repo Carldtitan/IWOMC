@@ -1,0 +1,275 @@
+import {
+  compareText,
+  identityCanonicalValue,
+  resourceMatchKey,
+  stableId
+} from "../graphs/canonical.js";
+import type {
+  EvidenceGraphSet,
+  EvidenceNode,
+  EvidenceReference,
+  Finding,
+  ReconciliationResult,
+  ReconciliationUncertainty,
+  ResourceIdentity,
+  SupportLevel
+} from "../graphs/types.js";
+
+export const npmUsedInstalledObservedUndeclaredRule = Object.freeze({
+  ruleId: "npm.used-installed-observed-undeclared",
+  version: "1.0.0"
+});
+
+export function reconcileNpmUndeclaredDependencies(graphs: EvidenceGraphSet): ReconciliationResult {
+  const declared = groupByIdentity(graphs.declared.nodes.filter(isNpmNode));
+  const installed = groupByIdentity(
+    graphs.installed.nodes.filter(
+      (node) => isNpmNode(node) && stringAttribute(node, "stateEffect") === "present"
+    )
+  );
+  const used = groupByIdentity(
+    graphs.used.nodes.filter(
+      (node) =>
+        isNpmNode(node) &&
+        stringAttribute(node, "certainty") === "certain" &&
+        booleanAttribute(node, "executable")
+    )
+  );
+  const observedSuccessful = groupByIdentity(
+    graphs.observedAction.nodes.filter(
+      (node) =>
+        isNpmNode(node) &&
+        stringAttribute(node, "action") === "install" &&
+        stringAttribute(node, "outcome") === "succeeded" &&
+        stringAttribute(node, "stateEffect") === "present"
+    )
+  );
+  const observedFailed = groupByIdentity(
+    graphs.observedAction.nodes.filter(
+      (node) =>
+        isNpmNode(node) &&
+        stringAttribute(node, "action") === "install" &&
+        (stringAttribute(node, "outcome") === "failed" ||
+          stringAttribute(node, "stateEffect") !== "present")
+    )
+  );
+  const validated = groupByIdentity(
+    graphs.validated.nodes.filter(
+      (node) => isNpmNode(node) && stringAttribute(node, "outcome") === "REDACTEDed"
+    )
+  );
+  const candidates = new Set([
+    ...installed.keys(),
+    ...used.keys(),
+    ...observedSuccessful.keys(),
+    ...observedFailed.keys()
+  ]);
+  const findings: Finding[] = [];
+  const uncertainties: ReconciliationUncertainty[] = [];
+
+  for (const key of [...candidates].sort(compareText)) {
+    const installedNodes = installed.get(key) ?? [];
+    const usedNodes = used.get(key) ?? [];
+    const successfulActions = observedSuccessful.get(key) ?? [];
+    const failedActions = observedFailed.get(key) ?? [];
+    const candidateNodes = [...installedNodes, ...usedNodes, ...successfulActions];
+    const identity = candidateNodes[0]?.identity ?? failedActions[0]?.identity;
+    if (identity === undefined || declared.has(key)) {
+      continue;
+    }
+
+    if (candidateNodes.some((node) => !canDriveFinding(node.adapter.supportLevel))) {
+      uncertainties.push(uncertainty("unsupported_evidence", identity, candidateNodes));
+      continue;
+    }
+    if (installedNodes.length > 0 && usedNodes.length > 0 && successfulActions.length > 0) {
+      findings.push(
+        finding(
+          identity,
+          installedNodes,
+          usedNodes,
+          successfulActions,
+          validated.get(key) ?? [],
+          graphs
+        )
+      );
+      continue;
+    }
+    if (installedNodes.length > 0 && usedNodes.length === 0) {
+      uncertainties.push(
+        uncertainty("installed_without_use", identity, [
+          ...installedNodes,
+          ...successfulActions,
+          ...failedActions
+        ])
+      );
+    } else if (usedNodes.length > 0 && installedNodes.length === 0) {
+      uncertainties.push(
+        uncertainty("use_without_installed_effect", identity, [
+          ...usedNodes,
+          ...successfulActions,
+          ...failedActions
+        ])
+      );
+    } else if (failedActions.length > 0 && successfulActions.length === 0) {
+      uncertainties.push(uncertainty("failed_install_without_effect", identity, failedActions));
+    } else {
+      uncertainties.push(uncertainty("incomplete_capture", identity, candidateNodes));
+    }
+  }
+
+  return Object.freeze({
+    findings: Object.freeze(
+      findings.sort((left, right) => compareText(left.findingId, right.findingId))
+    ),
+    gaps: graphs.gaps,
+    uncertainties: Object.freeze(
+      uncertainties.sort((left, right) => compareText(left.uncertaintyId, right.uncertaintyId))
+    )
+  });
+}
+
+function finding(
+  identity: ResourceIdentity,
+  installed: readonly EvidenceNode[],
+  used: readonly EvidenceNode[],
+  actions: readonly EvidenceNode[],
+  validated: readonly EvidenceNode[],
+  graphs: EvidenceGraphSet
+): Finding {
+  const supportLevel = weakestSupportLevel([...installed, ...used, ...actions]);
+  const supportingEvidence = mergeEvidence([...used, ...installed, ...actions, ...validated]);
+  const affectedTargetIds = [
+    ...new Set([...installed, ...used, ...actions].flatMap((node) => node.targetIds ?? []))
+  ].sort(compareText);
+  const gapIds = graphs.gaps.map((gap) => gap.gapId).sort(compareText);
+  const observationConfidence = minimumConfidence([...installed, ...actions]);
+  const attributionConfidence = minimumAttributionConfidence(actions);
+  const semanticsConfidence = minimumConfidence(used);
+  const validationConfidence = validated.length === 0 ? 0 : minimumConfidence(validated);
+
+  return Object.freeze({
+    affectedIdentities: Object.freeze([identity]),
+    affectedTargetIds: Object.freeze(affectedTargetIds),
+    assertion: `${identity.normalizedName} is used by executable source, present in the observed npm environment, and attributable to a successful install effect, but is absent from repository declarations.`,
+    category: "dependency.used_but_undeclared",
+    confidence: Object.freeze({
+      attribution: attributionConfidence,
+      necessity: Math.min(semanticsConfidence, validationConfidence || 0.5),
+      observation: observationConfidence,
+      semantics: semanticsConfidence,
+      validation: validationConfidence
+    }),
+    counterEvidence: Object.freeze([]),
+    findingId: stableId("finding", {
+      identity: identityCanonicalValue(identity),
+      ruleId: npmUsedInstalledObservedUndeclaredRule.ruleId,
+      ruleVersion: npmUsedInstalledObservedUndeclaredRule.version
+    }),
+    gapIds: Object.freeze(gapIds),
+    nextEvidenceNeeded: Object.freeze(
+      validated.length === 0
+        ? [
+            "Reconstruct from repository declarations in a clean environment",
+            "Run the accepted behavior contract after a native npm manifest/lock update"
+          ]
+        : []
+    ),
+    plausibleAlternatives: Object.freeze([
+      "The import could resolve through an unrecorded workspace or alias",
+      "The package could be intentionally supplied by a target image"
+    ]),
+    ruleId: npmUsedInstalledObservedUndeclaredRule.ruleId,
+    ruleVersion: npmUsedInstalledObservedUndeclaredRule.version,
+    severity: "error" as const,
+    supportLevel,
+    supportingEvidence: Object.freeze(supportingEvidence)
+  });
+}
+
+function uncertainty(
+  code: ReconciliationUncertainty["code"],
+  identity: ResourceIdentity,
+  nodes: readonly EvidenceNode[]
+): ReconciliationUncertainty {
+  return Object.freeze({
+    code,
+    evidence: Object.freeze(mergeEvidence(nodes)),
+    identity,
+    uncertaintyId: stableId("uncertainty", {
+      code,
+      identity: identityCanonicalValue(identity),
+      ruleId: npmUsedInstalledObservedUndeclaredRule.ruleId
+    })
+  });
+}
+
+function groupByIdentity(
+  nodes: readonly EvidenceNode[]
+): ReadonlyMap<string, readonly EvidenceNode[]> {
+  const groups = new Map<string, EvidenceNode[]>();
+  for (const node of nodes) {
+    const key = resourceMatchKey(node.identity);
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, [node]);
+    } else {
+      group.push(node);
+    }
+  }
+  for (const group of groups.values()) {
+    group.sort((left, right) => compareText(left.nodeId, right.nodeId));
+  }
+  return groups;
+}
+
+function mergeEvidence(nodes: readonly EvidenceNode[]): EvidenceReference[] {
+  const evidence = new Map<string, EvidenceReference>();
+  for (const node of nodes) {
+    for (const item of node.evidence) {
+      evidence.set(item.evidenceId, item);
+    }
+  }
+  return [...evidence.values()].sort((left, right) =>
+    compareText(left.evidenceId, right.evidenceId)
+  );
+}
+
+function isNpmNode(node: EvidenceNode): boolean {
+  return node.identity.ecosystem === "npm";
+}
+
+function canDriveFinding(supportLevel: SupportLevel): boolean {
+  return supportLevel === "full_native" || supportLevel === "native_validation";
+}
+
+function weakestSupportLevel(nodes: readonly EvidenceNode[]): SupportLevel {
+  const rank: Readonly<Record<SupportLevel, number>> = {
+    full_native: 0,
+    native_validation: 1,
+    observed_only: 2,
+    unsupported: 3
+  };
+  return nodes.reduce<SupportLevel>(
+    (weakest, node) =>
+      rank[node.adapter.supportLevel] > rank[weakest] ? node.adapter.supportLevel : weakest,
+    "full_native"
+  );
+}
+
+function minimumConfidence(nodes: readonly EvidenceNode[]): number {
+  return nodes.reduce((minimum, node) => Math.min(minimum, node.confidence), 1);
+}
+
+function minimumAttributionConfidence(nodes: readonly EvidenceNode[]): number {
+  return nodes.reduce((minimum, node) => Math.min(minimum, node.attribution?.confidence ?? 0), 1);
+}
+
+function stringAttribute(node: EvidenceNode, key: string): string | undefined {
+  const value = node.attributes?.[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function booleanAttribute(node: EvidenceNode, key: string): boolean {
+  return node.attributes?.[key] === true;
+}
