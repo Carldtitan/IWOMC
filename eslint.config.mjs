@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import prettier from "eslint-config-prettier";
+import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -17,10 +18,20 @@ export default tseslint.config(
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
+    files: ["**/*.{js,cjs,mjs}"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: globals.node
+    }
+  },
+  {
     files: ["**/*.{ts,tsx,mts}"],
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["*.config.ts", "vitest.workspace.ts", "scripts/*.ts"]
+        },
         tsconfigRootDir: import.meta.dirname
       }
     },
@@ -38,6 +49,7 @@ export default tseslint.config(
   {
     files: ["**/*.config.{js,mjs,ts}", "scripts/**/*.{js,mjs,ts,mts}"],
     rules: {
+      "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-member-access": "off"
     }
