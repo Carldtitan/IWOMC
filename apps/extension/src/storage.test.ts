@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DEVICE_CREDENTIAL_KEY, STATE_KEY } from "./model.js";
 import { ExtensionStateStore, type Memento, type Secrets } from "./storage.js";
+import { unconfirmedCaptureCoverage } from "./coverage.js";
 
 class MemoryMemento implements Memento {
   readonly values = new Map<string, unknown>();
@@ -55,6 +56,12 @@ describe("ExtensionStateStore", () => {
       repositoryPath: "/fixture"
     });
     await store.saveCapture({
+      coverage: unconfirmedCaptureCoverage({
+        generatedAtEpochSeconds: 100,
+        providerSurface: "Codex local hook",
+        realmKind: "host",
+        realmLabel: "local extension host"
+      }),
       providerSurface: "Codex local hook",
       sessionId: "session-1",
       startedAtEpochSeconds: 100
@@ -63,6 +70,11 @@ describe("ExtensionStateStore", () => {
     expect(JSON.stringify(memento.values.get(STATE_KEY))).not.toContain(REDACTED);
     expect(REDACTEDs.values.get(DEVICE_CREDENTIAL_KEY)).toBe(REDACTED);
     expect(store.load().capture?.sessionId).toBe("session-1");
+    expect(store.load().capture?.coverage).toMatchObject({
+      permission: { condition: "unknown" },
+      provider: { providerId: "codex" },
+      upload: { state: "unknown" }
+    });
   });
 
   it("deletes both the REDACTED and non-REDACTED state on disconnect", async () => {

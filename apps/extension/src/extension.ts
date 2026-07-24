@@ -7,7 +7,11 @@ import {
   type ExtensionApiClient,
   type ProjectSummary
 } from "./api-client.js";
-import { CompanionController } from "./companion/controller.js";
+import {
+  CompanionController,
+  type CompanionLaunchOptions,
+  type CompanionLifecycle
+} from "./companion/controller.js";
 import {
   isEnrollmentExpired,
   statusForState,
@@ -15,9 +19,16 @@ import {
   type PersistentExtensionState
 } from "./model.js";
 import { ExtensionStateStore } from "./storage.js";
+import {
+  assessCoverage,
+  formatCoverageReport,
+  unconfirmedCaptureCoverage,
+  type RealmKind
+} from "./coverage.js";
 
 const commandIds = {
   connectWorkspace: "environmentReconciler.connectWorkspace",
+  diagnoseCoverage: "environmentReconciler.diagnoseCoverage",
   disconnect: "environmentReconciler.disconnect",
   linkProject: "environmentReconciler.linkProject",
   openStatus: "environmentReconciler.openStatus",
@@ -41,10 +52,17 @@ const statusPresentation: Record<
     label: "observing",
     tooltip: "Observing this repository within the currently reported coverage."
   },
+  offline_buffering: {
+    icon: "cloud-upload",
+    label: "offline · buffering",
+    tooltip:
+      "Cloud upload is unavailable. Redacted evidence may be buffering locally; diagnose coverage for the reported count."
+  },
   capture_gap: {
     icon: "warning",
-    label: "paused · coverage gap",
-    tooltip: "Observation is paused, so current activity is outside capture coverage."
+    label: "coverage gap",
+    tooltip:
+      "Observation is paused or at least one provider, realm, permission, upload, or adapter dimension is incomplete."
   },
   finding: {
     icon: "issues",
@@ -70,13 +88,13 @@ const statusPresentation: Record<
 
 export interface ActivationDependencies {
   readonly apiClient?: ExtensionApiClient;
-  readonly companion?: CompanionController;
+  readonly companion?: CompanionLifecycle;
   readonly nowEpochSeconds?: () => number;
 }
 
 export class ExtensionRuntime {
   readonly #apiClient: ExtensionApiClient;
-  readonly #companion: CompanionController;
+  readonly #companion: CompanionLifecycle;
   readonly #context: vscode.ExtensionContext;
   readonly #nowEpochSeconds: () => number;
   readonly #status: vscode.StatusBarItem;
@@ -99,6 +117,7 @@ export class ExtensionRuntime {
     context.subscriptions.push(
       this.#status,
       this.#register(commandIds.connectWorkspace, () => this.#connectWorkspace()),
+      this.#register(commandIds.diagnoseCoverage, () => this.#diagnoseCoverage()),
       this.#register(commandIds.linkProject, () => this.#linkProject()),
       this.#register(commandIds.startCapture, () => this.#startCapture()),
       this.#register(commandIds.stopCapture, () => this.#stopCapture()),
@@ -243,15 +262,20 @@ export class ExtensionRuntime {
         title: "Starting local observation"
       },
       async () => {
-        this.#companion.start({
-          binaryPath: this.#companionPath(),
-          dataDirectory: this.#context.globalStorageUri.fsPath
-        });
+        const startedAtEpochSeconds = this.#nowEpochSeconds();
+        const realm = currentExtensionRealm();
+        this.#companion.start(this.#companionLaunchOptions());
         try {
           await this.#store.saveCapture({
+            coverage: unconfirmedCaptureCoverage({
+              generatedAtEpochSeconds: startedAtEpochSeconds,
+              providerSurface,
+              realmKind: realm.kind,
+              realmLabel: realm.label
+            }),
             providerSurface,
             sessionId: randomUUID(),
-            startedAtEpochSeconds: this.#nowEpochSeconds()
+            startedAtEpochSeconds
           });
         } catch (error) {
           await this.#companion.stop();
@@ -259,9 +283,9 @@ export class ExtensionRuntime {
         }
       }
     );
-    this.#setStatus("observing");
-    await vscode.window.showInformationMessage(
-      `Observation started for ${state.project.projectName} within current coverage.`
+    this.#refreshStatus();
+    await vscode.window.showWarningMessage(
+      `Observation started for ${state.project.projectName}, but coverage remains incomplete until the Companion reports provider, realm, permission, upload, and adapter capabilities.`
     );
   }
 
@@ -312,10 +336,30 @@ export class ExtensionRuntime {
     const capture =
       state.capture === undefined
         ? "observation paused; activity is outside current coverage"
-        : `observing via ${state.capture.providerSurface} within current coverage`;
+        : `observation active via ${state.capture.providerSurface}`;
+    const coverage =
+      state.capture?.coverage === undefined
+        ? "Coverage is incomplete: no current provider, realm, permission, upload, and adapter report is available."
+        : formatCoverageReport(state.capture.coverage);
     await vscode.window.showInformationMessage(
-      `Environment Reconciler — ${connection}; ${project}; ${capture}.`
+      `Environment Reconciler — ${connection}; ${project}; ${capture}.\n${coverage}`
     );
+  }
+
+  async #diagnoseCoverage(): Promise<void> {
+    const coverage = this.#store.load().capture?.coverage;
+    if (coverage === undefined) {
+      await vscode.window.showWarningMessage(
+        "Coverage is incomplete: observation is paused or no Companion capability report is available. Provider, realm, permission, upload, and adapter coverage are unreported."
+      );
+      return;
+    }
+    const report = formatCoverageReport(coverage);
+    if (assessCoverage(coverage) === "incomplete") {
+      await vscode.window.showWarningMessage(report, { modal: true });
+    } else {
+      await vscode.window.showInformationMessage(report, { modal: true });
+    }
   }
 
   async #openWebWorkspace(): Promise<void> {
@@ -399,21 +443,36 @@ export class ExtensionRuntime {
     return folder.uri.fsPath;
   }
 
-  #companionPath(): string {
+  #companionLaunchOptions(): CompanionLaunchOptions {
     const configured = vscode.workspace
       .getConfiguration("environmentReconciler")
       .get<string>("companionPath", "")
       .trim();
     if (configured.length > 0) {
-      return configured;
+      return {
+        binaryPath: configured,
+        dataDirectory: this.#context.globalStorageUri.fsPath,
+        integrity: { kind: "development_override" }
+      };
     }
     const binaryName =
       process.platform === "win32"
         ? "environment-REDACTED-companion.exe"
         : "environment-REDACTED-companion";
-    return this.#context.asAbsolutePath(
-      path.join("bin", process.platform, process.arch, binaryName)
-    );
+    const relativeBinaryPath = ["bin", process.platform, process.arch, binaryName].join("/");
+    return {
+      binaryPath: this.#context.asAbsolutePath(
+        path.join("bin", process.platform, process.arch, binaryName)
+      ),
+      dataDirectory: this.#context.globalStorageUri.fsPath,
+      integrity: {
+        architecture: process.arch,
+        kind: "embedded_manifest",
+        manifestPath: this.#context.asAbsolutePath(path.join("bin", "companion-manifest.json")),
+        platform: process.platform,
+        relativeBinaryPath
+      }
+    };
   }
 
   async #saveProject(project: ProjectSummary, repositoryPath: string): Promise<void> {
@@ -450,4 +509,22 @@ export async function deactivate(): Promise<void> {
   const runtime = activeRuntime;
   activeRuntime = undefined;
   await runtime?.dispose();
+}
+
+function currentExtensionRealm(): { readonly kind: RealmKind; readonly label: string } {
+  const remoteName = vscode.env.remoteName;
+  if (remoteName === undefined) {
+    return { kind: "host", label: "local extension host" };
+  }
+  const normalized = remoteName.toLowerCase();
+  if (normalized.includes("wsl")) {
+    return { kind: "wsl", label: `${remoteName} extension host` };
+  }
+  if (normalized.includes("container")) {
+    return { kind: "dev_container", label: `${remoteName} extension host` };
+  }
+  if (normalized.includes("ssh")) {
+    return { kind: "remote_host", label: `${remoteName} extension host` };
+  }
+  return { kind: "extension_host", label: `${remoteName} extension host` };
 }

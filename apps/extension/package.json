@@ -26,6 +26,7 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onCommand:environmentReconciler.connectWorkspace",
+    "onCommand:environmentReconciler.diagnoseCoverage",
     "onCommand:environmentReconciler.linkProject",
     "onCommand:environmentReconciler.startCapture",
     "onCommand:environmentReconciler.stopCapture",
@@ -39,6 +40,10 @@
       {
         "command": "environmentReconciler.connectWorkspace",
         "title": "Environment Reconciler: Connect / Sign In"
+      },
+      {
+        "command": "environmentReconciler.diagnoseCoverage",
+        "title": "Environment Reconciler: Diagnose Coverage"
       },
       {
         "command": "environmentReconciler.linkProject",
@@ -86,10 +91,10 @@
     }
   },
   "scripts": {
-    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
+    "build": "esbuild ./src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
     "clean": "rimraf dist",
     "package": "pnpm run build && vsce package --no-dependencies --out dist/environment-REDACTED.vsix",
-    "test": "pnpm --dir ../.. exec vitest run --config apps/extension/vitest.config.ts",
+    "test": "pnpm --dir ../.. exec vitest run --config apps/extension/vitest.config.ts --configLoader runner",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
