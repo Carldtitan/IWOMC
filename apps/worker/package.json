@@ -9,8 +9,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@environment-reconciler/adapters": "workspace:*",
     "@environment-reconciler/contracts": "workspace:*",
     "@environment-reconciler/integrations": "workspace:*",
+    "@environment-reconciler/reconciler": "workspace:*",
     "hono": "^4.12.32"
   },
   "devDependencies": {
