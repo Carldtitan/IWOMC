@@ -1,0 +1,64 @@
+{
+  "documents": [
+    {
+      "schemaVersion": 1,
+      "provider": "claude_code",
+      "surface": "claude-code-local-hook-v1",
+      "providerVersion": "1.0.0-fixture",
+      "event": {
+        "eventId": "claude-session",
+        "sequence": 1,
+        "kind": "session_started",
+        "sessionId": "claude-1",
+        "monotonicNanos": 100,
+        "realmId": "host-1",
+        "actor": "agent",
+        "executorActor": "agent",
+        "reasoning": "private reasoning"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "claude_code",
+      "surface": "claude-code-local-hook-v1",
+      "providerVersion": "1.0.0-fixture",
+      "event": {
+        "eventId": "claude-install",
+        "sequence": 2,
+        "kind": "command_completed",
+        "sessionId": "claude-1",
+        "toolCallId": "tool-1",
+        "monotonicNanos": 200,
+        "realmId": "host-1",
+        "actor": "agent",
+        "executorActor": "agent",
+        "executable": "uv",
+        "arguments": ["add", "httpx"],
+        "exitCode": 0,
+        "inventoryBefore": { "snapshotId": "before", "packages": [] },
+        "inventoryAfter": {
+          "snapshotId": "after",
+          "packages": [
+            { "ecosystem": "pypi", "name": "httpx", "version": "0.28.1", "layerId": "project" }
+          ]
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "claude_code",
+      "surface": "claude-code-local-hook-v1",
+      "providerVersion": "1.0.0-fixture",
+      "event": {
+        "eventId": "claude-end",
+        "sequence": 3,
+        "kind": "session_ended",
+        "sessionId": "claude-1",
+        "monotonicNanos": 300,
+        "realmId": "host-1",
+        "actor": "agent",
+        "executorActor": "agent"
+      }
+    }
+  ]
+}

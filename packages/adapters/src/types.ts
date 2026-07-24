@@ -119,6 +119,92 @@ export interface NpmRepositorySnapshot {
   readonly projects: readonly NpmProject[];
 }
 
+export type PythonManager = "pip" | "uv";
+export type PythonEnvironmentScope = "project" | "virtual_environment" | "REDACTED" | "global";
+
+export interface PythonDeclaredDependency {
+  readonly adapter: AdapterIdentity;
+  readonly direct: boolean;
+  readonly editable: boolean;
+  readonly ecosystem: "pypi";
+  readonly extras: readonly string[];
+  readonly indexIdentity?: string;
+  readonly localReference?: string;
+  readonly marker?: string;
+  readonly name: string;
+  readonly normalizedName: string;
+  readonly projectRoot: string;
+  readonly sourceLocation: SourceLocation;
+  readonly specifier: string;
+}
+
+export interface PythonLockedDependency {
+  readonly adapter: AdapterIdentity;
+  readonly direct: boolean;
+  readonly ecosystem: "pypi";
+  readonly marker?: string;
+  readonly name: string;
+  readonly normalizedName: string;
+  readonly projectRoot: string;
+  readonly sourceLocation: SourceLocation;
+  readonly transitive: boolean;
+  readonly version: string;
+}
+
+export interface PythonUsageEvidence {
+  readonly adapter: AdapterIdentity;
+  readonly certainty: "certain" | "uncertain";
+  readonly ecosystem: "pypi";
+  readonly kind: "executable_reference" | "static_import" | "dynamic_import";
+  readonly name: string;
+  readonly normalizedName: string;
+  readonly projectRoot: string;
+  readonly sourceLocation: SourceLocation;
+}
+
+export interface PythonProject {
+  readonly declared: readonly PythonDeclaredDependency[];
+  readonly gaps: readonly AdapterGap[];
+  readonly locked: readonly PythonLockedDependency[];
+  readonly manager: PythonManager;
+  readonly projectRoot: string;
+  readonly pythonConstraint?: string;
+  readonly usage: readonly PythonUsageEvidence[];
+}
+
+export interface PythonRepositorySnapshot {
+  readonly adapter: AdapterIdentity;
+  readonly projects: readonly PythonProject[];
+}
+
+export interface PythonInstalledPackage {
+  readonly ecosystem: "pypi";
+  readonly editableProjectLocation?: string;
+  readonly environmentScope: PythonEnvironmentScope;
+  readonly name: string;
+  readonly normalizedName: string;
+  readonly version: string;
+}
+
+export interface PythonOperation {
+  readonly args: readonly string[];
+  readonly executable: "pip" | "python" | "uv";
+  readonly kind:
+    "add" | "remove" | "update" | "lock" | "frozen_install" | "graph" | "build" | "test";
+}
+
+export interface PythonTarget {
+  readonly architecture: "x86_64";
+  readonly baseImage: string;
+  readonly manager: PythonManager;
+  readonly managerVersion: string;
+  readonly platform: "linux";
+  readonly pythonVersion: string;
+  readonly supportLevel: "native_validation";
+}
+
+export type RepositorySnapshot = NpmRepositorySnapshot | PythonRepositorySnapshot;
+
 export interface RepositoryAdapter<TSnapshot> {
   readonly manifest: AdapterManifest;
   parse(files: readonly RepositoryFile[], inputSourceId: string): TSnapshot;
