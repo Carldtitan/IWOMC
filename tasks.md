@@ -174,8 +174,8 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 8.4 Implement browser-based **Connect workspace**, device enrollment return, project binding, logout, and disconnect.
   - [x] 8.5 Add status states and the commands specified in `design.md`.
   - [x] 8.6 Implement consent screens for observation scope and provider-hook installation. Show raw observational content as unavailable and off in MVP; do not expose an opt-in until Task 31 implements its separate controls.
-  - [ ] 8.7 Show provider, realm, permission, upload, and adapter coverage without a false global “all clear.”
-  - [ ] 8.8 Test extension activation, companion binary hash mismatch, missing binary, IPC authentication failure, offline state, enrollment expiry, consent denial, pause/resume, and recovery after Companion restart.
+  - [x] 8.7 Show provider, realm, permission, upload, and adapter coverage without a false global “all clear.”
+  - [x] 8.8 Test extension activation, companion binary hash mismatch, missing binary, IPC authentication failure, offline state, enrollment expiry, consent denial, pause/resume, and recovery after Companion restart.
   - **Exit:** A VSIX can pair one repository/device, launch the Companion, show honest status, and create a manual checkpoint without sponsor keys in the extension.
   - _Requirements: R1, R2.5-R2.8, R3.7-R3.9, R18.1-R18.2, R20.6_
 

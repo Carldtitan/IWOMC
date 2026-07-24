@@ -1,8 +1,17 @@
+import { assessCoverage, type CaptureCoverage } from "./coverage.js";
+
 export const STATE_KEY = "environmentReconciler.state.v1";
 export const DEVICE_CREDENTIAL_KEY = "environmentReconciler.deviceCredential.v1";
 
 export type ExtensionStatus =
-  "disconnected" | "observing" | "capture_gap" | "finding" | "validating" | "verified" | "error";
+  | "disconnected"
+  | "observing"
+  | "offline_buffering"
+  | "capture_gap"
+  | "finding"
+  | "validating"
+  | "verified"
+  | "error";
 
 export interface DeviceConnection {
   readonly deviceId: string;
@@ -17,6 +26,7 @@ export interface LinkedProject {
 }
 
 export interface ActiveCapture {
+  readonly coverage?: CaptureCoverage;
   readonly providerSurface: string;
   readonly sessionId: string;
   readonly startedAtEpochSeconds: number;
@@ -49,7 +59,13 @@ export function statusForState(
     return "error";
   }
   if (state.capture !== undefined) {
-    return "observing";
+    if (state.capture.coverage?.upload.state === "offline_buffering") {
+      return "offline_buffering";
+    }
+    return state.capture.coverage !== undefined &&
+      assessCoverage(state.capture.coverage) === "within_reported_coverage"
+      ? "observing"
+      : "capture_gap";
   }
   return state.project === undefined ? "disconnected" : "capture_gap";
 }
