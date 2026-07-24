@@ -111,7 +111,7 @@ function SystemStatus({ polling }: { readonly polling: WorkspacePollingState }) 
   const label = (() => {
     switch (polling.phase) {
       case "demo":
-        return "Local workspace · sponsor services ready";
+        return "Local workspace · live proof available";
       case "loading":
         return "Connecting to live system status…";
       case "partial":
@@ -358,7 +358,7 @@ function CandidateTab() {
     <div className="detail-body">
       <div className="candidate-summary">
         <div>
-          <p className="section-kicker">Fireworks proposal · guard accepted</p>
+          <p className="section-kicker">Evidence-grounded proposal · guard accepted</p>
           <h3>Declare the observed runtime dependency</h3>
           <p>
             Native npm operation, constrained to the existing manager. The final lockfile was
