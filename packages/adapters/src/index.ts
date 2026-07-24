@@ -45,4 +45,4 @@ export type {
   SourceLocation
 } from "./types.js";
 
-export const adaptersPackageStatus = "npm-pip-uv-native-validation" as const;
+export const adaptersPackageStatus = "npm-native-validation-python-observed-only" as const;

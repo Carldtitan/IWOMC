@@ -200,7 +200,7 @@ export interface PythonTarget {
   readonly managerVersion: string;
   readonly platform: "linux";
   readonly pythonVersion: string;
-  readonly supportLevel: "native_validation";
+  readonly supportLevel: "observed_only";
 }
 
 export type RepositorySnapshot = NpmRepositorySnapshot | PythonRepositorySnapshot;

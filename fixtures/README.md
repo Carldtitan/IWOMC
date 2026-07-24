@@ -12,9 +12,10 @@ validation outcomes live here. Fixtures must never contain real REDACTEDs or pro
 All three surfaces normalize into the same action envelope. Capability profiles remain
 provider/version-specific; hosted execution without an in-realm collector is explicitly unsupported.
 
-## Python native-validation targets
+## Planned Python targets
 
 - pip 25.1, Python 3.12.11, Linux x86_64
 - uv 0.7.12, Python 3.12.11, Linux x86_64
 
-Other versions and platforms are discovered but are not claimed as verified targets.
+pip and uv remain `observed_only` until live clean Daytona fixtures and the full conformance
+matrix REDACTED. These entries are planning identities, not verified target claims.

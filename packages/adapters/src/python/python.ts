@@ -51,8 +51,8 @@ const standardLibrary = new Set([
   "uuid"
 ]);
 
-export const pipAdapterManifest = manifest("pip", ["23", "24", "25"]);
-export const uvAdapterManifest = manifest("uv", ["0.5", "0.6", "0.7", "0.8"]);
+export const pipAdapterManifest = manifest("pip");
+export const uvAdapterManifest = manifest("uv");
 
 export const pipRepositoryAdapter: RepositoryAdapter<PythonRepositorySnapshot> = Object.freeze({
   manifest: pipAdapterManifest,
@@ -106,7 +106,9 @@ export function parsePythonInstalledGraph(
           name: item.name,
           normalizedName: normalizeName(item.name),
           version: item.version,
-          ...(typeof editable === "string" ? { editableProjectLocation: editable } : {})
+          ...(typeof editable === "string"
+            ? { editableProjectLocation: redactLocalReference(editable) }
+            : {})
         });
       })
       .sort((left, right) => left.normalizedName.localeCompare(right.normalizedName))
@@ -205,9 +207,13 @@ function parseRequirements(
     if (line.startsWith("-r ") || line.startsWith("--requirement ")) continue;
     const editable = line.startsWith("-e ") || line.startsWith("--editable ");
     const specifier = editable ? line.replace(/^(?:-e|--editable)\s+/, "") : line;
+    if (!editable && line.startsWith("-")) {
+      gaps.push(gap("invalid_manifest", "Unsupported requirement option", path, index + 1));
+      continue;
+    }
     const parsed = dependency(specifier);
     if (parsed === undefined) {
-      gaps.push(gap("invalid_manifest", `Unsupported requirement: ${line}`, path, index + 1));
+      gaps.push(gap("invalid_manifest", "Unsupported requirement syntax", path, index + 1));
       continue;
     }
     output.push(
@@ -377,7 +383,9 @@ interface ParsedDependency {
 
 function dependency(specifier: string): ParsedDependency | undefined {
   const [requirement = "", marker] = specifier.split(/\s*;\s*/, 2);
-  const local = /^([A-Za-z0-9_.-]+)(?:\[([^\]]+)\])?\s*@\s*(.+)$/.exec(requirement);
+  const local = /^([A-Za-z0-9][A-Za-z0-9_.-]*)(?:\[([^\]]+)\])?\s*@\s*(.+)$/.exec(
+    requirement
+  );
   if (local?.[1] !== undefined && local[3] !== undefined) {
     return {
       name: local[1],
@@ -386,7 +394,7 @@ function dependency(specifier: string): ParsedDependency | undefined {
       ...(marker === undefined ? {} : { marker })
     };
   }
-  const match = /^([A-Za-z0-9_.-]+)(?:\[([^\]]+)\])?/.exec(requirement);
+  const match = /^([A-Za-z0-9][A-Za-z0-9_.-]*)(?:\[([^\]]+)\])?/.exec(requirement);
   if (match?.[1] === undefined) return undefined;
   return {
     name: match[1],
@@ -405,6 +413,12 @@ function declaration(
   root: string,
   adapter: AdapterIdentity
 ): PythonDeclaredDependency {
+  const localReference =
+    parsed.localReference === undefined ? undefined : redactLocalReference(parsed.localReference);
+  const redactedSpecifier =
+    parsed.localReference === undefined || localReference === undefined
+      ? specifier
+      : specifier.replace(parsed.localReference, localReference);
   return Object.freeze({
     adapter,
     direct: true,
@@ -412,13 +426,13 @@ function declaration(
     ecosystem: "pypi",
     extras: Object.freeze(parsed.extras),
     ...(indexIdentity === undefined ? {} : { indexIdentity }),
-    ...(parsed.localReference === undefined ? {} : { localReference: parsed.localReference }),
+    ...(localReference === undefined ? {} : { localReference }),
     ...(parsed.marker === undefined ? {} : { marker: parsed.marker }),
     name: parsed.name,
     normalizedName: normalizeName(parsed.name),
     projectRoot: root,
     sourceLocation: { path, line },
-    specifier
+    specifier: redactedSpecifier
   });
 }
 
@@ -443,21 +457,21 @@ function uniqueDeclarations(
   ].sort((left, right) => left.normalizedName.localeCompare(right.normalizedName));
 }
 
-function manifest(manager: PythonManager, versions: readonly string[]): AdapterManifest {
+function manifest(manager: PythonManager): AdapterManifest {
   return Object.freeze({
     identity: Object.freeze({
       adapterId: `python/${manager}`,
       adapterVersion,
-      supportLevel: "native_validation"
+      supportLevel: "observed_only"
     }),
     ecosystem: "pypi",
     manager,
-    managerVersions: Object.freeze([...versions]),
+    managerVersions: Object.freeze([]),
     capabilities: Object.freeze({
       local_inventory: true,
-      mutation: true,
+      mutation: false,
       repository_parsing: true,
-      validation: true
+      validation: false
     }),
     generatedFiles: Object.freeze(manager === "uv" ? ["uv.lock"] : []),
     precedence: Object.freeze(
@@ -470,7 +484,7 @@ function manifest(manager: PythonManager, versions: readonly string[]): AdapterM
 }
 
 function identity(manager: PythonManager, inputSourceId: string): AdapterIdentity {
-  return Object.freeze({ ...manifest(manager, []).identity, inputSourceId });
+  return Object.freeze({ ...manifest(manager).identity, inputSourceId });
 }
 function target(
   manager: PythonManager,
@@ -485,7 +499,7 @@ function target(
     managerVersion,
     platform: "linux",
     pythonVersion,
-    supportLevel: "native_validation"
+    supportLevel: "observed_only"
   });
 }
 function operation(
@@ -513,6 +527,25 @@ function redactIndex(value: string): string {
   } catch {
     return "index:invalid";
   }
+}
+function redactLocalReference(value: string): string {
+  const trimmed = value.trim();
+  if (/^[a-z][a-z0-9+.-]*:\/\//iu.test(trimmed)) {
+    try {
+      const parsed = new URL(trimmed);
+      parsed.REDACTEDname = "";
+      parsed.REDACTED = "";
+      parsed.search = "";
+      parsed.hash = "";
+      return parsed.toString();
+    } catch {
+      return "REDACTED-remote-reference>";
+    }
+  }
+  if (/^[^/@\s]+@[^/:\s]+:/u.test(trimmed)) {
+    return trimmed.replace(/^[^@]+@/u, "REDACTED>@");
+  }
+  return trimmed;
 }
 function normalizeName(name: string): string {
   return name.toLowerCase().replace(/[-_.]+/g, "-");

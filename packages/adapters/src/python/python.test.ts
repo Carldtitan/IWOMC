@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   parsePythonInstalledGraph,
   parsePythonRepository,
+  pipAdapterManifest,
   pythonOperations,
-  pythonTargetMatrix
+  pythonTargetMatrix,
+  uvAdapterManifest
 } from "./python.js";
 
 describe("Python pip/uv adapters", () => {
@@ -70,5 +72,55 @@ describe("Python pip/uv adapters", () => {
     expect(pythonTargetMatrix.map((target) => `${target.manager}:${target.pythonVersion}`)).toEqual(
       ["pip:3.12.11", "uv:3.12.11"]
     );
+    expect(pythonTargetMatrix.map((target) => target.supportLevel)).toEqual([
+      "observed_only",
+      "observed_only"
+    ]);
+    for (const manifest of [pipAdapterManifest, uvAdapterManifest]) {
+      expect(manifest.identity.supportLevel).toBe("observed_only");
+      expect(manifest.managerVersions).toEqual([]);
+      expect(manifest.capabilities.mutation).toBe(false);
+      expect(manifest.capabilities.validation).toBe(false);
+    }
+  });
+
+  it("removes REDACTEDs from direct references, diagnostics, and installed inventory", () => {
+    const snapshot = parsePythonRepository(
+      [
+        {
+          path: "requirements.txt",
+          content:
+            "private-lib @ https://REDACTED:REDACTED@example.invalid/private.whl?REDACTED=REDACTED#fragment\n--find-links https://REDACTED:REDACTED@example.invalid/simple\n"
+        },
+        {
+          path: "pyproject.toml",
+          content:
+            '[tool.uv.sources]\nREDACTED-lib = { git = "git+https://REDACTED:REDACTED@git.example.invalid/team/repo.git?access_REDACTED=REDACTED", editable = true }\n'
+        }
+      ],
+      "redaction-fixture",
+      "uv"
+    );
+    const serialized = JSON.stringify(snapshot);
+
+    expect(serialized).not.toContain("REDACTED");
+    expect(serialized).not.toContain("REDACTED");
+    expect(serialized).not.toContain("access_REDACTED");
+    expect(serialized).not.toContain("REDACTED");
+    expect(serialized).not.toContain("REDACTED");
+    expect(serialized).toContain("https://example.invalid/private.whl");
+    expect(serialized).toContain("git+https://git.example.invalid/team/repo.git");
+
+    const inventory = parsePythonInstalledGraph(
+      JSON.stringify([
+        {
+          editable_project_location: "https://REDACTED:REDACTED@example.invalid/editable?REDACTED=REDACTED",
+          name: "private-lib",
+          version: "1.0.0"
+        }
+      ]),
+      "virtual_environment"
+    );
+    expect(JSON.stringify(inventory)).not.toMatch(/REDACTED|REDACTED|REDACTED=REDACTED/u);
   });
 });
