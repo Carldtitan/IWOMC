@@ -1,6 +1,8 @@
 export {
   EventBatchConsumer,
   EventConsumerError,
+  EventObjectReadError,
+  NormalizedPersistenceError,
   normalizeEventBatch,
   recoverStoredNotEnqueued
 } from "./event-consumer.js";
@@ -15,3 +17,11 @@ export type {
   ReconcileRequestQueuePort,
   StoredNotEnqueuedRecoveryPort
 } from "./event-consumer.js";
+export {
+  handleCloudflareEventBatch,
+  retryDelaySeconds,
+  type QueueDelivery,
+  type QueueDeliveryBatch,
+  type QueueDeliveryLog,
+  type QueueMessageConsumer
+} from "./cloudflare-handler.js";

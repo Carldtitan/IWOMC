@@ -11,6 +11,12 @@ export {
   type R2IngestObject
 } from "./cloudflare-r2.js";
 export {
+  CloudflareR2VerifiedObjectReader,
+  type PayloadUnprotector,
+  type R2VerifiedObject,
+  type R2VerifiedObjectBucket
+} from "./cloudflare-r2-reader.js";
+export {
   HyperdrivePostgresConnectionFactory,
   hyperdrivePostgresIngestionDriver,
   type HyperdriveBinding
@@ -24,5 +30,6 @@ export {
 } from "./hyperdrive-postgres.js";
 export { NeonIngestionAdapter, type NeonIngestionDriver } from "./neon-boundary.js";
 export { CloudflarePayloadProtection } from "./payload-protection.js";
+export { HyperdriveProcessedBatchMarkerPersistence } from "./processed-batch-postgres.js";
 export { CloudflareChainReceiptSigner } from "./receipt-signer.js";
 export { createCloudflareIngestionApi, type CloudflareIngestionBindings } from "./runtime-api.js";
