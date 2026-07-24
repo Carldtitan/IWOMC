@@ -26,14 +26,31 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onCommand:environmentReconciler.connectWorkspace",
+    "onCommand:environmentReconciler.linkProject",
+    "onCommand:environmentReconciler.startCapture",
+    "onCommand:environmentReconciler.stopCapture",
     "onCommand:environmentReconciler.scanNow",
-    "onCommand:environmentReconciler.openStatus"
+    "onCommand:environmentReconciler.openStatus",
+    "onCommand:environmentReconciler.openWebWorkspace",
+    "onCommand:environmentReconciler.disconnect"
   ],
   "contributes": {
     "commands": [
       {
         "command": "environmentReconciler.connectWorkspace",
-        "title": "Environment Reconciler: Connect Workspace"
+        "title": "Environment Reconciler: Connect / Sign In"
+      },
+      {
+        "command": "environmentReconciler.linkProject",
+        "title": "Environment Reconciler: Link Project"
+      },
+      {
+        "command": "environmentReconciler.startCapture",
+        "title": "Environment Reconciler: Start Observed Session"
+      },
+      {
+        "command": "environmentReconciler.stopCapture",
+        "title": "Environment Reconciler: End Observed Session"
       },
       {
         "command": "environmentReconciler.scanNow",
@@ -42,13 +59,37 @@
       {
         "command": "environmentReconciler.openStatus",
         "title": "Environment Reconciler: Open Status"
+      },
+      {
+        "command": "environmentReconciler.openWebWorkspace",
+        "title": "Environment Reconciler: Open Web Workspace"
+      },
+      {
+        "command": "environmentReconciler.disconnect",
+        "title": "Environment Reconciler: Disconnect Device"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Environment Reconciler",
+      "properties": {
+        "environmentReconciler.serviceUrl": {
+          "type": "string",
+          "default": "http://localhost:8787",
+          "description": "Environment Reconciler service URL."
+        },
+        "environmentReconciler.companionPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional absolute path to a development Companion binary."
+        }
+      }
+    }
   },
   "scripts": {
     "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
     "clean": "rimraf dist",
     "package": "pnpm run build && vsce package --no-dependencies --out dist/environment-REDACTED.vsix",
+    "test": "pnpm --dir ../.. exec vitest run --config apps/extension/vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
