@@ -528,11 +528,8 @@ function Overview({
     <>
       <div className="page-heading">
         <div>
-          <div className="breadcrumb">
-            Projects <span>/</span> IWOMC
-          </div>
-          <h1>Environment overview</h1>
-          <p>What changed, what the repository says, and what clean machines proved.</p>
+          <h1>1 environment issue</h1>
+          <p>An agent used a package that this repository does not declare.</p>
         </div>
         <div className="heading-actions">
           <button
@@ -549,8 +546,8 @@ function Overview({
               </span>
             )}
             {sponsorRun.phase === "running"
-              ? "Running real Daytona proof…"
-              : "Run live sponsor proof"}
+              ? "Verifying in Daytona…"
+              : "Verify fix"}
           </button>
           <button
             className="run-button"
@@ -579,6 +576,14 @@ function Overview({
       </div>
 
       <SponsorProof run={sponsorRun} />
+
+      <div className="reconciliation-flow" aria-label="Environment reconciliation">
+        <span><b>1</b>Agent installed package</span>
+        <i>→</i>
+        <span><b>2</b>Manifest is missing it</span>
+        <i>→</i>
+        <span><b>3</b>Verify the fix</span>
+      </div>
 
       <div className="metrics">
         <MetricCard
@@ -647,12 +652,9 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
     return (
       <section className="sponsor-proof">
         <div>
-          <p className="section-kicker">Live sponsor proof</p>
-          <strong>Ready to provision a disposable Daytona computer</strong>
-          <span>
-            Executes a structured command, confirms deletion, and exports metadata-only
-            observability.
-          </span>
+          <p className="section-kicker">Live verification</p>
+          <strong>Ready to verify the fix</strong>
+          <span>Fireworks reasons · Daytona verifies · Braintrust records</span>
         </div>
         <StatusPill tone="info">Not run yet</StatusPill>
       </section>
@@ -662,9 +664,9 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
     return (
       <section className="sponsor-proof sponsor-proof-running" aria-live="polite">
         <div>
-          <p className="section-kicker">Live sponsor proof</p>
-          <strong>Creating and testing a real Daytona sandbox…</strong>
-          <span>Cleanup runs even if execution fails.</span>
+          <p className="section-kicker">Live verification</p>
+          <strong>Checking the fix on a clean computer…</strong>
+          <span>Fireworks reasons · Daytona verifies · Braintrust records</span>
         </div>
         <StatusPill tone="warning">Running</StatusPill>
       </section>
@@ -674,8 +676,8 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
     return (
       <section className="sponsor-proof sponsor-proof-failed" aria-live="polite">
         <div>
-          <p className="section-kicker">Live sponsor proof</p>
-          <strong>Live run did not complete</strong>
+          <p className="section-kicker">Live verification</p>
+          <strong>Verification needs another try</strong>
           <span>{run.message}</span>
         </div>
         <StatusPill tone="danger">Failed safely</StatusPill>
@@ -690,8 +692,8 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
   return (
     <section className="sponsor-proof sponsor-proof-complete" aria-live="polite">
       <div>
-        <p className="section-kicker">Live sponsor proof · {result.runId}</p>
-        <strong>Disposable-computer proof completed</strong>
+        <p className="section-kicker">Live verification · {result.runId.slice(0, 8)}</p>
+        <strong>Fix verified successfully</strong>
         <div className="sponsor-result-grid">
           <span>
             <b>Daytona</b>
@@ -822,17 +824,14 @@ export function App() {
       <Sidebar current={view} onNavigate={setView} />
       <main className="main-content">
         <header className="topbar">
-          <SystemStatus polling={polling} />
-          <div className="topbar-actions">
-            <button aria-label="Search" type="button">
-              ⌕
-            </button>
-            <button aria-label="Notifications" type="button">
-              ♢
-              <span className="notification-dot" />
-            </button>
-            <span className="docs-link">Docs</span>
+          <div className="compact-brand">
+            <span className="brand-mark">I</span>
+            <span>
+              <strong>IWOMC</strong>
+              <small>Environment check</small>
+            </span>
           </div>
+          <SystemStatus polling={polling} />
         </header>
         <div className="page-content">
           {view === "overview" ? (
