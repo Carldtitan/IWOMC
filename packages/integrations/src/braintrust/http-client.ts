@@ -93,6 +93,7 @@ export type BraintrustBestEffortResult =
   | {
       readonly delivery: "deferred";
       readonly failureClass: "configuration" | "provider" | "timeout" | "unknown";
+      readonly providerCode?: BraintrustIntegrationError["code"];
       readonly providerStatus?: number;
     };
 
@@ -402,6 +403,7 @@ export async function exportAllowlistedTracesBestEffort(
     return {
       delivery: "deferred",
       failureClass: classifyFailure(error),
+      ...(error instanceof BraintrustIntegrationError ? { providerCode: error.code } : {}),
       ...(error instanceof BraintrustIntegrationError && error.providerStatus !== undefined
         ? { providerStatus: error.providerStatus }
         : {})
