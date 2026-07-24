@@ -250,7 +250,7 @@ export class BraintrustHttpClient implements BraintrustPort {
       `project_logs/${encodeURIComponent(configuration.projectId)}/insert`,
       baseUrl
     ).toString();
-    this.#fetch = configuration.fetch ?? globalThis.fetch;
+    this.#fetch = configuration.fetch ?? globalThis.fetch.bind(globalThis);
     this.#requestTimeoutMs = requestTimeoutMs;
   }
 
