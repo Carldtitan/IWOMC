@@ -33,27 +33,27 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 
 ### Milestone 1: Repository and protocol foundation
 
-- [ ] 1. Scaffold the TypeScript/Rust monorepo
-  - [ ] 1.1 Create the root `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `vitest.workspace.ts`, ESLint configuration, Prettier configuration, and shared scripts.
-  - [ ] 1.2 Create the root Cargo workspace in `Cargo.toml` and pin the Rust toolchain in `rust-toolchain.toml`.
-  - [ ] 1.3 Create these application packages:
+- [x] 1. Scaffold the TypeScript/Rust monorepo
+  - [x] 1.1 Create the root `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `vitest.workspace.ts`, ESLint configuration, Prettier configuration, and shared scripts.
+  - [x] 1.2 Create the root Cargo workspace in `Cargo.toml` and pin the Rust toolchain in `rust-toolchain.toml`.
+  - [x] 1.3 Create these application packages:
     - `apps/worker/`
     - `apps/web/`
     - `apps/extension/`
     - `crates/companion/`
-  - [ ] 1.4 Create these shared packages:
+  - [x] 1.4 Create these shared packages:
     - `packages/contracts/`
     - `packages/db/`
     - `packages/REDACTED/`
     - `packages/adapters/`
     - `packages/integrations/`
     - `packages/testkit/`
-  - [ ] 1.5 Create `fixtures/`, `evals/`, `tests/contract/`, `tests/integration/`, `tests/e2e/`, and `tests/performance/`.
-  - [ ] 1.6 Add strict TypeScript, `cargo fmt --check`, Clippy with warnings denied, Vitest, Rust unit tests, and Playwright scripts.
-  - [ ] 1.7 Implement environment validation in `packages/contracts/src/env.ts` using `.env.example` as the documented contract; separate server-only, migration-only, and public values.
-  - [ ] 1.8 Add CI jobs for formatting, linting, TypeScript compilation, Rust compilation, unit tests, contract generation, REDACTED scanning, and extension packaging.
-  - [ ] 1.9 Test missing, malformed, and accidentally browser-exposed environment variables.
-  - [ ] 1.10 Create `wrangler.jsonc` with Worker static-asset, Queue, Workflow, R2, Neon, and `nodejs_compat` configuration stubs; pin the Daytona SDK version instead of relying on an unbounded latest dependency.
+  - [x] 1.5 Create `fixtures/`, `evals/`, `tests/contract/`, `tests/integration/`, `tests/e2e/`, and `tests/performance/`.
+  - [x] 1.6 Add strict TypeScript, `cargo fmt --check`, Clippy with warnings denied, Vitest, Rust unit tests, and Playwright scripts.
+  - [x] 1.7 Implement environment validation in `packages/contracts/src/env.ts` using `.env.example` as the documented contract; separate server-only, migration-only, and public values.
+  - [x] 1.8 Add CI jobs for formatting, linting, TypeScript compilation, Rust compilation, unit tests, contract generation, REDACTED scanning, and extension packaging.
+  - [x] 1.9 Test missing, malformed, and accidentally browser-exposed environment variables.
+  - [x] 1.10 Create `wrangler.jsonc` with Worker static-asset, Queue, Workflow, R2, Neon, and `nodejs_compat` configuration stubs; pin the Daytona SDK version instead of relying on an unbounded latest dependency.
   - **Exit:** A clean checkout can install, type-check, compile, test empty packages, and package an empty VSIX without using a real sponsor REDACTED.
   - _Requirements: R20.9, R21.7, R22.6_
 
