@@ -155,7 +155,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - `GET /v1/devices/:id/status`
   - [x] 7.3 Verify request size, schema, workspace/project/device authorization, event chain, stream sequence, and replay protection before accepting a batch.
   - [x] 7.4 Add a server-side defense-in-depth secret guard before R2, Queue, Neon, Fireworks, Braintrust, or logs.
-  - [x] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
+  - [ ] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
   - [x] 7.6 Enqueue only a content-addressed pointer after durable object storage succeeds.
   - [x] 7.7 Implement `apps/worker/src/queues/event-consumer.ts` to normalize event headers, snapshots, capability reports, and capture gaps.
   - [x] 7.8 Implement DLQ handling and a reconciliation job for `stored_not_enqueued` or stalled batches.
@@ -170,7 +170,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 - [ ] 8. Build the extension shell and secure local IPC
   - [x] 8.1 Implement activation/deactivation in `apps/extension/src/extension.ts`.
   - [x] 8.2 Package and launch the matching Companion binary through `apps/extension/src/companion/`.
-  - [ ] 8.3 Implement named-pipe IPC on Windows and Unix-domain-socket IPC on Linux/macOS with a startup challenge and request validation.
+  - [x] 8.3 Implement named-pipe IPC on Windows and Unix-domain-socket IPC on Linux/macOS with a startup challenge and request validation.
   - [x] 8.4 Implement browser-based **Connect workspace**, device enrollment return, project binding, logout, and disconnect.
   - [x] 8.5 Add status states and the commands specified in `design.md`.
   - [x] 8.6 Implement consent screens for observation scope and provider-hook installation. Show raw observational content as unavailable and off in MVP; do not expose an opt-in until Task 31 implements its separate controls.
@@ -274,7 +274,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 14.5 Record model, prompt/template, sampling, adapter/tool versions, and redacted input/output fingerprints.
   - [x] 14.6 Create Braintrust tracing in `packages/integrations/src/braintrust/` and instrument only the allowed spans/fields from `design.md`.
   - [ ] 14.7 Create eval cases for the first finding, hallucinated package, fabricated evidence, manager switching, ambiguous evidence, dynamic dependency, prompt injection, invalid JSON, timeout, and secret-bearing input.
-  - [ ] 14.8 Implement the encrypted R2/Neon `braintrust_trace_outbox` with trace ID, payload digest, attempts, next attempt, and terminal export state; do not use Worker memory as the retry spool.
+  - [x] 14.8 Implement the encrypted R2/Neon `braintrust_trace_outbox` with trace ID, payload digest, attempts, next attempt, and terminal export state; do not use Worker memory as the retry spool.
   - [x] 14.9 Make deterministic finding/candidate state independent of Braintrust availability.
   - [x] 14.10 Add deterministic native quick-fix and user-authored semantic-operation paths for Fireworks failure; both pass the same guard, materialization, and validation gates.
   - [ ] 14.11 Implement a model/template registry and Braintrust evaluation promotion gate; a new default cannot activate until the configured validity, grounding, refusal, and secret-leakage thresholds pass.
@@ -284,7 +284,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - _Requirements: R11, R12.1-R12.3, R19, R20.1-R20.6, R22.4_
 
 - [ ] 15. Implement Daytona materialization, validation, and cleanup
-  - [x] 15.1 Pin the Daytona TypeScript SDK behind `packages/integrations/src/daytona/`, enable Cloudflare `nodejs_compat`, and keep a transport wrapper/direct-HTTPS fallback for individual incompatible methods.
+  - [ ] 15.1 Pin the Daytona TypeScript SDK behind `packages/integrations/src/daytona/`, enable Cloudflare `nodejs_compat`, and keep a transport wrapper/direct-HTTPS fallback for individual incompatible methods.
   - [ ] 15.2 Persist each sandbox ID immediately and monitor it through bounded authoritative SDK reads or a verified `/v1/daytona/webhook` event plus final authoritative refresh; do not depend on a long-lived WebSocket surviving Workflow suspension.
   - [ ] 15.3 Implement immutable Source_Input materialization for exact Git commit archives and eligible encrypted working-tree bundles, including submodule/LFS identities or gaps, without giving Daytona a GitHub token or substituting an older commit.
   - [ ] 15.4 Reserve an `external_operations` row and emit an audit event before Fireworks/Daytona side effects; use deterministic workspace/batch/baseline-or-candidate/target/operation/TTL labels so retries reconcile an existing resource.
@@ -297,7 +297,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - run path-scope, secret, diff-size, semantic-reparse, manifest-lock, generated-file, policy, and operation-to-diff guards;
     - persist evidence;
     - delete the sandbox.
-  - [ ] 15.6 Implement MVP target derivation from workspace policy, repository/runtime selectors, CI matrices, and user confirmation. Resolve the supported case to one versioned Linux/Node/npm target whose immutable base identity includes snapshot ID/digest, baseline inventory digest, creation metadata, delivered capability report, resource policy, and enforceable default-deny or explicit registry/source egress policy; emit `unsupported_target_or_capability` for any additional required target rather than omitting it.
+  - [x] 15.6 Implement MVP target derivation from workspace policy, repository/runtime selectors, CI matrices, and user confirmation. Resolve the supported case to one versioned Linux/Node/npm target whose immutable base identity includes snapshot ID/digest, baseline inventory digest, creation metadata, delivered capability report, resource policy, and enforceable default-deny or explicit registry/source egress policy; emit `unsupported_target_or_capability` for any additional required target rather than omitting it.
   - [x] 15.7 Expand every batch into the unchanged baseline plus conservative/additional bounded candidates by required target, using comparable Source_Input, base, policy, and behavior-contract inputs.
   - [ ] 15.8 Implement preflight, source preparation, resolve, clean install, graph verification, build, enabled lint, enabled type-check, test, smoke, optional benchmark, evidence persistence, and cleanup phases.
   - [ ] 15.9 Implement phase status/timing, trusted structured commands, structured derived diagnostics and bounded redacted excerpts with no full-stream capture, requested-versus-delivered resources, target/base identity, cache identity, artifact fingerprints, and the complete scoped VerificationAttestation.
