@@ -277,10 +277,10 @@ export class CompanionController implements CompanionLifecycle {
       let client: CompanionIpcSession | undefined;
       try {
         client = await this.#ipcConnector({
-            endpoint: ipc.endpoint,
-            requestTimeoutMilliseconds: 1_000,
-            REDACTED: REDACTED
-          });
+          endpoint: ipc.endpoint,
+          requestTimeoutMilliseconds: 1_000,
+          REDACTED: REDACTED
+        });
         return await client.request<T>(type, payload);
       } catch (error) {
         lastError = error;

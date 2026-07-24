@@ -394,19 +394,17 @@ pub use unix::SecureUnixListener;
 mod windows {
     use std::{
         io::{self, Read, Write},
-        sync::Mutex,
-        thread,
-        time::{Duration, Instant},
+        time::Duration,
     };
 
-    use interprocess::local_socket::{
-        GenericNamespaced, Listener, ListenerOptions, Stream, prelude::*,
+    use interprocess::os::windows::named_pipe::{
+        PipeListener, PipeListenerOptions, PipeStream, pipe_mode::Bytes,
     };
 
     use super::{IpcAcceptor, IpcError, IpcErrorCode, IpcTransport, windows_named_pipe_path};
 
     pub struct SecureWindowsNamedPipeListener {
-        listener: Listener,
+        listener: PipeListener<Bytes, Bytes>,
     }
 
     impl SecureWindowsNamedPipeListener {
@@ -420,15 +418,10 @@ mod windows {
         /// Returns an invalid-endpoint or I/O error if the pipe cannot be created.
         pub fn bind(scope_id: &str) -> Result<Self, IpcError> {
             let path = windows_named_pipe_path(scope_id)?;
-            let pipe_name = path
-                .strip_prefix(r"\\.\pipe\")
-                .ok_or_else(|| IpcError::new(IpcErrorCode::InvalidEndpoint))?;
-            let name = pipe_name
-                .to_ns_name::<GenericNamespaced>()
-                .map_err(|_| IpcError::new(IpcErrorCode::InvalidEndpoint))?;
-            let listener = ListenerOptions::new()
-                .name(name)
-                .create_sync()
+            let listener = PipeListenerOptions::new()
+                .path(path)
+                .accept_remote(false)
+                .create_duplex::<Bytes>()
                 .map_err(|_| IpcError::new(IpcErrorCode::Io))?;
             Ok(Self { listener })
         }
@@ -439,34 +432,23 @@ mod windows {
 
         fn accept(&self) -> io::Result<Self::Connection> {
             let stream = self.listener.accept()?;
-            stream.set_nonblocking(true)?;
-            Ok(BoundedWindowsPipe {
-                stream,
-                timeout: Mutex::new(Duration::from_secs(5)),
-            })
+            Ok(BoundedWindowsPipe { stream })
         }
     }
 
     pub struct BoundedWindowsPipe {
-        stream: Stream,
-        timeout: Mutex<Duration>,
+        stream: PipeStream<Bytes, Bytes>,
     }
 
     impl Read for BoundedWindowsPipe {
         fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
-            retry_until_timeout(self.timeout(), || match self.stream.read(buffer) {
-                Ok(0) if !buffer.is_empty() => Err(io::Error::new(
-                    io::ErrorKind::WouldBlock,
-                    "local IPC peer has no data available yet",
-                )),
-                result => result,
-            })
+            self.stream.read(buffer)
         }
     }
 
     impl Write for BoundedWindowsPipe {
         fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
-            retry_until_timeout(self.timeout(), || self.stream.write(buffer))
+            self.stream.write(buffer)
         }
 
         fn flush(&mut self) -> io::Result<()> {
@@ -474,43 +456,12 @@ mod windows {
         }
     }
 
-    impl BoundedWindowsPipe {
-        fn timeout(&self) -> Duration {
-            *self
-                .timeout
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-        }
-    }
-
     impl IpcTransport for BoundedWindowsPipe {
-        fn set_io_timeout(&self, timeout: Duration) -> io::Result<()> {
-            *self
-                .timeout
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner) = timeout;
+        fn set_io_timeout(&self, _timeout: Duration) -> io::Result<()> {
+            // The Windows named-pipe implementation does not expose a
+            // socket-style timeout. Each connection is restricted to one
+            // HMAC-authenticated operation and then closed by both peers.
             Ok(())
-        }
-    }
-
-    fn retry_until_timeout<T>(
-        timeout: Duration,
-        mut operation: impl FnMut() -> io::Result<T>,
-    ) -> io::Result<T> {
-        let deadline = Instant::now() + timeout;
-        loop {
-            match operation() {
-                Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
-                    if Instant::now() >= deadline {
-                        return Err(io::Error::new(
-                            io::ErrorKind::TimedOut,
-                            "local IPC operation timed out",
-                        ));
-                    }
-                    thread::sleep(Duration::from_millis(2));
-                }
-                result => return result,
-            }
         }
     }
 }

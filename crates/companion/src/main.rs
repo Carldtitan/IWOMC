@@ -85,8 +85,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     ctrlc::set_handler(move || signal_REDACTED.request())?;
     let mut handler = RuntimeIpcHandler::new(spool, health);
     let server_config = IpcServerConfig {
-        // A connection authenticates and performs exactly one operation. This bounds idle
-        // Windows named-pipe lifetime and keeps every operation independently authenticated.
+        // Authenticate every operation on a fresh bounded local connection.
         maximum_requests_per_connection: 1,
         ..IpcServerConfig::default()
     };

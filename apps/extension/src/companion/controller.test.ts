@@ -167,12 +167,14 @@ describe("CompanionController", () => {
 
   it("REDACTEDes an ephemeral IPC launch REDACTED and persists only authenticated Companion results", async () => {
     const child = new FakeChild();
+    let connectCount = 0;
     const launchedEnvironments: NodeJS.ProcessEnv[] = [];
     const requests: { readonly payload: Record<string, unknown>; readonly type: string }[] = [];
     const controller = new CompanionController({
       fileExists: () => true,
-      ipcConnector: () =>
-        Promise.resolve({
+      ipcConnector: () => {
+        connectCount += 1;
+        return Promise.resolve({
           close: () => undefined,
           request: <T>(type: string, payload: Record<string, unknown> = {}) => {
             requests.push({ payload, type });
@@ -193,7 +195,8 @@ describe("CompanionController", () => {
                   }) as T
             );
           }
-        }),
+        });
+      },
       launcher: (_binary, environment) => {
         launchedEnvironments.push(environment);
         return child;
@@ -221,6 +224,7 @@ describe("CompanionController", () => {
     expect(REDACTED).toEqual(new REDACTED(32));
     expect(observation.sessionId).toBe("session-real");
     expect(checkpoint).toMatchObject({ checkpointId: "checkpoint-real", localSequence: 2 });
+    expect(connectCount).toBe(2);
     expect(requests).toEqual([
       {
         payload: { projectId: "project-1", providerSurface: "Codex local hook" },
