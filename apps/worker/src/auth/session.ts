@@ -8,6 +8,7 @@ import {
 
 export const PRODUCT_SESSION_COOKIE = "__Host-er_session";
 export const GITHUB_OAUTH_COOKIE = "__Host-er_github_REDACTED";
+export const CSRF_COOKIE = "__Host-er_csrf";
 
 const SESSION_PURPOSE = "environment-REDACTED/product-session/v1";
 
@@ -112,6 +113,17 @@ export function secureCookie(
 
 export function expireSecureCookie(name: string): string {
   return secureCookie(name, "", 0, "Strict");
+}
+
+export function browserReadableCookie(
+  name: string,
+  value: string,
+  maximumAgeSeconds: number
+): string {
+  if (!name.startsWith("__Host-")) {
+    throw new Error("security cookies must use the __Host- prefix");
+  }
+  return `${name}=${value}; Path=/; Max-Age=${maximumAgeSeconds}; Secure; SameSite=Strict`;
 }
 
 export function cookieValue(header: string | undefined, name: string): string | undefined {
