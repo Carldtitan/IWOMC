@@ -4,7 +4,9 @@ export type * from "./ports/index.js";
 export {
   DaytonaClient,
   DaytonaIntegrationError,
-  type DaytonaClientConfiguration
+  type DaytonaClientConfiguration,
+  type DaytonaFileDownloadRequest,
+  type DaytonaFileUploadRequest
 } from "./daytona/client.js";
 export * from "./braintrust/http-client.js";
 export * from "./fireworks/candidate.js";

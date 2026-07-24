@@ -1,4 +1,5 @@
 import { Daytona, type Sandbox } from "@daytona/sdk";
+import { Buffer } from "node:buffer";
 
 import { sha256Canonical, sha256Text } from "../internal/digest.js";
 import type {
@@ -60,6 +61,14 @@ interface TrustedCommandResult {
 }
 
 export interface DaytonaSandboxLike {
+  readonly fs: {
+    downloadFile(remotePath: string, timeoutSeconds?: number): Promise<Uint8Array>;
+    getFileDetails(path: string): Promise<{
+      readonly isDir: boolean;
+      readonly size: number;
+    }>;
+    uploadFile(file: Buffer, remotePath: string, timeoutSeconds?: number): Promise<void>;
+  };
   readonly id: string;
   readonly labels: Record<string, string>;
   readonly name: string;
@@ -97,13 +106,31 @@ export interface DaytonaClientConfiguration {
   ) => Promise<readonly string[]>;
 }
 
+export interface DaytonaFileUploadRequest {
+  readonly bytes: Uint8Array;
+  readonly maximumBytes: number;
+  readonly remotePath: string;
+  readonly sandbox: DaytonaSandboxReference;
+  readonly timeoutMs: number;
+}
+
+export interface DaytonaFileDownloadRequest {
+  readonly maximumBytes: number;
+  readonly remotePath: string;
+  readonly sandbox: DaytonaSandboxReference;
+  readonly timeoutMs: number;
+}
+
 export class DaytonaIntegrationError extends Error {
   readonly code:
     | "invalid_configuration"
     | "sandbox_not_found"
     | "unsupported_secret_binding"
     | "invalid_runner_response"
-    | "cleanup_not_confirmed";
+    | "cleanup_not_confirmed"
+    | "invalid_file_transfer"
+    | "file_too_large"
+    | "file_changed_during_transfer";
 
   constructor(code: DaytonaIntegrationError["code"]) {
     super(code);
@@ -394,6 +421,39 @@ export class DaytonaClient implements DaytonaPort {
     };
   }
 
+  async uploadFile(request: DaytonaFileUploadRequest): Promise<void> {
+    validateFileTransfer(request);
+    if (request.bytes.byteLength > request.maximumBytes) {
+      throw new DaytonaIntegrationError("file_too_large");
+    }
+    const sandbox = await this.#sandbox(request.sandbox.sandboxId);
+    await sandbox.fs.uploadFile(
+      Buffer.from(request.bytes.buffer, request.bytes.byteOffset, request.bytes.byteLength),
+      request.remotePath,
+      timeoutSeconds(request.timeoutMs)
+    );
+  }
+
+  async downloadFile(request: DaytonaFileDownloadRequest): Promise<Uint8Array> {
+    validateFileTransfer(request);
+    const sandbox = await this.#sandbox(request.sandbox.sandboxId);
+    const details = await sandbox.fs.getFileDetails(request.remotePath);
+    if (details.isDir || !Number.isSafeInteger(details.size) || details.size < 0) {
+      throw new DaytonaIntegrationError("invalid_file_transfer");
+    }
+    if (details.size > request.maximumBytes) {
+      throw new DaytonaIntegrationError("file_too_large");
+    }
+    const downloaded = await sandbox.fs.downloadFile(
+      request.remotePath,
+      timeoutSeconds(request.timeoutMs)
+    );
+    if (downloaded.byteLength > request.maximumBytes || downloaded.byteLength !== details.size) {
+      throw new DaytonaIntegrationError("file_changed_during_transfer");
+    }
+    return Uint8Array.from(downloaded);
+  }
+
   async deleteSandbox(request: DeleteDaytonaSandboxRequest): Promise<DeleteDaytonaSandboxResult> {
     const sandbox = await this.#sandbox(request.sandbox.sandboxId);
     await sandbox.delete(Math.max(1, Math.ceil(request.maxCleanupTimeMs / 1_000)), true);
@@ -434,6 +494,32 @@ export class DaytonaClient implements DaytonaPort {
       throw new DaytonaIntegrationError("sandbox_not_found");
     }
   }
+}
+
+function validateFileTransfer(
+  request: DaytonaFileUploadRequest | DaytonaFileDownloadRequest
+): void {
+  const segments = request.remotePath.split("/");
+  if (
+    request.remotePath.length > 1_024 ||
+    !request.remotePath.startsWith("/tmp/environment-reconciler/") ||
+    !/^\/[A-Za-z0-9._/-]+$/u.test(request.remotePath) ||
+    segments.some(
+      (segment, index) => (index > 0 && segment.length === 0) || segment === "." || segment === ".."
+    ) ||
+    !Number.isSafeInteger(request.maximumBytes) ||
+    request.maximumBytes < 1 ||
+    request.maximumBytes > 64 * 1_024 * 1_024 ||
+    !Number.isSafeInteger(request.timeoutMs) ||
+    request.timeoutMs < 1 ||
+    request.timeoutMs > 10 * 60 * 1_000
+  ) {
+    throw new DaytonaIntegrationError("invalid_file_transfer");
+  }
+}
+
+function timeoutSeconds(timeoutMs: number): number {
+  return Math.max(1, Math.ceil(timeoutMs / 1_000));
 }
 
 export type { Sandbox };
