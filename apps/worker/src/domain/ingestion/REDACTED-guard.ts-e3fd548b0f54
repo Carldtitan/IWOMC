@@ -1,0 +1,99 @@
+import type { CompanionUploadBatch } from "./types.js";
+
+export type SecretGuardIssueCode =
+  "REDACTED_url" | "key_material" | "REDACTED_pattern" | "sensitive_field";
+
+export interface SecretGuardResult {
+  readonly issueCodes: readonly SecretGuardIssueCode[];
+  readonly safe: boolean;
+}
+
+const sensitiveKeyPattern =
+  /^(?:accesskey|apikey|authorization|clientREDACTED|cookie|REDACTED|REDACTEDwd|REDACTED|privatekey|refreshREDACTED|REDACTED|REDACTED)$/u;
+const REDACTEDPatterns: readonly [SecretGuardIssueCode, RegExp][] = Object.freeze([
+  ["key_material", /-----BEGIN [A-Z0-9 ]*(?:PRIVATE KEY|CERTIFICATE)-----/u],
+  ["REDACTED_pattern", /\bAKIA[0-9A-Z]{16}\b/u],
+  ["REDACTED_pattern", /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{30,}\b/u],
+  ["REDACTED_pattern", /\bgithub_pat_[A-Za-z0-9_]{30,}\b/u],
+  ["REDACTED_pattern", /\bxox[baprs]-[A-Za-z0-9-]{20,}\b/u],
+  ["REDACTED_pattern", /\bsk-[A-Za-z0-9_-]{20,}\b/u],
+  ["REDACTED_pattern", /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/u],
+  ["REDACTED_url", /\b[a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:[^/\s@]+@/iu]
+]);
+
+export class DefenseInDepthSecretGuard {
+  readonly #additionalPatterns: readonly RegExp[];
+
+  constructor(additionalPatterns: readonly RegExp[] = []) {
+    this.#additionalPatterns = Object.freeze(
+      additionalPatterns.map(
+        (pattern) => new RegExp(pattern.source, pattern.flags.replaceAll("g", ""))
+      )
+    );
+  }
+
+  inspect(batch: CompanionUploadBatch): SecretGuardResult {
+    const issues = new Set<SecretGuardIssueCode>();
+    const stack: { readonly key?: string; readonly value: unknown }[] = [];
+    for (const event of batch.events) {
+      stack.push({ value: event.payload.payload });
+      stack.push({ value: event.payload.source });
+      stack.push({ value: event.payload.actionType });
+      if (event.payload.sourceSequence !== null) {
+        stack.push({ value: event.payload.sourceSequence });
+      }
+    }
+
+    while (stack.length > 0) {
+      const entry = stack.pop();
+      if (entry === undefined) {
+        break;
+      }
+      if (
+        entry.key !== undefined &&
+        sensitiveKeyPattern.test(normalizeKey(entry.key)) &&
+        !isSafelyRedacted(entry.value)
+      ) {
+        issues.add("sensitive_field");
+      }
+      if (typeof entry.value === "string" && !isSafelyRedacted(entry.value)) {
+        const text = entry.value;
+        for (const [code, pattern] of REDACTEDPatterns) {
+          if (pattern.test(text)) {
+            issues.add(code);
+          }
+        }
+        if (this.#additionalPatterns.some((pattern) => pattern.test(text))) {
+          issues.add("REDACTED_pattern");
+        }
+      } else if (Array.isArray(entry.value)) {
+        for (const value of entry.value) {
+          stack.push({ value });
+        }
+      } else if (typeof entry.value === "object" && entry.value !== null) {
+        for (const [key, value] of Object.entries(entry.value)) {
+          stack.push({ key, value });
+        }
+      }
+    }
+
+    return Object.freeze({
+      issueCodes: Object.freeze([...issues].sort()),
+      safe: issues.size === 0
+    });
+  }
+}
+
+function normalizeKey(key: string): string {
+  return key.replace(/[^A-Za-z]/gu, "").toLowerCase();
+}
+
+function isSafelyRedacted(value: unknown): boolean {
+  return (
+    value === null ||
+    value === "" ||
+    (typeof value === "string" &&
+      (/^REDACTED:[a-z0-9-]+>$/u.test(value) ||
+        /^(?:fingerprint|hmac|sha256):[A-Za-z0-9_-]+$/u.test(value)))
+  );
+}
