@@ -133,14 +133,14 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 
 - [ ] 6. Implement GitHub sign-in, workspace setup, repository linking, and device enrollment
   - [ ] 6.1 Create the Hono Worker entry/auth route group, then implement GitHub App OAuth start/callback routes in `apps/worker/src/auth/github/` with state, PKCE, exact callback validation, and expiring product sessions.
-  - [ ] 6.2 Implement installation verification and repository listing through the authenticated user's user-token/repository intersection, not every repository visible to an installation.
-  - [ ] 6.3 Implement personal-workspace creation and project/repository linking in `apps/worker/src/api/workspaces/` and `apps/worker/src/api/projects/`.
-  - [ ] 6.4 Implement an MVP workspace invite link for an authenticated GitHub user with simple `owner` and `member` roles; reserve the expanded role matrix for private alpha.
-  - [ ] 6.5 Implement one-time, short-lived, workspace-bound device enrollment codes in `apps/worker/src/api/device-enrollments/`, tied to a device-generated public key.
-  - [ ] 6.6 Register the device public signing key and issue only a revocable product device credential.
+  - [x] 6.2 Implement installation verification and repository listing through the authenticated user's user-token/repository intersection, not every repository visible to an installation.
+  - [x] 6.3 Implement personal-workspace creation and project/repository linking in `apps/worker/src/api/workspaces/` and `apps/worker/src/api/projects/`.
+  - [x] 6.4 Implement an MVP workspace invite link for an authenticated GitHub user with simple `owner` and `member` roles; reserve the expanded role matrix for private alpha.
+  - [x] 6.5 Implement one-time, short-lived, workspace-bound device enrollment codes in `apps/worker/src/api/device-enrollments/`, tied to a device-generated public key.
+  - [x] 6.6 Register the device public signing key and issue only a revocable product device credential.
   - [ ] 6.7 Implement encrypted server-side GitHub user/refresh-token storage, `HttpOnly`/`Secure`/`SameSite` browser sessions, CSRF protection, logout, device revocation, and installation suspension handling.
-  - [ ] 6.8 Ensure no GitHub, Daytona, Fireworks, Braintrust, database, or encryption root credential is returned to the browser or extension.
-  - [ ] 6.9 Implement the minimum least-privileged GitHub repository client: request one-repository reduced permissions, fetch an exact commit archive, and after explicit approval create Git blobs/tree/commit for the exact Source_Input plus candidate patch, verify the resulting tree digest, update a deterministic branch ref, and open a pull request with expected-head checks.
+  - [x] 6.8 Ensure no GitHub, Daytona, Fireworks, Braintrust, database, or encryption root credential is returned to the browser or extension.
+  - [x] 6.9 Implement the minimum least-privileged GitHub repository client: request one-repository reduced permissions, fetch an exact commit archive, and after explicit approval create Git blobs/tree/commit for the exact Source_Input plus candidate patch, verify the resulting tree digest, update a deterministic branch ref, and open a pull request with expected-head checks.
   - [ ] 6.10 Test OAuth state/PKCE, spoofed installation IDs, token expiry/refresh, repository authorization, invite authorization/expiry, revoked installations, enrollment expiry, device revocation, and exact-commit/patch binding.
   - **Exit:** A user can sign in, link one authorized repository, invite one collaborator, enroll one device, and exercise the minimal exact-patch PR client without broad or client-side credentials.
   - _Requirements: R2.1-R2.8, R17.5, R20.9_
@@ -247,7 +247,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 12.4 Attach evidence, counterevidence, affected targets, plausible alternatives, realm/layer, source locations, adapter/input versions, support level, rule version, gaps, and independent observation/attribution/semantics/necessity/validation confidence.
   - [x] 12.5 Keep actor attribution separate from environment effect and dependency necessity.
   - [x] 12.6 Ensure an installed package alone and a missing static import alone never trigger add/remove recommendations.
-  - [ ] 12.7 Add stable finding identifiers and supersession behavior across repeated checkpoints.
+  - [x] 12.7 Add stable finding identifiers and supersession behavior across repeated checkpoints.
   - [x] 12.8 Use property tests to prove deterministic output, ecosystem identity isolation, attribution restraint, gap preservation, and installed-state restraint.
   - [ ] 12.9 Implement `apps/worker/src/services/reconcile-checkpoint.ts` and wire the Queue consumer to load durable inputs, build graphs, run rules, persist/supersede findings, and enqueue candidate-generation work idempotently for material-action-stabilized, session-end, PR-update, and manual-scan triggers.
   - **Exit:** The npm fixture deterministically produces one evidence-backed hidden-dependency finding, while every negative fixture produces its expected non-finding or uncertainty state.
@@ -256,9 +256,9 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 - [ ] 13. Implement behavior-contract discovery and the default policy
   - [ ] 13.1 Persist an editable human-authored project goal and discover npm install/build/lint/typecheck/test/smoke/benchmark commands from package scripts and CI configuration.
   - [ ] 13.2 Implement behavior-contract step IDs/order, enable/disable, discovery evidence/fingerprint, review state, acceptance actor/time, invalidation source, working directory, realm/target applicability, timeout, expected exit statuses, secret references, and assertions.
-  - [ ] 13.3 Implement the default policy with hard target/behavior gates followed by dependency-count, reproducibility, supported-version, and change-surface preferences.
-  - [ ] 13.4 Implement candidate, concurrency, retry, elapsed-time, and cost budgets.
-  - [ ] 13.5 Ensure clean installation without an accepted behavior contract can produce only `reconstruction_passed`.
+  - [x] 13.3 Implement the default policy with hard target/behavior gates followed by dependency-count, reproducibility, supported-version, and change-surface preferences.
+  - [x] 13.4 Implement candidate, concurrency, retry, elapsed-time, and cost budgets.
+  - [x] 13.5 Ensure clean installation without an accepted behavior contract can produce only `reconstruction_passed`.
   - [ ] 13.6 Add property tests proving hard constraints dominate, policies are immutable once referenced, and changes invalidate affected candidates.
   - [ ] 13.7 Implement authenticated project-goal, behavior-contract, and policy read/edit/reorder/enable/disable/accept APIs with optimistic version checks and audit events.
   - **Exit:** The vertical fixture has an accepted, versioned behavior contract and a default policy that cannot be overridden by an LLM.
@@ -267,24 +267,24 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 ### Milestone 4: Candidate reasoning, proof, and product surface
 
 - [ ] 14. Implement Fireworks candidate generation and Braintrust evaluation
-  - [ ] 14.1 Create the Fireworks transport, reasoning-packet builder, CandidatePlan schema (including affected files and expected validation impact), and bounded retry policy in `packages/integrations/src/fireworks/`.
-  - [ ] 14.2 Send only the finding, relevant redacted graph slice and semantic file/AST fragments, project goal, behavior-contract summary, repository conventions, capability summary, permitted native operations, policy summary, and prior validation summary.
-  - [ ] 14.3 Reject invented evidence IDs, unknown files, unsupported operations, package-manager switching, disallowed dependencies, policy violations, and invalid structured output.
-  - [ ] 14.4 Convert accepted plans to native adapter operations; do not allow Fireworks to write arbitrary final files or lockfiles.
-  - [ ] 14.5 Record model, prompt/template, sampling, adapter/tool versions, and redacted input/output fingerprints.
-  - [ ] 14.6 Create Braintrust tracing in `packages/integrations/src/braintrust/` and instrument only the allowed spans/fields from `design.md`.
+  - [x] 14.1 Create the Fireworks transport, reasoning-packet builder, CandidatePlan schema (including affected files and expected validation impact), and bounded retry policy in `packages/integrations/src/fireworks/`.
+  - [x] 14.2 Send only the finding, relevant redacted graph slice and semantic file/AST fragments, project goal, behavior-contract summary, repository conventions, capability summary, permitted native operations, policy summary, and prior validation summary.
+  - [x] 14.3 Reject invented evidence IDs, unknown files, unsupported operations, package-manager switching, disallowed dependencies, policy violations, and invalid structured output.
+  - [x] 14.4 Convert accepted plans to native adapter operations; do not allow Fireworks to write arbitrary final files or lockfiles.
+  - [x] 14.5 Record model, prompt/template, sampling, adapter/tool versions, and redacted input/output fingerprints.
+  - [x] 14.6 Create Braintrust tracing in `packages/integrations/src/braintrust/` and instrument only the allowed spans/fields from `design.md`.
   - [ ] 14.7 Create eval cases for the first finding, hallucinated package, fabricated evidence, manager switching, ambiguous evidence, dynamic dependency, prompt injection, invalid JSON, timeout, and secret-bearing input.
   - [ ] 14.8 Implement the encrypted R2/Neon `braintrust_trace_outbox` with trace ID, payload digest, attempts, next attempt, and terminal export state; do not use Worker memory as the retry spool.
-  - [ ] 14.9 Make deterministic finding/candidate state independent of Braintrust availability.
-  - [ ] 14.10 Add deterministic native quick-fix and user-authored semantic-operation paths for Fireworks failure; both pass the same guard, materialization, and validation gates.
+  - [x] 14.9 Make deterministic finding/candidate state independent of Braintrust availability.
+  - [x] 14.10 Add deterministic native quick-fix and user-authored semantic-operation paths for Fireworks failure; both pass the same guard, materialization, and validation gates.
   - [ ] 14.11 Implement a model/template registry and Braintrust evaluation promotion gate; a new default cannot activate until the configured validity, grounding, refusal, and secret-leakage thresholds pass.
   - [ ] 14.12 Append the final validation summary class to the reasoning trace and expose pending/terminal trace-export failure through the MVP integration/operator status API.
-  - [ ] 14.13 Implement `apps/worker/src/services/generate-candidate.ts` to consume an accepted finding; reserve the deterministic Fireworks external operation and audit event before the call; run the selected candidate path; persist guard outcomes and candidate state; and start the validation Workflow idempotently.
+  - [x] 14.13 Implement `apps/worker/src/services/generate-candidate.ts` to consume an accepted finding; reserve the deterministic Fireworks external operation and audit event before the call; run the selected candidate path; persist guard outcomes and candidate state; and start the validation Workflow idempotently.
   - **Exit:** Fireworks can produce an allowed npm operation for the fixture, malicious/invalid outputs are guard-rejected, and Braintrust contains no seeded plaintext secret.
   - _Requirements: R11, R12.1-R12.3, R19, R20.1-R20.6, R22.4_
 
 - [ ] 15. Implement Daytona materialization, validation, and cleanup
-  - [ ] 15.1 Pin the Daytona TypeScript SDK behind `packages/integrations/src/daytona/`, enable Cloudflare `nodejs_compat`, and keep a transport wrapper/direct-HTTPS fallback for individual incompatible methods.
+  - [x] 15.1 Pin the Daytona TypeScript SDK behind `packages/integrations/src/daytona/`, enable Cloudflare `nodejs_compat`, and keep a transport wrapper/direct-HTTPS fallback for individual incompatible methods.
   - [ ] 15.2 Persist each sandbox ID immediately and monitor it through bounded authoritative SDK reads or a verified `/v1/daytona/webhook` event plus final authoritative refresh; do not depend on a long-lived WebSocket surviving Workflow suspension.
   - [ ] 15.3 Implement immutable Source_Input materialization for exact Git commit archives and eligible encrypted working-tree bundles, including submodule/LFS identities or gaps, without giving Daytona a GitHub token or substituting an older commit.
   - [ ] 15.4 Reserve an `external_operations` row and emit an audit event before Fireworks/Daytona side effects; use deterministic workspace/batch/baseline-or-candidate/target/operation/TTL labels so retries reconcile an existing resource.
@@ -298,10 +298,10 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - persist evidence;
     - delete the sandbox.
   - [ ] 15.6 Implement MVP target derivation from workspace policy, repository/runtime selectors, CI matrices, and user confirmation. Resolve the supported case to one versioned Linux/Node/npm target whose immutable base identity includes snapshot ID/digest, baseline inventory digest, creation metadata, delivered capability report, resource policy, and enforceable default-deny or explicit registry/source egress policy; emit `unsupported_target_or_capability` for any additional required target rather than omitting it.
-  - [ ] 15.7 Expand every batch into the unchanged baseline plus conservative/additional bounded candidates by required target, using comparable Source_Input, base, policy, and behavior-contract inputs.
+  - [x] 15.7 Expand every batch into the unchanged baseline plus conservative/additional bounded candidates by required target, using comparable Source_Input, base, policy, and behavior-contract inputs.
   - [ ] 15.8 Implement preflight, source preparation, resolve, clean install, graph verification, build, enabled lint, enabled type-check, test, smoke, optional benchmark, evidence persistence, and cleanup phases.
   - [ ] 15.9 Implement phase status/timing, trusted structured commands, structured derived diagnostics and bounded redacted excerpts with no full-stream capture, requested-versus-delivered resources, target/base identity, cache identity, artifact fingerprints, and the complete scoped VerificationAttestation.
-  - [ ] 15.10 Implement server-side verification as an invariant requiring the accepted behavior contract and a pass on every required target; if baseline already passes the claimed behavior, prohibit “reproduced and fixed” and use only the supported narrower hardening label.
+  - [x] 15.10 Implement server-side verification as an invariant requiring the accepted behavior contract and a pass on every required target; if baseline already passes the claimed behavior, prohibit “reproduced and fixed” and use only the supported narrower hardening label.
   - [ ] 15.11 Delete sandboxes in `finally`, record confirmed deletion, and add a leased TTL janitor for orphan discovery, authoritative reconciliation, and retry.
   - [ ] 15.12 Implement explicit unsupported, timed-out, security-blocked, infrastructure, resource-budget, inconclusive, and cleanup-failed outcomes.
   - [ ] 15.13 Test the full lifecycle, baseline semantics, duplicate Workflow attempts, webhook/poll recovery, egress inability, trusted-runner envelopes, and post-materialization guards with fakes, then run one live Daytona create/execute/collect/delete smoke job.
