@@ -64,10 +64,10 @@ pre,
   position: fixed;
   z-index: 5;
   display: flex;
-  width: 250px;
+  width: 224px;
   height: 100vh;
   flex-direction: column;
-  padding: 22px 14px 14px;
+  padding: 16px 12px 12px;
   border-right: 1px solid var(--border-soft);
   background: var(--sidebar);
 }
@@ -76,7 +76,7 @@ pre,
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 0 7px 21px;
+  padding: 0 6px 15px;
 }
 
 .brand-mark {
@@ -163,7 +163,7 @@ pre,
 }
 
 nav {
-  margin-top: 24px;
+  margin-top: 17px;
 }
 
 .nav-label {
@@ -181,7 +181,7 @@ nav {
   align-items: center;
   gap: 10px;
   margin: 2px 0;
-  padding: 9px 10px;
+  padding: 8px 9px;
   border: 0;
   border-radius: 6px;
   color: #8f9993;
@@ -318,9 +318,9 @@ nav {
 }
 
 .main-content {
-  width: calc(100% - 250px);
+  width: calc(100% - 224px);
   min-height: 100vh;
-  margin-left: 250px;
+  margin-left: 224px;
 }
 
 .topbar {
@@ -429,7 +429,7 @@ nav {
 .page-content {
   width: min(1440px, 100%);
   margin: 0 auto;
-  padding: 28px 32px 60px;
+  padding: 20px 26px 44px;
 }
 
 .page-heading {
@@ -458,8 +458,8 @@ p {
 }
 
 .page-heading h1 {
-  margin-bottom: 7px;
-  font-size: 25px;
+  margin-bottom: 5px;
+  font-size: 22px;
   letter-spacing: -0.035em;
 }
 
@@ -499,6 +499,45 @@ p {
   opacity: 0.72;
 }
 
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-mark {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid #4d7797;
+  border-radius: 4px;
+  font-family: "DM Mono", monospace;
+  font-size: 8px;
+}
+
+.live-proof-button {
+  display: flex;
+  min-width: 174px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #315d81;
+  color: #cfe8ff;
+  background: #102235;
+}
+
+.live-proof-button:hover:not(:disabled) {
+  border-color: #4d8aba;
+  background: #15304a;
+}
+
+.live-proof-button:disabled {
+  cursor: wait;
+  opacity: 0.8;
+}
+
 .spinner {
   width: 12px;
   height: 12px;
@@ -506,6 +545,92 @@ p {
   border-top-color: #0a130d;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+.light-spinner {
+  border-color: rgb(255 255 255 / 25%);
+  border-top-color: #cfe8ff;
+}
+
+.fallback-dot {
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 3px rgb(226 163 73 / 10%);
+}
+
+.sponsor-proof {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 9px;
+  padding: 10px 13px;
+  border: 1px solid #243d51;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgb(16 34 53 / 88%), rgb(16 21 19 / 92%));
+}
+
+.sponsor-proof > div:first-child {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sponsor-proof .section-kicker {
+  margin-bottom: 0;
+}
+
+.sponsor-proof strong {
+  color: #eaf6ff;
+  font-size: 12px;
+}
+
+.sponsor-proof span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.sponsor-proof-running {
+  border-color: #765728;
+}
+
+.sponsor-proof-failed {
+  border-color: #713c3c;
+  background: linear-gradient(90deg, rgb(58 24 24 / 88%), rgb(16 21 19 / 92%));
+}
+
+.sponsor-proof-complete {
+  border-color: #285c3d;
+  background: linear-gradient(90deg, rgb(18 55 36 / 88%), rgb(16 21 19 / 92%));
+}
+
+.sponsor-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sponsor-result-grid span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 8px;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 5px;
+  background: rgb(0 0 0 / 15%);
+}
+
+.sponsor-result-grid b {
+  color: #d9e7df;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 @keyframes spin {
@@ -518,8 +643,8 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 24px;
-  padding: 11px 13px;
+  margin-top: 16px;
+  padding: 8px 11px;
   border: 1px solid var(--border-soft);
   border-radius: 8px;
   background: #111513;
@@ -613,15 +738,15 @@ p {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .metric-card {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 12px;
-  padding: 15px;
+  gap: 10px;
+  padding: 11px 12px;
   border: 1px solid var(--border-soft);
   border-radius: 8px;
   background: var(--panel);
@@ -665,13 +790,13 @@ p {
 }
 
 .metric-card strong {
-  margin-top: 3px;
-  font-size: 15px;
+  margin-top: 2px;
+  font-size: 14px;
 }
 
 .metric-card small {
   overflow: hidden;
-  margin-top: 3px;
+  margin-top: 2px;
   color: var(--faint);
   font-size: 8px;
   text-overflow: ellipsis;
@@ -695,7 +820,7 @@ p {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 17px 18px 13px;
+  padding: 13px 15px 10px;
   border-bottom: 1px solid var(--border-soft);
 }
 
@@ -714,7 +839,7 @@ p {
 }
 
 .timeline {
-  padding: 13px 18px 6px;
+  padding: 10px 15px 4px;
 }
 
 .timeline-event {
@@ -722,7 +847,7 @@ p {
   display: grid;
   grid-template-columns: 48px 14px 1fr;
   gap: 8px;
-  min-height: 45px;
+  min-height: 39px;
 }
 
 .timeline-event:not(:last-child)::after {
@@ -800,14 +925,14 @@ p {
 }
 
 .coverage-list {
-  padding: 8px 17px;
+  padding: 5px 15px;
 }
 
 .coverage-list > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #1f2521;
   color: #aab2ad;
   font-size: 9px;
@@ -834,7 +959,7 @@ p {
   display: grid;
   grid-template-columns: 32px 1fr 30px;
   gap: 12px;
-  padding: 18px;
+  padding: 14px 16px;
 }
 
 .finding-severity {
@@ -893,7 +1018,7 @@ code {
 
 .tabs {
   display: flex;
-  padding: 0 18px;
+  padding: 0 16px;
   border-top: 1px solid var(--border-soft);
   border-bottom: 1px solid var(--border-soft);
 }
@@ -903,7 +1028,7 @@ code {
   align-items: center;
   gap: 6px;
   margin-bottom: -1px;
-  padding: 10px 12px;
+  padding: 8px 11px;
   border: 0;
   border-bottom: 1px solid transparent;
   color: var(--faint);
@@ -929,7 +1054,7 @@ code {
 }
 
 .detail-body {
-  padding: 17px 18px;
+  padding: 13px 16px;
 }
 
 .statement {

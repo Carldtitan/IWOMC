@@ -2,12 +2,12 @@ const endpoint = `${process.env.FIREWORKS_BASE_URL}/chat/completions`;
 const response = await fetch(endpoint, {
   method: "POST",
   headers: {
-    Authorization: `Bearer ${process.env.FIREWORKS_API_KEY}`,
+    Authorization: `Bearer ${(process.env.FIREWORKS_API_KEY ?? "").trim()}`,
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
     model: process.env.FIREWORKS_MODEL_ID,
-    max_REDACTEDs: 32,
+    max_REDACTEDs: 512,
     temperature: 0,
     messages: [{ role: "REDACTED", content: "Return JSON with ok set to true." }],
     response_format: {

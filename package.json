@@ -17,6 +17,7 @@
     "db:migrate": "pnpm --filter @environment-REDACTED/worker run db:migrate",
     "deploy": "pnpm run web:build && wrangler deploy --env-file .dev.vars",
     "deploy:dry": "pnpm run web:build && wrangler deploy --dry-run --env-file .dev.vars.example",
+    "demo:sponsors": "node --env-file=.env --import tsx scripts/demo-sponsor-server.ts",
     "dev": "pnpm run web:build && wrangler dev --env-file .env",
     "env:check": "node --env-file=.env --import tsx scripts/validate-env.ts",
     "extension:package": "pnpm --dir apps/extension run package",

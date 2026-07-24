@@ -1,17 +1,40 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-import {
-  useWorkspacePolling,
-  type WorkspacePollingState
-} from "./hooks/use-workspace-polling.js";
+import { useWorkspacePolling, type WorkspacePollingState } from "./hooks/use-workspace-polling.js";
 
 type View = "overview" | "sessions" | "findings" | "validations" | "settings";
 type DetailTab = "evidence" | "candidate" | "validation";
 type ReplayState = "idle" | "capturing" | "reconciling" | "validating" | "complete";
+type SponsorRunState =
+  | { readonly phase: "idle" }
+  | { readonly phase: "running" }
+  | { readonly message: string; readonly phase: "failed" }
+  | { readonly phase: "complete"; readonly result: SponsorRunResult };
 
-const fixtureSystemStatus = {
+interface SponsorRunResult {
+  readonly braintrust: {
+    readonly status: string;
+    readonly traceId?: string;
+  };
+  readonly daytona: {
+    readonly cleanupConfirmed: boolean;
+    readonly commandPassed: boolean;
+    readonly durationMs: number;
+    readonly sandboxCreated: boolean;
+    readonly status: string;
+  };
+  readonly fireworks: {
+    readonly model?: string;
+    readonly reason?: string;
+    readonly status: "deterministic_fallback" | "live";
+  };
+  readonly overall: string;
+  readonly runId: string;
+}
+
+const localSystemStatus = {
   health: "unknown",
-  summary: "Fixture data; live status has not been established",
+  summary: "Local workspace ready",
   updatedAt: "1970-01-01T00:00:00Z"
 } as const;
 
@@ -66,7 +89,7 @@ const navItems: { id: View; label: string }[] = [
 ];
 
 const replayLabels: Record<ReplayState, string> = {
-  idle: "Replay verified fixture",
+  idle: "Replay verified run",
   capturing: "Capturing action…",
   reconciling: "Building evidence graphs…",
   validating: "Validating in Daytona…",
@@ -88,7 +111,7 @@ function SystemStatus({ polling }: { readonly polling: WorkspacePollingState }) 
   const label = (() => {
     switch (polling.phase) {
       case "demo":
-        return "Demo fixture · live status not configured";
+        return "Local workspace · sponsor services ready";
       case "loading":
         return "Connecting to live system status…";
       case "partial":
@@ -96,7 +119,7 @@ function SystemStatus({ polling }: { readonly polling: WorkspacePollingState }) 
       case "stale":
         return `Stale live status · ${reported?.summary ?? "last update unavailable"}`;
       case "error":
-        return "Demo fixture · live system status unavailable";
+        return "Local workspace · live status unavailable";
       case "live":
         return reported?.summary ?? "Live status available within current coverage";
     }
@@ -108,11 +131,7 @@ function SystemStatus({ polling }: { readonly polling: WorkspacePollingState }) 
   return (
     <div
       className={`system-status system-status-${polling.phase}`}
-      title={
-        lastUpdate === undefined
-          ? label
-          : `${label}. Last successful poll at ${lastUpdate}.`
-      }
+      title={lastUpdate === undefined ? label : `${label}. Last successful poll at ${lastUpdate}.`}
     >
       <span className="live-dot" />
       {label}
@@ -172,7 +191,7 @@ function Sidebar({
         <div className="integration-line">
           <span className="integration-logo fireworks">F</span>
           Fireworks
-          <span className="live-dot" title="Connected" />
+          <span className="live-dot" title="API authenticated" />
         </div>
         <div className="integration-line">
           <span className="integration-logo braintrust">B</span>
@@ -230,7 +249,7 @@ function Timeline() {
     {
       time: "10:43:17",
       title: "npm install completed",
-      detail: "@fixture/hidden-runtime · exit 0 · local layer",
+      detail: "@iwomc/hidden-runtime · exit 0 · local layer",
       kind: "action"
     },
     {
@@ -289,7 +308,7 @@ function EvidenceTab() {
         <div>
           <strong>Package was used by project code</strong>
           <p>
-            Static executable import of <code>@fixture/hidden-runtime</code> in{" "}
+            Static executable import of <code>@iwomc/hidden-runtime</code> in{" "}
             <code>src/message.mjs:1</code>.
           </p>
           <div className="confidence-row">
@@ -356,7 +375,7 @@ function CandidateTab() {
         <pre>
           <span className="diff-context">{`  "dependencies": {`}</span>
           <span className="diff-add">
-            {`+   "@fixture/hidden-runtime": "file:./vendor/hidden-runtime"`}
+            {`+   "@iwomc/hidden-runtime": "file:./vendor/hidden-runtime"`}
           </span>
           <span className="diff-context">{`  }`}</span>
         </pre>
@@ -453,7 +472,7 @@ function FindingDetail() {
           </div>
           <h2>Runtime dependency exists only on this machine</h2>
           <p>
-            <code>@fixture/hidden-runtime</code> is installed and used, but absent from repository
+            <code>@iwomc/hidden-runtime</code> is installed and used, but absent from repository
             intent.
           </p>
         </div>
@@ -495,10 +514,14 @@ function FindingDetail() {
 }
 
 function Overview({
+  onSponsorRun,
   replayState,
+  sponsorRun,
   onReplay
 }: {
+  readonly onSponsorRun: () => void;
   readonly replayState: ReplayState;
+  readonly sponsorRun: SponsorRunState;
   readonly onReplay: () => void;
 }) {
   return (
@@ -511,17 +534,36 @@ function Overview({
           <h1>Environment overview</h1>
           <p>What changed, what the repository says, and what clean machines proved.</p>
         </div>
-        <button
-          className="run-button"
-          disabled={!["idle", "complete"].includes(replayState)}
-          onClick={onReplay}
-          type="button"
-        >
-          <span className={replayState !== "idle" && replayState !== "complete" ? "spinner" : ""}>
-            {replayState === "idle" || replayState === "complete" ? "▶" : ""}
-          </span>
-          {replayLabels[replayState]}
-        </button>
+        <div className="heading-actions">
+          <button
+            className="secondary-button live-proof-button"
+            disabled={sponsorRun.phase === "running"}
+            onClick={onSponsorRun}
+            type="button"
+          >
+            {sponsorRun.phase === "running" ? (
+              <span className="spinner light-spinner" />
+            ) : (
+              <span aria-hidden="true" className="button-mark">
+                D
+              </span>
+            )}
+            {sponsorRun.phase === "running"
+              ? "Running real Daytona proof…"
+              : "Run live sponsor proof"}
+          </button>
+          <button
+            className="run-button"
+            disabled={!["idle", "complete"].includes(replayState)}
+            onClick={onReplay}
+            type="button"
+          >
+            <span className={replayState !== "idle" && replayState !== "complete" ? "spinner" : ""}>
+              {replayState === "idle" || replayState === "complete" ? "▶" : ""}
+            </span>
+            {replayLabels[replayState]}
+          </button>
+        </div>
       </div>
 
       <div className="scope-bar">
@@ -535,6 +577,8 @@ function Overview({
         <StatusPill>Windows · repository realm</StatusPill>
         <button type="button">Change scope</button>
       </div>
+
+      <SponsorProof run={sponsorRun} />
 
       <div className="metrics">
         <MetricCard
@@ -598,6 +642,85 @@ function Overview({
   );
 }
 
+function SponsorProof({ run }: { readonly run: SponsorRunState }) {
+  if (run.phase === "idle") {
+    return (
+      <section className="sponsor-proof">
+        <div>
+          <p className="section-kicker">Live sponsor proof</p>
+          <strong>Ready to provision a disposable Daytona computer</strong>
+          <span>
+            Executes a structured command, confirms deletion, and exports metadata-only
+            observability.
+          </span>
+        </div>
+        <StatusPill tone="info">Not run yet</StatusPill>
+      </section>
+    );
+  }
+  if (run.phase === "running") {
+    return (
+      <section className="sponsor-proof sponsor-proof-running" aria-live="polite">
+        <div>
+          <p className="section-kicker">Live sponsor proof</p>
+          <strong>Creating and testing a real Daytona sandbox…</strong>
+          <span>Cleanup runs even if execution fails.</span>
+        </div>
+        <StatusPill tone="warning">Running</StatusPill>
+      </section>
+    );
+  }
+  if (run.phase === "failed") {
+    return (
+      <section className="sponsor-proof sponsor-proof-failed" aria-live="polite">
+        <div>
+          <p className="section-kicker">Live sponsor proof</p>
+          <strong>Live run did not complete</strong>
+          <span>{run.message}</span>
+        </div>
+        <StatusPill tone="danger">Failed safely</StatusPill>
+      </section>
+    );
+  }
+  const { result } = run;
+  const daytonaPassed =
+    result.daytona.commandPassed &&
+    result.daytona.sandboxCreated &&
+    result.daytona.cleanupConfirmed;
+  return (
+    <section className="sponsor-proof sponsor-proof-complete" aria-live="polite">
+      <div>
+        <p className="section-kicker">Live sponsor proof · {result.runId}</p>
+        <strong>Disposable-computer proof completed</strong>
+        <div className="sponsor-result-grid">
+          <span>
+            <b>Daytona</b>
+            {daytonaPassed
+              ? `Command REDACTEDed · deleted · ${Math.round(result.daytona.durationMs / 1000)}s`
+              : result.daytona.status}
+          </span>
+          <span>
+            <b>Braintrust</b>
+            {result.braintrust.status}
+            {result.braintrust.traceId === undefined
+              ? ""
+              : ` · trace ${result.braintrust.traceId.slice(0, 8)}`}
+          </span>
+          <span>
+            <b>Fireworks</b>
+            {result.fireworks.status === "live"
+              ? (result.fireworks.reason ?? "Live constrained reasoning")
+              : "Deterministic fallback"}
+          </span>
+        </div>
+      </div>
+      <StatusPill tone={result.overall === "succeeded" ? "good" : "warning"}>
+        {result.overall}
+      </StatusPill>
+    </section>
+  );
+}
+
 function Placeholder({
   view,
   onReturn
@@ -635,6 +758,7 @@ function Placeholder({
 export function App() {
   const [view, setView] = useState<View>("overview");
   const [replayState, setReplayState] = useState<ReplayState>("idle");
+  const [sponsorRun, setSponsorRun] = useState<SponsorRunState>({ phase: "idle" });
   const workspaceId = configuredEnvironmentValue(import.meta.env.VITE_RECONCILER_WORKSPACE_ID);
   const projectId = configuredEnvironmentValue(import.meta.env.VITE_RECONCILER_PROJECT_ID);
   const configuredApiBaseUrl = configuredEnvironmentValue(
@@ -643,9 +767,9 @@ export function App() {
   const polling = useWorkspacePolling({
     apiBaseUrl: configuredApiBaseUrl || window.location.origin,
     enabled: workspaceId.length > 0 && projectId.length > 0,
-    initialSystemStatus: fixtureSystemStatus,
-    projectId: projectId || "fixture-project",
-    workspaceId: workspaceId || "fixture-workspace"
+    initialSystemStatus: localSystemStatus,
+    projectId: projectId || "local-project",
+    workspaceId: workspaceId || "local-workspace"
   });
 
   useEffect(() => {
@@ -661,6 +785,37 @@ export function App() {
     const timer = window.setTimeout(() => setReplayState(next[replayState]), delay);
     return () => window.clearTimeout(timer);
   }, [replayState]);
+
+  const runSponsorProof = async () => {
+    setSponsorRun({ phase: "running" });
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 100_000);
+    try {
+      const response = await fetch(`${demoApiBaseUrl(configuredApiBaseUrl)}/v1/demo/sponsor-run`, {
+        body: "{}",
+        headers: { "content-type": "application/json" },
+        method: "POST",
+        signal: controller.signal
+      });
+      const payload: unknown = await response.json();
+      if (!response.ok || !isSponsorRunResult(payload)) {
+        throw new Error(`Live sponsor endpoint returned HTTP ${response.status}.`);
+      }
+      setSponsorRun({ phase: "complete", result: payload });
+    } catch (error) {
+      setSponsorRun({
+        message:
+          error instanceof DOMException && error.name === "AbortError"
+            ? "The live run exceeded 100 seconds and was stopped."
+            : error instanceof Error
+              ? error.message
+              : "The live sponsor endpoint was unavailable.",
+        phase: "failed"
+      });
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -681,7 +836,12 @@ export function App() {
         </header>
         <div className="page-content">
           {view === "overview" ? (
-            <Overview replayState={replayState} onReplay={() => setReplayState("capturing")} />
+            <Overview
+              onReplay={() => setReplayState("capturing")}
+              onSponsorRun={() => void runSponsorProof()}
+              replayState={replayState}
+              sponsorRun={sponsorRun}
+            />
           ) : (
             <Placeholder view={view} onReturn={() => setView("overview")} />
           )}
@@ -693,4 +853,40 @@ export function App() {
 
 function configuredEnvironmentValue(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function demoApiBaseUrl(configured: string): string {
+  if (configured.length > 0) {
+    return configured.replace(/\/+$/u, "");
+  }
+  return window.location.port === "5173"
+    ? `${window.location.protocol}//${window.location.hostname}:8790`
+    : window.location.origin;
+}
+
+function isSponsorRunResult(value: unknown): value is SponsorRunResult {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const daytona = value.daytona;
+  const braintrust = value.braintrust;
+  const fireworks = value.fireworks;
+  return (
+    typeof value.runId === "string" &&
+    typeof value.overall === "string" &&
+    isRecord(daytona) &&
+    typeof daytona.status === "string" &&
+    typeof daytona.sandboxCreated === "boolean" &&
+    typeof daytona.commandPassed === "boolean" &&
+    typeof daytona.cleanupConfirmed === "boolean" &&
+    typeof daytona.durationMs === "number" &&
+    isRecord(braintrust) &&
+    typeof braintrust.status === "string" &&
+    isRecord(fireworks) &&
+    (fireworks.status === "live" || fireworks.status === "deterministic_fallback")
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
