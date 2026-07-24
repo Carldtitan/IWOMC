@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type {
   DaytonaPort,
@@ -105,6 +105,41 @@ describe("demo sponsor run route", () => {
     expect(oversized.status).toBe(400);
     expect(unexpected.status).toBe(400);
     expect(calls).toBe(0);
+  });
+
+  it("rejects concurrent sponsor runs within the active Worker isolate", async () => {
+    let finish: ((value: DemoSponsorRunResponse) => void) | undefined;
+    let calls = 0;
+    const routes = createDemoSponsorRunRoutes(() => ({
+      run: () => {
+        calls += 1;
+        if (calls > 1) {
+          return Promise.resolve(successfulResponse());
+        }
+        return new Promise<DemoSponsorRunResponse>((resolve) => {
+          finish = resolve;
+        });
+      }
+    }));
+    const request = (): Promise<Response> =>
+      Promise.resolve(
+        routes.request("http://worker.test/v1/demo/sponsor-run", {
+          body: "{}",
+          headers: { "Content-Type": "application/json" },
+          method: "POST"
+        })
+      );
+
+    const first = request();
+    await vi.waitFor(() => expect(calls).toBe(1));
+    const concurrent = await request();
+
+    expect(concurrent.status).toBe(409);
+    expect(await concurrent.json()).toEqual({ error: "sponsor_run_already_active" });
+    finish?.(successfulResponse());
+    expect((await first).status).toBe(200);
+    expect((await request()).status).toBe(200);
+    expect(calls).toBe(2);
   });
 });
 
