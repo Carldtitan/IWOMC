@@ -44,7 +44,6 @@ const base64Encoded32Bytes = nonEmptyString.refine((value) => {
 }, "must be a Base64-encoded 32-byte value");
 
 const optionalNonEmptyString = nonEmptyString.optional();
-const optionalHttpUrl = httpUrl.optional();
 const optionalHttpsUrl = httpsUrl.optional();
 
 export const publicEnvironmentSchema = z.object({

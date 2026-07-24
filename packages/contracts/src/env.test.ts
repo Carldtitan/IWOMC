@@ -71,11 +71,15 @@ describe("environment contracts", () => {
     const malformedSecret = "this-value-must-never-appear-in-an-error";
     input.DATA_ENCRYPTION_KEY = malformedSecret;
 
-    expect(() => parseServerEnvironment(input)).toThrowError(
-      expect.objectContaining({
-        message: expect.not.stringContaining(malformedSecret)
-      })
-    );
+    try {
+      parseServerEnvironment(input);
+      expect.fail("Expected malformed environment validation to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(EnvironmentValidationError);
+      if (error instanceof Error) {
+        expect(error.message).not.toContain(malformedSecret);
+      }
+    }
   });
 
   it("rejects partial R2 configuration", () => {

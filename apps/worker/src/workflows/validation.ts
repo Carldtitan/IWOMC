@@ -16,10 +16,12 @@ export class ValidationWorkflow extends WorkflowEntrypoint<Env, ValidationWorkfl
     event: WorkflowEvent<ValidationWorkflowParams>,
     step: WorkflowStep
   ): Promise<ValidationWorkflowResult> {
-    return step.do("record foundation invocation", async () => ({
-      status: "foundation_only",
-      candidateId: event.payload.candidateId,
-      validationBatchId: event.payload.validationBatchId
-    }));
+    return step.do("record foundation invocation", () =>
+      Promise.resolve({
+        status: "foundation_only",
+        candidateId: event.payload.candidateId,
+        validationBatchId: event.payload.validationBatchId
+      })
+    );
   }
 }

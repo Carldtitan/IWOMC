@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
-type WorkerBindings = {
+interface WorkerBindings {
   Bindings: Env;
-};
+}
 
 export interface IngestPointer {
   readonly objectKey: string;
@@ -92,7 +92,7 @@ app.onError((error, context) => {
   console.error(
     JSON.stringify({
       message: "unhandled request error",
-      error: error instanceof Error ? error.message : String(error),
+      kind: error instanceof Error ? "error" : "unknown_throwable",
       path: new URL(context.req.url).pathname
     })
   );
@@ -102,7 +102,7 @@ app.onError((error, context) => {
 
 const worker = {
   fetch: app.fetch,
-  async queue(batch: MessageBatch<IngestPointer>): Promise<void> {
+  queue(batch: MessageBatch<IngestPointer>): void {
     for (const message of batch.messages) {
       console.error(
         JSON.stringify({
