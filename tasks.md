@@ -277,8 +277,8 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 14.8 Implement the encrypted R2/Neon `braintrust_trace_outbox` with trace ID, payload digest, attempts, next attempt, and terminal export state; do not use Worker memory as the retry spool.
   - [x] 14.9 Make deterministic finding/candidate state independent of Braintrust availability.
   - [x] 14.10 Add deterministic native quick-fix and user-authored semantic-operation paths for Fireworks failure; both pass the same guard, materialization, and validation gates.
-  - [ ] 14.11 Implement a model/template registry and Braintrust evaluation promotion gate; a new default cannot activate until the configured validity, grounding, refusal, and secret-leakage thresholds pass.
-  - [ ] 14.12 Append the final validation summary class to the reasoning trace and expose pending/terminal trace-export failure through the MVP integration/operator status API.
+  - [x] 14.11 Implement a model/template registry and Braintrust evaluation promotion gate; a new default cannot activate until the configured validity, grounding, refusal, and secret-leakage thresholds pass.
+  - [x] 14.12 Append the final validation summary class to the reasoning trace and expose pending/terminal trace-export failure through the MVP integration/operator status API.
   - [x] 14.13 Implement `apps/worker/src/services/generate-candidate.ts` to consume an accepted finding; reserve the deterministic Fireworks external operation and audit event before the call; run the selected candidate path; persist guard outcomes and candidate state; and start the validation Workflow idempotently.
   - **Exit:** Fireworks can produce an allowed npm operation for the fixture, malicious/invalid outputs are guard-rejected, and Braintrust contains no seeded plaintext secret.
   - _Requirements: R11, R12.1-R12.3, R19, R20.1-R20.6, R22.4_
