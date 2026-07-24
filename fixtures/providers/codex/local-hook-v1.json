@@ -1,0 +1,213 @@
+{
+  "fixtureVersion": "1.0.0",
+  "surface": "cli-local-hook-v1",
+  "description": "Synthetic Codex local-hook lifecycle for deterministic normalization tests.",
+  "documents": [
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-1",
+        "sequence": 1,
+        "kind": "session_started",
+        "sessionId": "codex-session-1",
+        "monotonicNanos": 100,
+        "realmId": "host-fixture",
+        "actor": "agent",
+        "executorActor": "agent",
+        "prompt": "raw fixture prompt"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-2",
+        "sequence": 2,
+        "kind": "tool_started",
+        "sessionId": "codex-session-1",
+        "turnId": "turn-1",
+        "toolCallId": "tool-1",
+        "monotonicNanos": 200,
+        "realmId": "host-fixture",
+        "actor": "agent",
+        "executorActor": "agent"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-3",
+        "sequence": 3,
+        "kind": "command_completed",
+        "sessionId": "codex-session-1",
+        "turnId": "turn-1",
+        "toolCallId": "tool-1",
+        "monotonicNanos": 300,
+        "startedMonotonicNanos": 210,
+        "endedMonotonicNanos": 290,
+        "realmId": "host-fixture",
+        "layerId": "project",
+        "actor": "agent",
+        "executorActor": "agent",
+        "terminalId": "terminal-fixture",
+        "terminalMatches": true,
+        "processId": 102,
+        "parentProcessIds": [
+          101,
+          100
+        ],
+        "providerProcessId": 100,
+        "workingDirectory": "C:/fixture/private-repository",
+        "workingDirectoryMatches": true,
+        "realmMatches": true,
+        "executable": "npm",
+        "arguments": [
+          "install",
+          "hidden-runtime"
+        ],
+        "commandOutput": "installed hidden-runtime with sk-test_FAKE_51HACKATHON_NOT_A_REAL_KEY_000000",
+        "exitCode": 0,
+        "inventoryBefore": {
+          "snapshotId": "snapshot-before",
+          "packages": []
+        },
+        "inventoryAfter": {
+          "snapshotId": "snapshot-after",
+          "packages": [
+            {
+              "ecosystem": "npm",
+              "name": "hidden-runtime",
+              "version": "1.0.0",
+              "layerId": "project"
+            }
+          ]
+        },
+        "reasoning": "private fixture reasoning",
+        "rawResponse": {
+          "REDACTED": "never persist this"
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-4",
+        "sequence": 4,
+        "kind": "file_changed",
+        "sessionId": "codex-session-1",
+        "turnId": "turn-1",
+        "monotonicNanos": 400,
+        "realmId": "host-fixture",
+        "actor": "agent",
+        "executorActor": "agent",
+        "affectedPaths": [
+          "C:/fixture/private-repository/package.json"
+        ]
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-5",
+        "sequence": 5,
+        "kind": "approval_decided",
+        "sessionId": "codex-session-1",
+        "turnId": "turn-1",
+        "monotonicNanos": 500,
+        "realmId": "host-fixture",
+        "actor": "agent",
+        "executorActor": "agent",
+        "approval": {
+          "decision": "approved",
+          "actor": "human",
+          "modifiedBeforeExecution": false
+        }
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-6",
+        "sequence": 6,
+        "kind": "subagent_started",
+        "sessionId": "codex-session-1",
+        "turnId": "turn-1",
+        "toolCallId": "subagent-call-1",
+        "subagentId": "subagent-1",
+        "monotonicNanos": 600,
+        "realmId": "host-fixture",
+        "actor": "subagent",
+        "executorActor": "subagent"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-7",
+        "sequence": 7,
+        "kind": "subagent_ended",
+        "sessionId": "codex-session-1",
+        "turnId": "turn-1",
+        "toolCallId": "subagent-call-1",
+        "subagentId": "subagent-1",
+        "monotonicNanos": 700,
+        "realmId": "host-fixture",
+        "actor": "subagent",
+        "executorActor": "subagent"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-8",
+        "sequence": 8,
+        "kind": "terminal_state",
+        "sessionId": "codex-session-1",
+        "monotonicNanos": 800,
+        "realmId": "host-fixture",
+        "actor": "system",
+        "executorActor": "system",
+        "terminalId": "terminal-fixture"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "provider": "codex",
+      "surface": "cli-local-hook-v1",
+      "providerVersion": "0.1.0-fixture",
+      "event": {
+        "eventId": "codex-event-9",
+        "sequence": 9,
+        "kind": "session_ended",
+        "sessionId": "codex-session-1",
+        "monotonicNanos": 900,
+        "realmId": "host-fixture",
+        "actor": "agent",
+        "executorActor": "agent"
+      }
+    }
+  ]
+}

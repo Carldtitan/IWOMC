@@ -186,11 +186,11 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [ ] 9.2 Implement platform abstractions in `crates/companion/src/platform/` for process ancestry and repository-scoped filesystem events.
   - [ ] 9.3 Implement baseline, pre-action, stabilized post-action, session-end, PR/manual checkpoint, and timeout snapshot epochs in `crates/companion/src/snapshots/`.
   - [ ] 9.4 Implement native read-only runtime, package, path, service, shell-profile, and configuration inventories under `crates/companion/src/inventory/`.
-  - [ ] 9.5 Implement action correlation under `crates/companion/src/correlation/` using provider IDs, process ancestry, terminal ID, working directory, realm/layer, and action windows.
-  - [ ] 9.6 Implement actor classes, separate initiation/execution/approval fields, independent confidence factors, and `unknown`/`mixed` restraint.
-  - [ ] 9.7 Preserve install-then-remove operations and overlapping actions independently of final inventory.
-  - [ ] 9.8 Emit explicit gaps for missing privilege, missing pre-state, stabilization timeout, observer loss, scope exclusion, and unsupported realm.
-  - [ ] 9.9 Test process descendants, failed actions, concurrent human/agent actions, install-then-remove, overlap, timeout, unknown actor, global-versus-project layer, and realm separation.
+  - [x] 9.5 Implement action correlation under `crates/companion/src/correlation/` using provider IDs, process ancestry, terminal ID, working directory, realm/layer, and action windows.
+  - [x] 9.6 Implement actor classes, separate initiation/execution/approval fields, independent confidence factors, and `unknown`/`mixed` restraint.
+  - [x] 9.7 Preserve install-then-remove operations and overlapping actions independently of final inventory.
+  - [x] 9.8 Emit explicit gaps for missing privilege, missing pre-state, stabilization timeout, observer loss, scope exclusion, and unsupported realm.
+  - [x] 9.9 Test process descendants, failed actions, concurrent human/agent actions, install-then-remove, overlap, timeout, unknown actor, global-versus-project layer, and realm separation.
   - [ ] 9.10 Implement checkpoint Source_Input identity: record the exact Git commit/tree, submodule and LFS identities or gaps, and for an eligible dirty tree create an encrypted content-addressed patch/untracked-file bundle after local ignore, size, and REDACTED-policy checks; REDACTEDwise defer validation explicitly.
   - [ ] 9.11 Give Source_Input bundles a validation-only authorization class and short retention policy, exclude them from Fireworks/Braintrust, and test finalize, expiry, deletion, missing LFS/submodule, ignored-file, and stale-base behavior.
   - [ ] 9.12 Keep provider hooks non-gating: durably queue/redact the local action, acknowledge without waiting for cloud work, and asynchronously create the reconciliation trigger as soon as a material action stabilizes; test all four R16.2 trigger reasons.
@@ -198,16 +198,16 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - _Requirements: R4, R5, R16.1-R16.2, R21.1-R21.2, R21.6, R22.2_
 
 - [ ] 10. Implement the first Codex provider adapter
-  - [ ] 10.1 Create `crates/companion/src/providers/codex.rs` and the local provider-event receiver.
-  - [ ] 10.2 Normalize documented Codex session, turn, tool, command, file, approval, subagent, and terminal-state events available on the selected MVP surface.
-  - [ ] 10.3 Publish a capability profile for the exact Codex surface, provider version, adapter version, and enabled hooks.
-  - [ ] 10.4 Link likely environment-changing actions to targeted snapshot envelopes before execution when the hook permits it.
+  - [x] 10.1 Create `crates/companion/src/providers/codex.rs` and the local provider-event receiver.
+  - [x] 10.2 Normalize documented Codex session, turn, tool, command, file, approval, subagent, and terminal-state events available on the selected MVP surface.
+  - [x] 10.3 Publish a capability profile for the exact Codex surface, provider version, adapter version, and enabled hooks.
+  - [x] 10.4 Link likely environment-changing actions to targeted snapshot envelopes before execution when the hook permits it.
   - [ ] 10.5 Keep the observation lease open through a bounded descendant-process drain.
-  - [ ] 10.6 Record intent and failure without installed effect when a command fails.
-  - [ ] 10.7 Emit capture gaps for missing sequence, missing terminal event, disabled hook, unsupported hosted execution, or invalid provider payload.
-  - [ ] 10.8 Remove private reasoning and raw prompt/response fields before normalized persistence.
-  - [ ] 10.9 Add versioned recorded fixtures in `fixtures/providers/codex/`.
-  - [ ] 10.10 Test normal, interrupted, failed, duplicate, out-of-order, subagent, human-approved, human-modified, descendant-installer, and hook-disabled cases.
+  - [x] 10.6 Record intent and failure without installed effect when a command fails.
+  - [x] 10.7 Emit capture gaps for missing sequence, missing terminal event, disabled hook, unsupported hosted execution, or invalid provider payload.
+  - [x] 10.8 Remove private reasoning and raw prompt/response fields before normalized persistence.
+  - [x] 10.9 Add versioned recorded fixtures in `fixtures/providers/codex/`.
+  - [x] 10.10 Test normal, interrupted, failed, duplicate, out-of-order, subagent, human-approved, human-modified, descendant-installer, and hook-disabled cases.
   - **Exit:** One supported Codex local surface can start/end a session automatically and correlate an npm installation with its process and state effects.
   - _Requirements: R3, R4.2, R5, R20.1-R20.6_
 
@@ -311,15 +311,15 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - _Requirements: R4.11, R12.2-R12.7, R14, R15, R16.5, R17.1-R17.2, R20.7-R20.8, R20.11, R21.10, R22.1_
 
 - [ ] 16. Build the MVP web workspace
-  - [ ] 16.1 Build the authenticated React application shell in `apps/web/src/app/`.
+  - [x] 16.1 Build the authenticated React application shell in `apps/web/src/app/`.
   - [ ] 16.2 Implement workspace/project navigation and the project overview.
-  - [ ] 16.3 Implement capture/support coverage by provider surface, realm, permission, adapter, manager, and target.
-  - [ ] 16.4 Implement session list and causal timeline with concurrent events left visibly concurrent.
-  - [ ] 16.5 Implement finding detail with actual state, declared state, action evidence, actor confidence, gaps, and next proof needed.
-  - [ ] 16.6 Implement candidate diff/rationale, static guard results, behavior contract, and policy summary.
-  - [ ] 16.7 Implement candidate-by-target validation matrix, live phase state, terminal classification, structured diagnostics, cleanup, and scoped attestation.
+  - [x] 16.3 Implement capture/support coverage by provider surface, realm, permission, adapter, manager, and target.
+  - [x] 16.4 Implement session list and causal timeline with concurrent events left visibly concurrent.
+  - [x] 16.5 Implement finding detail with actual state, declared state, action evidence, actor confidence, gaps, and next proof needed.
+  - [x] 16.6 Implement candidate diff/rationale, static guard results, behavior contract, and policy summary.
+  - [x] 16.7 Implement candidate-by-target validation matrix, live phase state, terminal classification, structured diagnostics, cleanup, and scoped attestation.
   - [ ] 16.8 Implement incremental cursor polling and ETags rather than adding a new real-time infrastructure service.
-  - [ ] 16.9 Never collapse partial capture, unknown actor, infrastructure failure, unsupported target, inconclusive, or stale proof into a generic green/red badge.
+  - [x] 16.9 Never collapse partial capture, unknown actor, infrastructure failure, unsupported target, inconclusive, or stale proof into a generic green/red badge.
   - [ ] 16.10 Implement basic persisted finding comments and explicit candidate approval records with audit events for the MVP `owner` and `member` roles.
   - [ ] 16.11 Verify that an invited collaborator sees the same persisted sessions, findings, candidate states, validation results, comments, and approvals permitted by the MVP role.
   - [ ] 16.12 Implement editable project-goal/behavior-contract/policy views plus member, device/provider, integration, MVP privacy/retention status, and audit-history views required by R18.3.
