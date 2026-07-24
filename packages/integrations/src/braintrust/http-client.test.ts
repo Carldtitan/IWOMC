@@ -167,6 +167,7 @@ describe("Braintrust allowlisted HTTP exporter", () => {
     expect(delivery).toEqual({
       delivery: "deferred",
       failureClass: "provider",
+      providerCode: "provider_error",
       providerStatus: 503
     });
     expect(candidateTruth).toEqual({
