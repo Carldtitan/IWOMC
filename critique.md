@@ -8,18 +8,18 @@
 
 ## Design health
 
-| Heuristic | Score | Finding |
-|---|---:|---|
-| Visibility of system status | 4 | The live proof exposes Daytona execution/cleanup, Braintrust export, and Fireworks availability separately. |
-| Match with the engineering workflow | 4 | The screen follows action → disagreement → candidate → clean proof. |
-| User control | 3 | Tabs and desktop navigation are reachable; mutation still requires a later approval surface. |
-| Consistency | 4 | One status vocabulary and a restrained set of panels, pills, diffs, and timelines. |
-| Error prevention | 4 | Missing sponsor coverage is never converted into a REDACTEDing state. |
-| Recognition over recall | 4 | Evidence, candidate, target, cleanup, and attestation are directly labelled. |
-| Efficiency | 3 | The complete causal path fits in one desktop viewport; mobile navigation remains intentionally compact. |
-| Minimalism | 4 | No decorative charts or chat-first framing; the finding remains the focal object. |
-| Error recovery | 3 | Live proof failures are reported safely and can be retried. |
-| Help/documentation | 3 | Scope and evidence copy are clear; deeper settings views remain later work. |
+| Heuristic                           | Score | Finding                                                                                                     |
+| ----------------------------------- | ----: | ----------------------------------------------------------------------------------------------------------- |
+| Visibility of system status         |     4 | The live proof exposes Daytona execution/cleanup, Braintrust export, and Fireworks availability separately. |
+| Match with the engineering workflow |     4 | The screen follows action → disagreement → candidate → clean proof.                                         |
+| User control                        |     3 | Tabs and desktop navigation are reachable; mutation still requires a later approval surface.                |
+| Consistency                         |     4 | One status vocabulary and a restrained set of panels, pills, diffs, and timelines.                          |
+| Error prevention                    |     4 | Missing sponsor coverage is never converted into a REDACTEDing state.                                           |
+| Recognition over recall             |     4 | Evidence, candidate, target, cleanup, and attestation are directly labelled.                                |
+| Efficiency                          |     3 | The complete causal path fits in one desktop viewport; mobile navigation remains intentionally compact.     |
+| Minimalism                          |     4 | No decorative charts or chat-first framing; the finding remains the focal object.                           |
+| Error recovery                      |     3 | Live proof failures are reported safely and can be retried.                                                 |
+| Help/documentation                  |     3 | Scope and evidence copy are clear; deeper settings views remain later work.                                 |
 
 ## Resolved critical/high issues
 
