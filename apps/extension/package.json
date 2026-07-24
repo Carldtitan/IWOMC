@@ -1,0 +1,57 @@
+{
+  "name": "environment-REDACTED",
+  "displayName": "Environment Reconciler",
+  "description": "Observe agent-created environment changes and verify repository fixes.",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "publisher": "environment-REDACTED",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "reproducibility",
+    "dependencies",
+    "agents",
+    "daytona"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:environmentReconciler.connectWorkspace",
+    "onCommand:environmentReconciler.scanNow",
+    "onCommand:environmentReconciler.openStatus"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "environmentReconciler.connectWorkspace",
+        "title": "Environment Reconciler: Connect Workspace"
+      },
+      {
+        "command": "environmentReconciler.scanNow",
+        "title": "Environment Reconciler: Scan Now"
+      },
+      {
+        "command": "environmentReconciler.openStatus",
+        "title": "Environment Reconciler: Open Status"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
+    "clean": "rimraf dist",
+    "package": "pnpm run build && vsce package --no-dependencies --out dist/environment-REDACTED.vsix",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.100.0",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.9",
+    "rimraf": "^6.0.1",
+    "typescript": "6.0.3"
+  }
+}
