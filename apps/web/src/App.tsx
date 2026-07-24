@@ -1,8 +1,19 @@
 import { useEffect, useState, type ReactNode } from "react";
 
+import {
+  useWorkspacePolling,
+  type WorkspacePollingState
+} from "./hooks/use-workspace-polling.js";
+
 type View = "overview" | "sessions" | "findings" | "validations" | "settings";
 type DetailTab = "evidence" | "candidate" | "validation";
 type ReplayState = "idle" | "capturing" | "reconciling" | "validating" | "complete";
+
+const fixtureSystemStatus = {
+  health: "unknown",
+  summary: "Fixture data; live status has not been established",
+  updatedAt: "1970-01-01T00:00:00Z"
+} as const;
 
 function Icon({ children }: { readonly children: ReactNode }) {
   return (
@@ -70,6 +81,43 @@ function StatusPill({
   readonly tone?: "good" | "warning" | "danger" | "neutral" | "info";
 }) {
   return <span className={`pill pill-${tone}`}>{children}</span>;
+}
+
+function SystemStatus({ polling }: { readonly polling: WorkspacePollingState }) {
+  const reported = polling.page?.systemStatus;
+  const label = (() => {
+    switch (polling.phase) {
+      case "demo":
+        return "Demo fixture · live status not configured";
+      case "loading":
+        return "Connecting to live system status…";
+      case "partial":
+        return `Partial live status · ${reported?.summary ?? "coverage is incomplete"}`;
+      case "stale":
+        return `Stale live status · ${reported?.summary ?? "last update unavailable"}`;
+      case "error":
+        return "Demo fixture · live system status unavailable";
+      case "live":
+        return reported?.summary ?? "Live status available within current coverage";
+    }
+  })();
+  const lastUpdate =
+    polling.lastSuccessfulPollAt === undefined
+      ? undefined
+      : new Date(polling.lastSuccessfulPollAt).toLocaleTimeString();
+  return (
+    <div
+      className={`system-status system-status-${polling.phase}`}
+      title={
+        lastUpdate === undefined
+          ? label
+          : `${label}. Last successful poll at ${lastUpdate}.`
+      }
+    >
+      <span className="live-dot" />
+      {label}
+    </div>
+  );
 }
 
 function Sidebar({
@@ -587,6 +635,18 @@ function Placeholder({
 export function App() {
   const [view, setView] = useState<View>("overview");
   const [replayState, setReplayState] = useState<ReplayState>("idle");
+  const workspaceId = configuredEnvironmentValue(import.meta.env.VITE_RECONCILER_WORKSPACE_ID);
+  const projectId = configuredEnvironmentValue(import.meta.env.VITE_RECONCILER_PROJECT_ID);
+  const configuredApiBaseUrl = configuredEnvironmentValue(
+    import.meta.env.VITE_RECONCILER_API_BASE_URL
+  );
+  const polling = useWorkspacePolling({
+    apiBaseUrl: configuredApiBaseUrl || window.location.origin,
+    enabled: workspaceId.length > 0 && projectId.length > 0,
+    initialSystemStatus: fixtureSystemStatus,
+    projectId: projectId || "fixture-project",
+    workspaceId: workspaceId || "fixture-workspace"
+  });
 
   useEffect(() => {
     if (replayState === "idle" || replayState === "complete") {
@@ -607,10 +667,7 @@ export function App() {
       <Sidebar current={view} onNavigate={setView} />
       <main className="main-content">
         <header className="topbar">
-          <div className="system-status">
-            <span className="live-dot" />
-            All systems operational
-          </div>
+          <SystemStatus polling={polling} />
           <div className="topbar-actions">
             <button aria-label="Search" type="button">
               ⌕
@@ -632,4 +689,8 @@ export function App() {
       </main>
     </div>
   );
+}
+
+function configuredEnvironmentValue(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }
