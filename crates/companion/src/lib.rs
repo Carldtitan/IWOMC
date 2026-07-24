@@ -9,6 +9,7 @@ pub mod health;
 pub mod ipc;
 pub mod logging;
 pub mod observation;
+pub mod observation_lease;
 pub mod providers;
 pub mod redaction;
 pub mod shutdown;

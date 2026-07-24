@@ -197,12 +197,12 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - **Exit:** A synthetic or manual process action creates a redacted, attributed action envelope with pre/post evidence or an explicit reason why that proof is incomplete.
   - _Requirements: R4, R5, R16.1-R16.2, R21.1-R21.2, R21.6, R22.2_
 
-- [ ] 10. Implement the first Codex provider adapter
+- [x] 10. Implement the first Codex provider adapter
   - [x] 10.1 Create `crates/companion/src/providers/codex.rs` and the local provider-event receiver.
   - [x] 10.2 Normalize documented Codex session, turn, tool, command, file, approval, subagent, and terminal-state events available on the selected MVP surface.
   - [x] 10.3 Publish a capability profile for the exact Codex surface, provider version, adapter version, and enabled hooks.
   - [x] 10.4 Link likely environment-changing actions to targeted snapshot envelopes before execution when the hook permits it.
-  - [ ] 10.5 Keep the observation lease open through a bounded descendant-process drain.
+  - [x] 10.5 Keep the observation lease open through a bounded descendant-process drain.
   - [x] 10.6 Record intent and failure without installed effect when a command fails.
   - [x] 10.7 Emit capture gaps for missing sequence, missing terminal event, disabled hook, unsupported hosted execution, or invalid provider payload.
   - [x] 10.8 Remove private reasoning and raw prompt/response fields before normalized persistence.
