@@ -91,7 +91,10 @@ export class RuntimeBraintrustDemoTraceExporter implements DemoTraceExporter {
         console.error(
           JSON.stringify({
             failureClass: result.failureClass,
-            message: "Braintrust demo trace delivery deferred"
+            message: "Braintrust demo trace delivery deferred",
+            ...(result.providerStatus === undefined
+              ? {}
+              : { providerStatus: result.providerStatus })
           })
         );
       }
