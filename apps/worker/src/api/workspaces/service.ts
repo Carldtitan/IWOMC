@@ -1,6 +1,7 @@
 import { constantTimeEqual, randomToken, sha256Base64Url } from "../../security/crypto.js";
 
-export type WorkspaceRole = "owner" | "member";
+export type WorkspaceRole =
+  "owner" | "maintainer" | "developer" | "reviewer" | "observer" | "member";
 
 export interface WorkspaceRecord {
   readonly createdAtEpochSeconds: number;

@@ -113,7 +113,10 @@ export const workspaceMembers = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.workspaceId, table.REDACTEDId], name: "workspace_members_pk" }),
-    check("workspace_members_role_ck", sql`${table.role} in ('owner', 'member')`)
+    check(
+      "workspace_members_role_ck",
+      sql`${table.role} in ('owner', 'maintainer', 'developer', 'reviewer', 'observer', 'member')`
+    )
   ]
 );
 
@@ -142,7 +145,10 @@ export const workspaceInvitations = pgTable(
   (table) => [
     uniqueIndex("workspace_invitations_ws_id_uq").on(table.workspaceId, table.id),
     uniqueIndex("workspace_invitations_REDACTED_uq").on(table.REDACTEDDigest),
-    check("workspace_invitations_role_ck", sql`${table.role} in ('owner', 'member')`),
+    check(
+      "workspace_invitations_role_ck",
+      sql`${table.role} in ('owner', 'maintainer', 'developer', 'reviewer', 'observer', 'member')`
+    ),
     check(
       "workspace_invitations_state_ck",
       sql`${table.state} in ('pending', 'accepted', 'revoked', 'expired')`
@@ -2346,7 +2352,7 @@ export const auditLog = pgTable(
     ),
     check(
       "audit_log_category_ck",
-      sql`${table.category} in ('authentication', 'installation', 'policy', 'behavior_contract', 'approval', 'external_side_effect', 'github_write', 'retention', 'export', 'deletion', 'cleanup')`
+      sql`${table.category} in ('authentication', 'installation', 'policy', 'behavior_contract', 'approval', 'collaboration', 'membership', 'device', 'integration', 'privacy', 'external_side_effect', 'github_write', 'retention', 'export', 'deletion', 'cleanup')`
     ),
     check("audit_log_outcome_ck", sql`${table.outcome} in ('succeeded', 'failed', 'denied')`)
   ]

@@ -9,13 +9,18 @@ export type AuditCategory =
   | "approval"
   | "authentication"
   | "behavior_contract"
+  | "collaboration"
   | "cleanup"
   | "deletion"
+  | "device"
   | "export"
   | "external_side_effect"
   | "github_write"
+  | "integration"
   | "installation"
+  | "membership"
   | "policy"
+  | "privacy"
   | "retention";
 
 export type AuditActor =

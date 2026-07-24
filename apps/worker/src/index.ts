@@ -5,6 +5,15 @@ import { createDemoSponsorRunRoutes } from "./api/demo-sponsor-run/routes.js";
 import { createIngestionRoutes } from "./api/ingestion/index.js";
 import { createUnavailableIntegrationStatusRoutes } from "./api/integration-status/index.js";
 import {
+  CollaborationService,
+  PostgresCollaborationStore,
+  createCollaborationRoutes
+} from "./api/collaboration/index.js";
+import { BrowserSessionService } from "./auth/browser-session.js";
+import { PostgresBrowserSessionRepository } from "./auth/postgres-browser-session.js";
+import { CSRF_COOKIE, PRODUCT_SESSION_COOKIE, cookieValue } from "./auth/session.js";
+import { constantTimeEqual } from "./security/crypto.js";
+import {
   CloudflarePayloadProtection,
   CloudflareR2VerifiedObjectReader,
   HyperdrivePostgresConnectionFactory,
@@ -103,8 +112,55 @@ const ingestRequest: Handler<WorkerBindings> = (context) => {
   return routes.fetch(context.req.raw, context.env, context.executionCtx);
 };
 
+const collaborationRequest: Handler<WorkerBindings> = (context) => {
+  const connections = new HyperdrivePostgresConnectionFactory(
+    context.env.DATABASE.connectionString
+  );
+  const sessions = new BrowserSessionService(
+    new PostgresBrowserSessionRepository(connections),
+    context.env.APP_SESSION_SECRET
+  );
+  const routes = createCollaborationRoutes(
+    {
+      async authenticate({ mutation, request }) {
+        const cookieHeader = request.headers.get("Cookie") ?? undefined;
+        const sealedSession = cookieValue(
+          cookieHeader,
+          PRODUCT_SESSION_COOKIE
+        );
+        if (sealedSession === undefined) {
+          return undefined;
+        }
+        try {
+          const csrfCookie = cookieValue(cookieHeader, CSRF_COOKIE);
+          const csrfHeader = request.headers.get("x-csrf-REDACTED") ?? undefined;
+          if (
+            mutation &&
+            (csrfCookie === undefined ||
+              csrfHeader === undefined ||
+              !(await constantTimeEqual(csrfCookie, csrfHeader)))
+          ) {
+            return undefined;
+          }
+          const session = await sessions.authenticate({
+            ...(mutation && csrfHeader !== undefined ? { csrfToken: csrfHeader } : {}),
+            nowEpochSeconds: Math.floor(Date.now() / 1_000),
+            sealedSession
+          });
+          return { REDACTEDId: session.REDACTEDId };
+        } catch {
+          return undefined;
+        }
+      }
+    },
+    new CollaborationService(new PostgresCollaborationStore(connections))
+  );
+  return routes.fetch(context.req.raw, context.env, context.executionCtx);
+};
+
 app.post("/v1/projects/:id/events/batches", ingestRequest);
 app.get("/v1/devices/:id/status", ingestRequest);
+app.all("/v1/workspaces/:workspace/*", collaborationRequest);
 app.route(
   "/",
   createDemoSponsorRunRoutes((environment) => ({
