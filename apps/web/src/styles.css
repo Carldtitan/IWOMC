@@ -243,12 +243,12 @@ nav {
   font-size: 10px;
 }
 
-.integration-dot-unknown {
+.live-dot.integration-dot-unknown {
   background: var(--faint);
   box-shadow: 0 0 0 3px rgb(100 112 105 / 9%);
 }
 
-.integration-dot-unavailable {
+.live-dot.integration-dot-unavailable {
   background: var(--amber);
   box-shadow: 0 0 0 3px rgb(228 189 117 / 9%);
 }
