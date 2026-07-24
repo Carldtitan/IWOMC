@@ -379,19 +379,6 @@ Do not add anREDACTED package manager or provider until all conditions REDACTED:
 
 ### Milestone 5: Complete the MVP contract
 
-- [ ] 18. Add Claude Code and Cursor provider adapters
-  - [ ] 18.1 Implement `crates/companion/src/providers/claude_code.rs`.
-  - [ ] 18.2 Implement `crates/companion/src/providers/cursor.rs`.
-  - [ ] 18.3 Select and document one supported local MVP surface for each provider.
-  - [ ] 18.4 Negotiate capabilities per surface/version rather than assuming parity with Codex.
-  - [ ] 18.5 Normalize available session, tool, command, result, file, approval, and subagent events.
-  - [ ] 18.6 Use the same action-envelope and ground-truth plane when a provider omits an event.
-  - [ ] 18.7 Emit explicit gaps for hosted/remote work without an in-realm collector.
-  - [ ] 18.8 Add fixtures and compatibility tests for every claimed event/surface.
-  - [ ] 18.9 Test disabled hooks, missing terminal events, human-edited commands, subagents, duplicate payloads, private-reasoning removal, and provider-version changes.
-  - **Exit:** Codex, Claude Code, and Cursor each publish an honest capability profile and can contribute to the same normalized action model on one documented local surface.
-  - _Requirements: R3, R5, R21.8-R21.9_
-
 - [ ] 19. Implement full MVP Python support for pip and uv
   - [ ] 19.1 Implement Python project/interpreter/virtual-environment discovery in `packages/adapters/src/python/`.
   - [ ] 19.2 Parse supported `requirements*.txt`, `pyproject.toml`, uv project metadata, and uv lock data semantically.
