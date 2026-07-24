@@ -20,9 +20,10 @@ app.get("/", (context) => {
 
   return context.json({
     name: "Environment Reconciler",
-    status: "foundation-ready",
-    message: "The control-plane foundation is running.",
+    status: "mvp-vertical-slice",
+    message: "The evidence, reconciliation, candidate, and validation control plane is running.",
     health: `${origin}/health`,
+    capabilities: `${origin}/v1/capabilities`,
     github: {
       callback: `${origin}/v1/auth/github/callback`,
       setup: `${origin}/v1/auth/github/setup`,
@@ -35,7 +36,55 @@ app.get("/health", (context) =>
   context.json({
     ok: true,
     service: "environment-REDACTED",
-    stage: "foundation"
+    stage: "mvp-vertical-slice",
+    bindings: {
+      database: true,
+      ingestQueue: true,
+      objectStorage: true,
+      validationWorkflow: true
+    },
+    integrations: {
+      braintrust: context.env.BRAINTRUST_ENABLED === "true",
+      daytona: context.env.DAYTONA_API_KEY.length > 0,
+      fireworks: context.env.FIREWORKS_API_KEY.length > 0,
+      github: context.env.GITHUB_APP_ID.length > 0
+    }
+  })
+);
+
+app.get("/v1/capabilities", (context) =>
+  context.json({
+    capture: [
+      {
+        provider: "codex",
+        surface: "local-hook-v1",
+        support: "native",
+        rawPromptContent: false,
+        privateReasoning: false
+      }
+    ],
+    reconciliation: [
+      {
+        ecosystem: "npm",
+        manager: "npm",
+        support: "native_validation",
+        rule: "dependency.used_but_undeclared"
+      }
+    ],
+    sponsors: {
+      braintrust: {
+        configured: context.env.BRAINTRUST_ENABLED === "true",
+        purpose: "metadata-only reasoning and validation observability"
+      },
+      daytona: {
+        configured: context.env.DAYTONA_API_KEY.length > 0,
+        purpose: "separate clean baseline and candidate reconstruction"
+      },
+      fireworks: {
+        configured: context.env.FIREWORKS_API_KEY.length > 0,
+        purpose: "schema-constrained candidate reasoning"
+      }
+    }
   })
 );
 
