@@ -13,9 +13,11 @@
     "@environment-REDACTED/contracts": "workspace:*",
     "@environment-REDACTED/integrations": "workspace:*",
     "@environment-REDACTED/REDACTED": "workspace:*",
-    "hono": "^4.12.32"
+    "hono": "^4.12.32",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@types/pg": "^8.15.5",
     "rimraf": "^6.0.1",
     "typescript": "6.0.3"
   }
