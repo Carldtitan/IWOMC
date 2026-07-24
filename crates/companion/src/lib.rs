@@ -7,6 +7,8 @@ pub mod credentials;
 pub mod crypto;
 pub mod health;
 pub mod logging;
+pub mod observation;
+pub mod providers;
 pub mod redaction;
 pub mod shutdown;
 pub mod spool;
