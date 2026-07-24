@@ -6,6 +6,7 @@ pub mod contracts;
 pub mod credentials;
 pub mod crypto;
 pub mod health;
+pub mod ipc;
 pub mod logging;
 pub mod observation;
 pub mod providers;
