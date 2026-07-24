@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -87,5 +88,55 @@ describe("behavior contract and default optimality policy", () => {
       failedHardGates: ["secret_guard_passed"],
       resultClass: "policy_rejected"
     });
+  });
+
+  it("property: no soft objective can outrank any failed hard gate", () => {
+    const policy = createDefaultOptimalityPolicy({
+      projectId: "project-1",
+      requiredTargetIds: ["linux-node-22"]
+    });
+    const failingGate = fc.constantFrom(
+      "acceptedBehaviorContract",
+      "allRequiredTargetsPass",
+      "nativeManagerOnly",
+      "lockfileConsistent",
+      "secretGuardPassed"
+    );
+
+    fc.assert(
+      fc.property(
+        failingGate,
+        fc.record({
+          dependencyCount: fc.nat({ max: 100_000 }),
+          reproducibilityScore: fc.double({
+            min: 0,
+            max: 1,
+            noNaN: true
+          }),
+          supportedVersions: fc.boolean(),
+          touchedFileCount: fc.nat({ max: 100_000 })
+        }),
+        (gate, preferences) => {
+          const facts = {
+            acceptedBehaviorContract: true,
+            allRequiredTargetsPass: true,
+            dependencyCount: preferences.dependencyCount,
+            lockfileConsistent: true,
+            nativeManagerOnly: true,
+            reproducibilityScore: preferences.reproducibilityScore,
+            secretGuardPassed: true,
+            supportedVersions: preferences.supportedVersions,
+            touchedFileCount: preferences.touchedFileCount
+          };
+          facts[gate] = false;
+
+          const decision = evaluateCandidatePolicy(policy, facts);
+          expect(decision.eligibleForVerification).toBe(false);
+          expect(decision.preferenceTuple).toBeUndefined();
+          expect(decision.failedHardGates).toHaveLength(1);
+        }
+      ),
+      { numRuns: 250 }
+    );
   });
 });
