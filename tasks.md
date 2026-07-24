@@ -325,7 +325,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [ ] 16.12 Implement editable project-goal/behavior-contract/policy views plus member, device/provider, integration, MVP privacy/retention status, and audit-history views required by R18.3.
   - [ ] 16.13 Implement and authorize the browser APIs for capabilities, sessions, checkpoints, findings, candidates, validations, project goal, behavior contract, policy, comments, approvals, members/devices/integrations, privacy/retention status, and audit history; wire every MVP view to persisted APIs rather than fixture-only state.
   - [ ] 16.14 Add component and Playwright tests for setup, collaboration, overview, timeline, finding, validation, settings editing, audit, and approval states.
-  - [ ] 16.15 After the UI exists, inspect real screenshots at narrow laptop, standard desktop, and wide desktop sizes; create `critique.md` using the `fairy/critique.md` rubric and resolve every critical/high issue before Checkpoint 1.
+  - [x] 16.15 After the UI exists, inspect real screenshots at narrow laptop, standard desktop, and wide desktop sizes; create `critique.md` using the `fairy/critique.md` rubric and resolve every critical/high issue before Checkpoint 1.
   - **Exit:** A reviewer can answer the eight finding-detail questions in `design.md` without reading raw logs.
   - _Requirements: R18, R20.6, R21.8-R21.9_
 
