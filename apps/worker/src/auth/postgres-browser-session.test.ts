@@ -18,10 +18,7 @@ class FakeConnection implements PostgresConnection {
     return Promise.resolve();
   }
 
-  query<Row>(
-    text: string,
-    values: readonly unknown[] = []
-  ): Promise<PostgresQueryResult<Row>> {
+  query<Row>(text: string, values: readonly unknown[] = []): Promise<PostgresQueryResult<Row>> {
     this.calls.push({ text, values });
     return Promise.resolve({
       rowCount: this.rowCount,

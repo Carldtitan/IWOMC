@@ -16,10 +16,7 @@ class FakeConnection implements PostgresConnection {
     return Promise.resolve();
   }
 
-  query<Row>(
-    text: string,
-    values: readonly unknown[] = []
-  ): Promise<PostgresQueryResult<Row>> {
+  query<Row>(text: string, values: readonly unknown[] = []): Promise<PostgresQueryResult<Row>> {
     this.calls.push({ text, values });
     const rows = text.includes("RETURNING id")
       ? [{ id: "00000000-0000-4000-8000-000000000123" }]

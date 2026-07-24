@@ -236,8 +236,7 @@ export class CompanionIpcClient {
     if (response.ok !== true) {
       const remotePayload = isObject(response.payload) ? response.payload : {};
       const remoteCode =
-        typeof remotePayload.code === "string" &&
-        /^[a-z][a-z0-9_]{0,63}$/u.test(remotePayload.code)
+        typeof remotePayload.code === "string" && /^[a-z][a-z0-9_]{0,63}$/u.test(remotePayload.code)
           ? remotePayload.code
           : "unknown";
       throw new CompanionIpcError(

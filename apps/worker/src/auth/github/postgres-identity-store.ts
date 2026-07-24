@@ -1,10 +1,5 @@
-import type {
-  PostgresConnectionFactory
-} from "../../infrastructure/ingestion/hyperdrive-postgres.js";
-import type {
-  BrowserSessionRecord,
-  BrowserSessionRepository
-} from "../browser-session.js";
+import type { PostgresConnectionFactory } from "../../infrastructure/ingestion/hyperdrive-postgres.js";
+import type { BrowserSessionRecord, BrowserSessionRepository } from "../browser-session.js";
 import { PostgresBrowserSessionRepository } from "../postgres-browser-session.js";
 import type { GitHubIdentityStore, StoredGitHubIdentity } from "./routes.js";
 
