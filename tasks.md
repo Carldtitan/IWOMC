@@ -254,8 +254,8 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - _Requirements: R8, R9, R16.2, R22.2-R22.3_
 
 - [ ] 13. Implement behavior-contract discovery and the default policy
-  - [ ] 13.1 Persist an editable human-authored project goal and discover npm install/build/lint/typecheck/test/smoke/benchmark commands from package scripts and CI configuration.
-  - [ ] 13.2 Implement behavior-contract step IDs/order, enable/disable, discovery evidence/fingerprint, review state, acceptance actor/time, invalidation source, working directory, realm/target applicability, timeout, expected exit statuses, secret references, and assertions.
+  - [x] 13.1 Persist an editable human-authored project goal and discover npm install/build/lint/typecheck/test/smoke/benchmark commands from package scripts and CI configuration.
+  - [x] 13.2 Implement behavior-contract step IDs/order, enable/disable, discovery evidence/fingerprint, review state, acceptance actor/time, invalidation source, working directory, realm/target applicability, timeout, expected exit statuses, secret references, and assertions.
   - [x] 13.3 Implement the default policy with hard target/behavior gates followed by dependency-count, reproducibility, supported-version, and change-surface preferences.
   - [x] 13.4 Implement candidate, concurrency, retry, elapsed-time, and cost budgets.
   - [x] 13.5 Ensure clean installation without an accepted behavior contract can produce only `reconstruction_passed`.
