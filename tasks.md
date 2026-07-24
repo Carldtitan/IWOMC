@@ -266,14 +266,14 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 
 ### Milestone 4: Candidate reasoning, proof, and product surface
 
-- [ ] 14. Implement Fireworks candidate generation and Braintrust evaluation
+- [x] 14. Implement Fireworks candidate generation and Braintrust evaluation
   - [x] 14.1 Create the Fireworks transport, reasoning-packet builder, CandidatePlan schema (including affected files and expected validation impact), and bounded retry policy in `packages/integrations/src/fireworks/`.
   - [x] 14.2 Send only the finding, relevant redacted graph slice and semantic file/AST fragments, project goal, behavior-contract summary, repository conventions, capability summary, permitted native operations, policy summary, and prior validation summary.
   - [x] 14.3 Reject invented evidence IDs, unknown files, unsupported operations, package-manager switching, disallowed dependencies, policy violations, and invalid structured output.
   - [x] 14.4 Convert accepted plans to native adapter operations; do not allow Fireworks to write arbitrary final files or lockfiles.
   - [x] 14.5 Record model, prompt/template, sampling, adapter/tool versions, and redacted input/output fingerprints.
   - [x] 14.6 Create Braintrust tracing in `packages/integrations/src/braintrust/` and instrument only the allowed spans/fields from `design.md`.
-  - [ ] 14.7 Create eval cases for the first finding, hallucinated package, fabricated evidence, manager switching, ambiguous evidence, dynamic dependency, prompt injection, invalid JSON, timeout, and secret-bearing input.
+  - [x] 14.7 Create eval cases for the first finding, hallucinated package, fabricated evidence, manager switching, ambiguous evidence, dynamic dependency, prompt injection, invalid JSON, timeout, and secret-bearing input.
   - [x] 14.8 Implement the encrypted R2/Neon `braintrust_trace_outbox` with trace ID, payload digest, attempts, next attempt, and terminal export state; do not use Worker memory as the retry spool.
   - [x] 14.9 Make deterministic finding/candidate state independent of Braintrust availability.
   - [x] 14.10 Add deterministic native quick-fix and user-authored semantic-operation paths for Fireworks failure; both pass the same guard, materialization, and validation gates.
