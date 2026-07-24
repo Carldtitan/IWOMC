@@ -58,6 +58,7 @@ export function createDemoSponsorRunRoutes(
   options: DemoSponsorRunRouteOptions = {}
 ): Hono<DemoBindings> {
   const routes = new Hono<DemoBindings>();
+  let activeRun = false;
   const timeoutMs = options.timeoutMs ?? maximumTimeoutMs;
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > maximumTimeoutMs) {
     throw new RangeError("demo sponsor run timeout is invalid");
@@ -78,6 +79,10 @@ export function createDemoSponsorRunRoutes(
     if (!(await hasEmptyBoundedBody(context.req.raw))) {
       return context.json({ error: "invalid_request" }, 400, responseHeaders(origin));
     }
+    if (activeRun) {
+      return context.json({ error: "sponsor_run_already_active" }, 409, responseHeaders(origin));
+    }
+    activeRun = true;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -90,6 +95,7 @@ export function createDemoSponsorRunRoutes(
       return context.json(failedResponse(controller.signal.aborted), 502, responseHeaders(origin));
     } finally {
       clearTimeout(timeout);
+      activeRun = false;
     }
   });
   return routes;
