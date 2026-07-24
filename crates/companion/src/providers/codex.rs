@@ -104,9 +104,25 @@ pub struct NormalizedCodexEvent {
     pub gaps: BTreeSet<CaptureGapCode>,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CodexObservationBoundaryKind {
+    Started,
+    DrainRequested,
+}
+
+/// A provider lifecycle boundary for the Companion's process-observer-owned lease coordinator.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CodexObservationBoundary {
+    pub kind: CodexObservationBoundaryKind,
+    pub session_id: String,
+    pub local_monotonic_nanos: u64,
+    pub provider_process_id: Option<u32>,
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AdapterOutput {
     pub event: Option<NormalizedCodexEvent>,
+    pub observation_boundary: Option<CodexObservationBoundary>,
     pub gaps: BTreeSet<CaptureGapCode>,
     pub duplicate_dropped: bool,
 }
@@ -212,7 +228,6 @@ struct SessionState {
     last_sequence: Option<u64>,
     open_terminal_actions: HashSet<String>,
     pending_before: HashMap<String, InstalledState>,
-    ended: bool,
 }
 
 pub struct CodexAdapter {
@@ -341,9 +356,7 @@ impl CodexAdapter {
             .clone()
             .unwrap_or_else(|| raw.event_id.clone());
         match raw.kind {
-            CodexEventKind::SessionStarted => session.ended = false,
             CodexEventKind::SessionEnded => {
-                session.ended = true;
                 if !session.open_terminal_actions.is_empty() {
                     gaps.insert(CaptureGapCode::MissingTerminalEvent);
                 }
@@ -380,6 +393,7 @@ impl CodexAdapter {
         }
 
         let action = self.build_action(&raw, pending_before.as_ref(), &mut gaps);
+        let observation_boundary = observation_boundary(&raw);
         let redacted_summary = raw
             .command_output
             .as_deref()
@@ -402,6 +416,7 @@ impl CodexAdapter {
         };
         Ok(AdapterOutput {
             event: Some(event),
+            observation_boundary,
             gaps,
             duplicate_dropped: false,
         })
@@ -510,6 +525,20 @@ impl CodexAdapter {
     }
 }
 
+fn observation_boundary(raw: &RawCodexEvent) -> Option<CodexObservationBoundary> {
+    let kind = match raw.kind {
+        CodexEventKind::SessionStarted => CodexObservationBoundaryKind::Started,
+        CodexEventKind::SessionEnded => CodexObservationBoundaryKind::DrainRequested,
+        _ => return None,
+    };
+    Some(CodexObservationBoundary {
+        kind,
+        session_id: raw.session_id.clone(),
+        local_monotonic_nanos: raw.monotonic_nanos,
+        provider_process_id: raw.provider_process_id,
+    })
+}
+
 fn validate_raw_event(raw: &RawCodexEvent) -> Result<(), CodexAdapterError> {
     let valid = !raw.event_id.is_empty()
         && !raw.session_id.is_empty()
@@ -541,7 +570,7 @@ mod tests {
 
     use super::{
         CODEX_LOCAL_SURFACE, CapabilityState, CodexAdapter, CodexAdapterConfig,
-        CodexAdapterErrorCode, CodexEventKind,
+        CodexAdapterErrorCode, CodexEventKind, CodexObservationBoundaryKind,
     };
     use crate::{
         REDACTEDs::{SecretKey, VersionedSecretKey},
@@ -650,6 +679,35 @@ mod tests {
         let output = adapter.normalize(&out_of_order).expect("out of order");
         assert!(output.event.is_none());
         assert!(output.gaps.contains(&CaptureGapCode::OutOfOrderSequence));
+    }
+
+    #[test]
+    fn session_end_requests_a_descendant_drain_boundary() {
+        let mut adapter = adapter();
+        let started = adapter
+            .normalize(&document(
+                1,
+                "session_started",
+                json!({"providerProcessId": 100}),
+            ))
+            .expect("start")
+            .observation_boundary
+            .expect("start boundary");
+        assert_eq!(started.kind, CodexObservationBoundaryKind::Started);
+        assert_eq!(started.provider_process_id, Some(100));
+
+        let ended = adapter
+            .normalize(&document(
+                2,
+                "session_ended",
+                json!({"providerProcessId": 100}),
+            ))
+            .expect("end")
+            .observation_boundary
+            .expect("end boundary");
+        assert_eq!(ended.kind, CodexObservationBoundaryKind::DrainRequested);
+        assert_eq!(ended.session_id, "session-1");
+        assert_eq!(ended.local_monotonic_nanos, 200);
     }
 
     #[test]
