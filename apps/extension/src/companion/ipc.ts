@@ -264,12 +264,7 @@ export class CompanionIpcClient {
       const responsePayload = requiredObject(challenge.payload);
       const serverNonce = requiredNonce(responsePayload.serverNonce);
       const serverMac = requiredMac(responsePayload.mac);
-      const expectedServerMac = createHandshakeMac(
-        REDACTED,
-        "server",
-        clientNonce,
-        serverNonce
-      );
+      const expectedServerMac = createHandshakeMac(REDACTED, "server", clientNonce, serverNonce);
       if (!safeMacEqual(serverMac, expectedServerMac)) {
         throw authenticationFailure();
       }
@@ -280,11 +275,7 @@ export class CompanionIpcClient {
         serverNonce
       });
       const proofPayload = requiredObject(proof.payload);
-      if (
-        proof.type !== "handshake.ack" ||
-        proof.ok !== true ||
-        proofPayload.accepted !== true
-      ) {
+      if (proof.type !== "handshake.ack" || proof.ok !== true || proofPayload.accepted !== true) {
         throw authenticationFailure();
       }
     } catch (error) {
@@ -334,9 +325,7 @@ export class CompanionIpcClient {
     const requestId = response.requestId;
     if (
       typeof requestId !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(
-        requestId
-      )
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(requestId)
     ) {
       throw new CompanionIpcError("invalid_frame", "The IPC response ID is invalid.");
     }
@@ -517,10 +506,7 @@ function safeMacEqual(actual: string, expected: string): boolean {
 }
 
 function authenticationFailure(): CompanionIpcError {
-  return new CompanionIpcError(
-    "authentication_failed",
-    "The Companion IPC authentication failed."
-  );
+  return new CompanionIpcError("authentication_failed", "The Companion IPC authentication failed.");
 }
 
 function isObject(value: unknown): value is JsonObject {

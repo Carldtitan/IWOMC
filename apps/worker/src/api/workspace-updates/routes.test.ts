@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  WorkspaceUpdateRouteError,
-  createWorkspaceUpdateRoutes
-} from "./routes.js";
+import { WorkspaceUpdateRouteError, createWorkspaceUpdateRoutes } from "./routes.js";
 import type {
   WorkspaceUpdatePage,
   WorkspaceUpdatesAuthenticator,
@@ -36,11 +33,14 @@ describe("workspace update route factory", () => {
       stale: false,
       updates: [{ id: "finding-1", kind: "finding" }]
     });
-    expect(calls).toEqual([
-      expect.objectContaining({
-        nowEpochMilliseconds: 1_234,
-        request: expect.any(Request)
-      }),
+    expect(calls[0]).toMatchObject({ nowEpochMilliseconds: 1_234 });
+    expect(
+      typeof calls[0] === "object" &&
+        calls[0] !== null &&
+        "request" in calls[0] &&
+        calls[0].request instanceof Request
+    ).toBe(true);
+    expect(calls.slice(1)).toEqual([
       {
         principal,
         projectId: "project-1",
@@ -59,16 +59,13 @@ describe("workspace update route factory", () => {
   it("returns 304 for matching strong or weak If-None-Match only after authorization", async () => {
     const calls: unknown[] = [];
     const app = createWorkspaceUpdateRoutes(authenticator(calls), service(calls));
-    const first = await app.request(
-      "/api/workspaces/workspace-1/projects/project-1/updates"
-    );
+    const first = await app.request("/api/workspaces/workspace-1/projects/project-1/updates");
     const etag = first.headers.get("etag");
     expect(etag).not.toBeNull();
 
-    const response = await app.request(
-      "/api/workspaces/workspace-1/projects/project-1/updates",
-      { headers: { "If-None-Match": `W/${etag}` } }
-    );
+    const response = await app.request("/api/workspaces/workspace-1/projects/project-1/updates", {
+      headers: { "If-None-Match": `W/${etag}` }
+    });
 
     expect(response.status).toBe(304);
     expect(await response.text()).toBe("");
@@ -92,9 +89,7 @@ describe("workspace update route factory", () => {
         })
     });
 
-    const response = await app.request(
-      "/api/workspaces/workspace-1/projects/project-1/updates"
-    );
+    const response = await app.request("/api/workspaces/workspace-1/projects/project-1/updates");
 
     expect(response.status).toBe(200);
     expect(response.headers.get("x-REDACTED-data-state")).toBe("stale_partial");
@@ -183,9 +178,7 @@ describe("workspace update route factory", () => {
       retryable: true
     });
     expect(unsafeResponse.status).toBe(500);
-    expect(await unsafeResponse.text()).toBe(
-      '{"error":"internal_server_error","retryable":false}'
-    );
+    expect(await unsafeResponse.text()).toBe('{"error":"internal_server_error","retryable":false}');
   });
 });
 

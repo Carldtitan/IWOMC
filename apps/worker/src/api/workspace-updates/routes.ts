@@ -16,11 +16,7 @@ export interface WorkspaceUpdateRouteOptions {
 }
 
 type RouteErrorCode =
-  | "forbidden"
-  | "invalid_cursor"
-  | "invalid_identifier"
-  | "service_unavailable"
-  | "unauthorized";
+  "forbidden" | "invalid_cursor" | "invalid_identifier" | "service_unavailable" | "unauthorized";
 
 export class WorkspaceUpdateRouteError extends Error {
   readonly code: RouteErrorCode;
@@ -148,9 +144,7 @@ function validatePage(page: WorkspaceUpdatePage): WorkspaceUpdatePage {
     page.updates.length <= 1_000 &&
     page.updates.every(validUpdate) &&
     (page.systemStatus === undefined ||
-      (["operational", "degraded", "unavailable", "unknown"].includes(
-        page.systemStatus.health
-      ) &&
+      (["operational", "degraded", "unavailable", "unknown"].includes(page.systemStatus.health) &&
         page.systemStatus.summary.length > 0 &&
         page.systemStatus.summary.length <= 500 &&
         validTimestamp(page.systemStatus.updatedAt)));

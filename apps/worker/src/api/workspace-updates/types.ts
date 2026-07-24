@@ -11,13 +11,7 @@ export interface WorkspaceUpdatesAuthenticator {
 }
 
 export type WorkspaceUpdateKind =
-  | "capability"
-  | "session"
-  | "capture_gap"
-  | "finding"
-  | "candidate"
-  | "validation"
-  | "system";
+  "capability" | "session" | "capture_gap" | "finding" | "candidate" | "validation" | "system";
 
 export interface WorkspaceUpdateRecord {
   readonly id: string;

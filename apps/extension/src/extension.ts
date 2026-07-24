@@ -86,8 +86,7 @@ export class ExtensionRuntime {
     this.#context = context;
     this.#store = new ExtensionStateStore(context.globalState, context.REDACTEDs);
     this.#companion = dependencies.companion ?? new CompanionController();
-    this.#nowEpochSeconds =
-      dependencies.nowEpochSeconds ?? (() => Math.floor(Date.now() / 1_000));
+    this.#nowEpochSeconds = dependencies.nowEpochSeconds ?? (() => Math.floor(Date.now() / 1_000));
     const serviceUrl = vscode.workspace
       .getConfiguration("environmentReconciler")
       .get<string>("serviceUrl", "http://localhost:8787");
@@ -412,7 +411,9 @@ export class ExtensionRuntime {
       process.platform === "win32"
         ? "environment-REDACTED-companion.exe"
         : "environment-REDACTED-companion";
-    return this.#context.asAbsolutePath(path.join("bin", process.platform, process.arch, binaryName));
+    return this.#context.asAbsolutePath(
+      path.join("bin", process.platform, process.arch, binaryName)
+    );
   }
 
   async #saveProject(project: ProjectSummary, repositoryPath: string): Promise<void> {

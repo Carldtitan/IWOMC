@@ -60,19 +60,13 @@
         "terminalId": "terminal-fixture",
         "terminalMatches": true,
         "processId": 102,
-        "parentProcessIds": [
-          101,
-          100
-        ],
+        "parentProcessIds": [101, 100],
         "providerProcessId": 100,
         "workingDirectory": "C:/fixture/private-repository",
         "workingDirectoryMatches": true,
         "realmMatches": true,
         "executable": "npm",
-        "arguments": [
-          "install",
-          "hidden-runtime"
-        ],
+        "arguments": ["install", "hidden-runtime"],
         "commandOutput": "installed hidden-runtime with sk-test_FAKE_51HACKATHON_NOT_A_REAL_KEY_000000",
         "exitCode": 0,
         "inventoryBefore": {
@@ -111,9 +105,7 @@
         "realmId": "host-fixture",
         "actor": "agent",
         "executorActor": "agent",
-        "affectedPaths": [
-          "C:/fixture/private-repository/package.json"
-        ]
+        "affectedPaths": ["C:/fixture/private-repository/package.json"]
       }
     },
     {

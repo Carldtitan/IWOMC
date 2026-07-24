@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 
 export type CompanionErrorCode = "already_running" | "missing_binary" | "spawn_failed";
@@ -36,7 +36,7 @@ const defaultLauncher: CompanionLauncher = (binaryPath, environment) =>
     env: environment,
     stdio: "ignore",
     windowsHide: true
-  }) as ChildProcess as ManagedChild;
+  });
 
 export class CompanionController {
   readonly #fileExists: (path: string) => boolean;
@@ -92,13 +92,13 @@ export class CompanionController {
 
   async stop(): Promise<void> {
     const child = this.#child;
-    if (child === undefined || child.exitCode !== null) {
+    if (child?.exitCode !== null) {
       this.#child = undefined;
       return;
     }
     child.kill("SIGTERM");
     const exited = await waitForExit(child, this.#shutdownTimeoutMilliseconds);
-    if (!exited && child.exitCode === null) {
+    if (!exited && hasNotExited(child)) {
       child.kill("SIGKILL");
       await waitForExit(child, Math.min(this.#shutdownTimeoutMilliseconds, 250));
     }
@@ -106,6 +106,10 @@ export class CompanionController {
       this.#child = undefined;
     }
   }
+}
+
+function hasNotExited(child: ManagedChild): boolean {
+  return child.exitCode === null;
 }
 
 function waitForExit(child: ManagedChild, timeoutMilliseconds: number): Promise<boolean> {
