@@ -1,0 +1,81 @@
+{
+  "baseDocument": {
+    "boundarySource": "provider",
+    "capabilityReportId": "example",
+    "capture": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+    "deviceId": "example",
+    "kind": "session",
+    "projectId": "example",
+    "provider": "codex",
+    "realmId": "example",
+    "schemaVersion": 1,
+    "sessionId": "example",
+    "startedAt": "2026-01-02T03:04:05Z",
+    "status": "registered",
+    "surface": "example",
+    "workspaceId": "example"
+  },
+  "description": "A v1 reader accepts an older minimal payload and the same payload with an optional field already reserved by v1.",
+  "documentWithOptionalField": {
+    "boundarySource": "provider",
+    "capabilityReportId": "example",
+    "capture": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+    "deviceId": "example",
+    "endedAt": "2026-01-02T04:05:06Z",
+    "kind": "session",
+    "projectId": "example",
+    "provider": "codex",
+    "realmId": "example",
+    "schemaVersion": 1,
+    "sessionId": "example",
+    "startedAt": "2026-01-02T03:04:05Z",
+    "status": "registered",
+    "surface": "example",
+    "workspaceId": "example"
+  },
+  "fixtureVersion": 1,
+  "numericVersionEncodings": [
+    {
+      "canonicalDigest": "sha256:8f8a6bc46ec59aac93af26528cb2f3d5ba4411759faa0786627c34373c48f9ba",
+      "encoding": "integer",
+      "json": "{\"schemaVersion\":1,\"kind\":\"workspace\",\"workspaceId\":\"example\",\"name\":\"example\",\"createdAt\":\"2026-01-02T03:04:05Z\",\"retentionClass\":\"example\"}"
+    },
+    {
+      "canonicalDigest": "sha256:8f8a6bc46ec59aac93af26528cb2f3d5ba4411759faa0786627c34373c48f9ba",
+      "encoding": "decimal",
+      "json": "{\"schemaVersion\":1.0,\"kind\":\"workspace\",\"workspaceId\":\"example\",\"name\":\"example\",\"createdAt\":\"2026-01-02T03:04:05Z\",\"retentionClass\":\"example\"}"
+    },
+    {
+      "canonicalDigest": "sha256:8f8a6bc46ec59aac93af26528cb2f3d5ba4411759faa0786627c34373c48f9ba",
+      "encoding": "exponent",
+      "json": "{\"schemaVersion\":1e0,\"kind\":\"workspace\",\"workspaceId\":\"example\",\"name\":\"example\",\"createdAt\":\"2026-01-02T03:04:05Z\",\"retentionClass\":\"example\"}"
+    }
+  ],
+  "protocolSchemaVersion": 1,
+  "timestampDocuments": [
+    {
+      "canonicalDigest": "sha256:7a8f6fff3c346efb8f1e94b82b4d09e5a03a8bad06e24212256aa498ab1545cf",
+      "document": {
+        "createdAt": "2026-01-02T04:04:05+01:00",
+        "kind": "workspace",
+        "name": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "workspaceId": "example"
+      },
+      "encoding": "offset"
+    },
+    {
+      "canonicalDigest": "sha256:64dca0ba4a06a25e53ab494f81dce06b8a266709f0bd7c2e81548d092d5f5277",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05.123400Z",
+        "kind": "workspace",
+        "name": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "workspaceId": "example"
+      },
+      "encoding": "fractional"
+    }
+  ]
+}

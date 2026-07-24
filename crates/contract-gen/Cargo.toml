@@ -1,0 +1,18 @@
+[package]
+name = "environment-reconciler-contract-gen"
+description = "Deterministic Rust contract generator for Environment Reconciler"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+prettyplease = "=0.3.0"
+quote = "=1.0.47"
+schemars = "=0.8.22"
+serde_json = "=1.0.151"
+syn = { version = "=3.0.3", features = ["full"] }
+typify = "=0.7.0"

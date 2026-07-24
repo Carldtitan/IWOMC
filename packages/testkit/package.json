@@ -11,6 +11,10 @@
     "clean": "rimraf dist",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
+  "dependencies": {
+    "@environment-reconciler/integrations": "workspace:*",
+    "@environment-reconciler/reconciler": "workspace:*"
+  },
   "devDependencies": {
     "rimraf": "^6.0.1",
     "typescript": "6.0.3"

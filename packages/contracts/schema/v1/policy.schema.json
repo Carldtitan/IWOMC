@@ -1,0 +1,443 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/policy.schema.json",
+  "title": "Environment Reconciler Behavior and Optimality Policy Contracts v1",
+  "$defs": {
+    "BehaviorAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assertionId", "kind", "subject", "operator", "expected", "required"],
+      "properties": {
+        "assertionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "exit_status",
+            "file_exists",
+            "file_absent",
+            "stdout_matches",
+            "stderr_matches",
+            "http_status",
+            "duration_under",
+            "dependency_graph"
+          ]
+        },
+        "subject": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "equals",
+            "not_equals",
+            "contains",
+            "matches",
+            "exists",
+            "absent",
+            "less_than",
+            "greater_than"
+          ]
+        },
+        "expected": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BehaviorStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stepId",
+        "order",
+        "enabled",
+        "kind",
+        "executable",
+        "arguments",
+        "workingDirectory",
+        "realmAssessment",
+        "targetSelector",
+        "timeoutSeconds",
+        "secretReferenceIds",
+        "expectedExitStatuses",
+        "assertions",
+        "required",
+        "discoveryEvidenceReferenceIds",
+        "discoveryFingerprint"
+      ],
+      "properties": {
+        "stepId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["resolve", "install", "build", "lint", "typecheck", "test", "smoke", "benchmark"]
+        },
+        "executable": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "workingDirectory": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "realmAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "targetSelector": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "secretReferenceIds": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "expectedExitStatuses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "assertions": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/BehaviorAssertion"
+          }
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "discoveryEvidenceReferenceIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "discoveryFingerprint": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "BehaviorContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "contractId",
+        "workspaceId",
+        "projectId",
+        "version",
+        "sourceInputDigest",
+        "reviewState",
+        "reviewAssessment",
+        "invalidatedBySourceIds",
+        "steps",
+        "contractDigest",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "behavior_contract"
+        },
+        "contractId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "reviewState": {
+          "type": "string",
+          "enum": ["discovered", "needs_review", "accepted", "invalidated"]
+        },
+        "reviewAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "acceptedBy": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "acceptedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "invalidatedBySourceIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/BehaviorStep"
+          }
+        },
+        "contractDigest": {
+          "description": "RFC 8785 SHA-256 digest of this object with contractDigest omitted.",
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "PolicyConstraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["constraintId", "kind", "subject", "operator", "operand", "failureCode"],
+      "properties": {
+        "constraintId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "required_target",
+            "allowed_manager",
+            "allowed_package",
+            "denied_package",
+            "maximum_dependency_count",
+            "required_test",
+            "required_lockfile",
+            "network_policy",
+            "resource_budget",
+            "path_scope",
+            "secret_policy",
+            "custom"
+          ]
+        },
+        "subject": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "equals",
+            "not_equals",
+            "contains",
+            "not_contains",
+            "less_than_or_equal",
+            "greater_than_or_equal",
+            "matches"
+          ]
+        },
+        "operand": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "failureCode": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        }
+      }
+    },
+    "PolicyObjective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectiveId", "kind", "direction", "weight", "measurement", "userSupplied"],
+      "properties": {
+        "objectiveId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "validation_pass_rate",
+            "dependency_count",
+            "install_duration",
+            "build_duration",
+            "test_duration",
+            "artifact_size",
+            "security_risk",
+            "version_freshness",
+            "custom"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["minimize", "maximize"]
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "measurement": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "userSupplied": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PolicyBudgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxCandidates",
+        "maxConcurrentJobs",
+        "maxAttempts",
+        "maxElapsedSeconds",
+        "maxEstimatedCostMicrousd"
+      ],
+      "properties": {
+        "maxCandidates": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxConcurrentJobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "maxElapsedSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 604800
+        },
+        "maxEstimatedCostMicrousd": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        }
+      }
+    },
+    "OptimalityPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "policyId",
+        "workspaceId",
+        "projectId",
+        "version",
+        "mode",
+        "hardConstraints",
+        "objectives",
+        "requiredTargetIds",
+        "budgets",
+        "policyDigest",
+        "createdBy",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "optimality_policy"
+        },
+        "policyId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["default", "user_defined", "hybrid"]
+        },
+        "hardConstraints": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/PolicyConstraint"
+          }
+        },
+        "objectives": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/PolicyObjective"
+          }
+        },
+        "requiredTargetIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "budgets": {
+          "$ref": "#/$defs/PolicyBudgets"
+        },
+        "policyDigest": {
+          "description": "RFC 8785 SHA-256 digest of this object with policyDigest omitted.",
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "createdBy": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

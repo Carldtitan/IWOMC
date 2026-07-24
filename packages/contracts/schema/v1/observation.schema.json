@@ -1,0 +1,790 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/observation.schema.json",
+  "title": "Environment Reconciler Observation Contracts v1",
+  "$defs": {
+    "ActorReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actorClass", "identityState"],
+      "properties": {
+        "actorClass": {
+          "type": "string",
+          "enum": ["human", "agent", "subagent", "system", "mixed", "unknown"]
+        },
+        "identityState": {
+          "type": "string",
+          "enum": ["pseudonymous", "unknown", "not_applicable"]
+        },
+        "pseudonymousId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "provider": {
+          "$ref": "provider.schema.json#/$defs/ProviderName"
+        }
+      }
+    },
+    "ApprovalEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "actor", "modifiedBeforeExecution"],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["approved", "denied", "not_required", "unknown"]
+        },
+        "actor": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "modifiedBeforeExecution": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ActorAttribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initiatorActor",
+        "executorActor",
+        "approval",
+        "classification",
+        "confidence",
+        "factors"
+      ],
+      "properties": {
+        "initiatorActor": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "executorActor": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "approval": {
+          "$ref": "#/$defs/ApprovalEvidence"
+        },
+        "classification": {
+          "type": "string",
+          "enum": ["human", "agent", "subagent", "system", "mixed", "unknown"]
+        },
+        "confidence": {
+          "$ref": "common.schema.json#/$defs/Confidence"
+        },
+        "factors": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        }
+      }
+    },
+    "EnvironmentFingerprintComparable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "keyVersion", "fingerprint"],
+      "properties": {
+        "state": {
+          "const": "comparable"
+        },
+        "keyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "fingerprint": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "EnvironmentFingerprintUnavailable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reasonCode"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["unknown", "not_applicable", "unsupported"]
+        },
+        "reasonCode": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        }
+      }
+    },
+    "EnvironmentFingerprint": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/EnvironmentFingerprintComparable"
+        },
+        {
+          "$ref": "#/$defs/EnvironmentFingerprintUnavailable"
+        }
+      ]
+    },
+    "EnvironmentVariableObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "present", "scope", "change", "secretDetected", "fingerprint"],
+      "properties": {
+        "name": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["process", "session", "project", "user", "system", "unknown"]
+        },
+        "change": {
+          "type": "string",
+          "enum": ["added", "removed", "changed", "unchanged", "unknown"]
+        },
+        "secretDetected": {
+          "type": "boolean"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/EnvironmentFingerprint"
+        }
+      }
+    },
+    "PackageOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manager", "operation", "packageName", "requestedVersion", "scope"],
+      "properties": {
+        "manager": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "operation": {
+          "type": "string",
+          "enum": ["install", "remove", "update", "resolve", "sync", "unknown"]
+        },
+        "packageName": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "requestedVersion": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["project", "workspace", "virtual_environment", "user", "system", "unknown"]
+        }
+      }
+    },
+    "FileEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "effect", "contentCaptured"],
+      "properties": {
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "effect": {
+          "type": "string",
+          "enum": ["created", "modified", "deleted", "renamed", "read", "unknown"]
+        },
+        "contentCaptured": {
+          "const": false
+        },
+        "beforeDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "afterDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "RedactedActionPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationKind",
+        "summary",
+        "executableFamily",
+        "argumentShape",
+        "packageOperations",
+        "fileEffects",
+        "environmentVariables",
+        "diagnosticCodes"
+      ],
+      "properties": {
+        "operationKind": {
+          "type": "string",
+          "enum": ["package", "process", "file", "configuration", "service", "runtime", "unknown"]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "executableFamily": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "argumentShape": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "packageOperations": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/PackageOperation"
+          }
+        },
+        "fileEffects": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/FileEffect"
+          }
+        },
+        "environmentVariables": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/EnvironmentVariableObservation"
+          }
+        },
+        "diagnosticCodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        }
+      }
+    },
+    "ObservationSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceKind", "providerState"],
+      "properties": {
+        "sourceKind": {
+          "type": "string",
+          "enum": ["provider", "process", "filesystem", "inventory", "extension", "system"]
+        },
+        "providerState": {
+          "type": "string",
+          "enum": ["identified", "unknown", "not_applicable"]
+        },
+        "provider": {
+          "$ref": "provider.schema.json#/$defs/ProviderName"
+        },
+        "surface": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        }
+      }
+    },
+    "ObservationEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "eventId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "bootId",
+        "source",
+        "sourceStreamId",
+        "sourceSequenceState",
+        "localSequence",
+        "causalParentEventIds",
+        "realmId",
+        "sessionState",
+        "turnState",
+        "toolCallState",
+        "actor",
+        "actionType",
+        "outcome",
+        "payload",
+        "capture",
+        "timestampUtc",
+        "monotonicNanos",
+        "clockUncertaintyMs",
+        "redactionPolicyVersion",
+        "previousEventHashState",
+        "eventHash"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "observation_event"
+        },
+        "eventId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "bootId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "source": {
+          "$ref": "#/$defs/ObservationSource"
+        },
+        "sourceStreamId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceSequenceState": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state", "value"],
+              "properties": {
+                "state": {
+                  "const": "known"
+                },
+                "value": {
+                  "$ref": "common.schema.json#/$defs/DecimalCounter"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state", "reasonCode"],
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "enum": ["unknown", "unsupported", "not_applicable"]
+                },
+                "reasonCode": {
+                  "$ref": "common.schema.json#/$defs/ShortString"
+                }
+              }
+            }
+          ]
+        },
+        "localSequence": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        },
+        "causalParentEventIds": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "layerId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sessionState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "sessionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "turnState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "turnId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "toolCallState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "toolCallId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "actor": {
+          "$ref": "#/$defs/ActorAttribution"
+        },
+        "actionType": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["attempted", "succeeded", "failed", "unknown"]
+        },
+        "payload": {
+          "$ref": "#/$defs/RedactedActionPayload"
+        },
+        "capture": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "timestampUtc": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "monotonicNanos": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        },
+        "clockUncertaintyMs": {
+          "$ref": "common.schema.json#/$defs/DurationMs"
+        },
+        "redactionPolicyVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "previousEventHashState": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state", "digest"],
+              "properties": {
+                "state": {
+                  "const": "known"
+                },
+                "digest": {
+                  "$ref": "common.schema.json#/$defs/Sha256Digest"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state"],
+              "properties": {
+                "state": {
+                  "const": "not_applicable"
+                }
+              }
+            }
+          ]
+        },
+        "eventHash": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "ActionEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "actionId",
+        "workspaceId",
+        "projectId",
+        "realmId",
+        "eventIds",
+        "providerEventState",
+        "preSnapshotState",
+        "postSnapshotState",
+        "attribution",
+        "stabilization",
+        "overlappingActionIds",
+        "gapIds",
+        "effectAssessment"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "action_envelope"
+        },
+        "actionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "layerId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "eventIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2048,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "providerEventState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "providerEventId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "preSnapshotState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "preSnapshotId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "postSnapshotState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "postSnapshotId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attribution": {
+          "$ref": "#/$defs/ActorAttribution"
+        },
+        "stabilization": {
+          "type": "string",
+          "enum": ["stable", "timed_out", "overlapping"]
+        },
+        "overlappingActionIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "gapIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "effectAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        }
+      }
+    },
+    "CaptureGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "gapId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "gapType",
+        "scope",
+        "reasonCode",
+        "impact",
+        "startedAt",
+        "resolutionState"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "capture_gap"
+        },
+        "gapId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "gapType": {
+          "type": "string",
+          "enum": [
+            "provider_event_loss",
+            "observer_disabled",
+            "permission_denied",
+            "snapshot_missing",
+            "stabilization_timeout",
+            "realm_unobserved",
+            "unsupported_surface",
+            "unknown"
+          ]
+        },
+        "scope": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "reasonCode": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "impact": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "startedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "resolutionState": {
+          "type": "string",
+          "enum": ["open", "resolved", "not_resolvable"]
+        },
+        "endedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "InventoryScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["realmId", "layerIds", "managerIds", "pathPseudonyms"],
+      "properties": {
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "layerIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "managerIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "pathPseudonyms": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "AdapterInventoryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapterId",
+        "adapterVersion",
+        "supportLevel",
+        "assessment",
+        "graphObjectIds",
+        "diagnosticCodes"
+      ],
+      "properties": {
+        "adapterId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "adapterVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "supportLevel": {
+          "$ref": "common.schema.json#/$defs/SupportLevel"
+        },
+        "assessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "graphObjectIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "diagnosticCodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "snapshotId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "parentSnapshotState",
+        "intervalStart",
+        "intervalEnd",
+        "scope",
+        "completeness",
+        "adapterResults",
+        "gapIds",
+        "contentDigest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "snapshot"
+        },
+        "snapshotId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "layerId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "parentSnapshotState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "parentSnapshotId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "intervalStart": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "intervalEnd": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "scope": {
+          "$ref": "#/$defs/InventoryScope"
+        },
+        "completeness": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "adapterResults": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/AdapterInventoryResult"
+          }
+        },
+        "gapIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    }
+  }
+}

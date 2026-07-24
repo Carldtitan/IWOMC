@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./env": "./src/env.ts"
+    "./env": "./src/env.ts",
+    "./generated": "./src/generated/protocol.ts",
+    "./protocol": "./src/protocol.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -13,6 +15,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "canonicalize": "3.0.0",
     "zod": "^4.1.5"
   },
   "devDependencies": {

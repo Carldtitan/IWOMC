@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/companion"]
+members = ["crates/companion", "crates/contract-gen"]
 resolver = "2"
 
 [workspace.package]

@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/protocol.schema.json",
+  "title": "ProtocolDocumentV1",
+  "description": "Discriminated union of every independently stored or transmitted v1 payload.",
+  "oneOf": [
+    {
+      "$ref": "identity.schema.json#/$defs/Workspace"
+    },
+    {
+      "$ref": "identity.schema.json#/$defs/Project"
+    },
+    {
+      "$ref": "identity.schema.json#/$defs/Device"
+    },
+    {
+      "$ref": "identity.schema.json#/$defs/Realm"
+    },
+    {
+      "$ref": "identity.schema.json#/$defs/Layer"
+    },
+    {
+      "$ref": "provider.schema.json#/$defs/ProviderCapabilityProfile"
+    },
+    {
+      "$ref": "provider.schema.json#/$defs/Session"
+    },
+    {
+      "$ref": "observation.schema.json#/$defs/ObservationEvent"
+    },
+    {
+      "$ref": "observation.schema.json#/$defs/ActionEnvelope"
+    },
+    {
+      "$ref": "observation.schema.json#/$defs/CaptureGap"
+    },
+    {
+      "$ref": "observation.schema.json#/$defs/Snapshot"
+    },
+    {
+      "$ref": "source.schema.json#/$defs/SourceInput"
+    },
+    {
+      "$ref": "source.schema.json#/$defs/WorkingTreeBundle"
+    },
+    {
+      "$ref": "source.schema.json#/$defs/SubmoduleIdentity"
+    },
+    {
+      "$ref": "source.schema.json#/$defs/LfsIdentity"
+    },
+    {
+      "$ref": "source.schema.json#/$defs/ObjectMetadata"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/DeclaredGraph"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/LockedGraph"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/ResolvedGraph"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/InstalledGraph"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/UsedGraph"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/ObservedActionGraph"
+    },
+    {
+      "$ref": "graphs.schema.json#/$defs/ValidatedGraph"
+    },
+    {
+      "$ref": "finding.schema.json#/$defs/Finding"
+    },
+    {
+      "$ref": "finding.schema.json#/$defs/EvidenceReference"
+    },
+    {
+      "$ref": "policy.schema.json#/$defs/BehaviorContract"
+    },
+    {
+      "$ref": "policy.schema.json#/$defs/OptimalityPolicy"
+    },
+    {
+      "$ref": "candidate.schema.json#/$defs/CandidatePlan"
+    },
+    {
+      "$ref": "candidate.schema.json#/$defs/CandidatePatch"
+    },
+    {
+      "$ref": "candidate.schema.json#/$defs/CandidateLifecycle"
+    },
+    {
+      "$ref": "validation.schema.json#/$defs/ValidationTarget"
+    },
+    {
+      "$ref": "validation.schema.json#/$defs/ValidationBatch"
+    },
+    {
+      "$ref": "validation.schema.json#/$defs/ValidationJob"
+    },
+    {
+      "$ref": "validation.schema.json#/$defs/ValidationPhase"
+    },
+    {
+      "$ref": "validation.schema.json#/$defs/ValidationOutcome"
+    },
+    {
+      "$ref": "validation.schema.json#/$defs/ValidationAttestation"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/ValidationJobKey"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/ValidationCacheEntry"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/ConcurrencyLease"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/ExternalOperation"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/SecretReference"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/SecretBinding"
+    },
+    {
+      "$ref": "operations.schema.json#/$defs/BraintrustOutboxRecord"
+    },
+    {
+      "$ref": "collaboration.schema.json#/$defs/Recommendation"
+    },
+    {
+      "$ref": "collaboration.schema.json#/$defs/Approval"
+    },
+    {
+      "$ref": "collaboration.schema.json#/$defs/AuditEvent"
+    },
+    {
+      "$ref": "ipc.schema.json#/$defs/CompanionStatus"
+    },
+    {
+      "$ref": "ipc.schema.json#/$defs/CompanionRequest"
+    },
+    {
+      "$ref": "ipc.schema.json#/$defs/CompanionResponse"
+    },
+    {
+      "$ref": "ipc.schema.json#/$defs/CompanionNotification"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/DeviceEnrollmentRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/DeviceEnrollmentResponse"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ObservationEventBatchRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/IngestAcceptedResponse"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/SnapshotIngestRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/CapabilityProfilePublishRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ChainAnchorPublishRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/CheckpointCreateRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/CheckpointCreateResponse"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ObjectUploadAuthorizationRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/EphemeralObjectAuthorization"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ObjectFinalizeRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ObjectKeyExchangeRequest"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ObjectKeyExchangeResponse"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ReconcileQueueMessage"
+    },
+    {
+      "$ref": "api.schema.json#/$defs/ApiErrorResponse"
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/identity.schema.json",
+  "title": "Environment Reconciler Identity Contracts v1",
+  "$defs": {
+    "WorkspaceRole": {
+      "type": "string",
+      "enum": ["owner", "member"]
+    },
+    "Workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "workspaceId", "name", "createdAt", "retentionClass"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "workspace"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "retentionClass": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        }
+      }
+    },
+    "Project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "projectId",
+        "workspaceId",
+        "repositoryId",
+        "repositoryFullName",
+        "defaultBranch",
+        "projectGoal",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "project"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "repositoryId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "repositoryFullName": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "defaultBranch": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "projectGoal": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "Device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "deviceId",
+        "workspaceId",
+        "displayName",
+        "platform",
+        "architecture",
+        "signingPublicKey",
+        "credentialVersion",
+        "status",
+        "enrolledAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "device"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "displayName": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["windows", "linux", "macos"]
+        },
+        "architecture": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "signingPublicKey": {
+          "$ref": "common.schema.json#/$defs/Base64"
+        },
+        "credentialVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "status": {
+          "type": "string",
+          "enum": ["paired", "online", "offline", "revoked"]
+        },
+        "enrolledAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "Realm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "realmId",
+        "deviceId",
+        "realmType",
+        "platform",
+        "architecture",
+        "displayLabel",
+        "coverage"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "realm"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "parentRealmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmType": {
+          "type": "string",
+          "enum": [
+            "host",
+            "wsl",
+            "dev_container",
+            "remote_ssh",
+            "codespace",
+            "cloud_environment",
+            "validation_sandbox"
+          ]
+        },
+        "platform": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "architecture": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "displayLabel": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "coverage": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        }
+      }
+    },
+    "Layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "layerId",
+        "realmId",
+        "layerType",
+        "selectors",
+        "coverage"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "layer"
+        },
+        "layerId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "parentLayerId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "layerType": {
+          "type": "string",
+          "enum": ["system", "user", "project", "virtual_environment", "container", "sandbox"]
+        },
+        "selectors": {
+          "$ref": "common.schema.json#/$defs/StringMap"
+        },
+        "coverage": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        }
+      }
+    }
+  }
+}

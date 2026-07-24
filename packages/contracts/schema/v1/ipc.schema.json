@@ -1,0 +1,465 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/ipc.schema.json",
+  "title": "Environment Reconciler Extension and Companion IPC Contracts v1",
+  "$defs": {
+    "CompanionStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "state",
+        "deviceEnrollment",
+        "activeProject",
+        "activeSession",
+        "coverage",
+        "pendingUploadBatches",
+        "companionVersion",
+        "protocolVersion",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "companion_status"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "disconnected",
+            "observing",
+            "offline_buffering",
+            "capture_gap",
+            "finding",
+            "validating",
+            "verified",
+            "error"
+          ]
+        },
+        "deviceEnrollment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "activeProject": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "activeProjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "activeSession": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "activeSessionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "coverage": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "pendingUploadBatches": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "companionVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "protocolVersion": {
+          "type": "integer",
+          "const": 1
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "StatusGetCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "status.get"
+        }
+      }
+    },
+    "WorkspaceEnrollCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "enrollmentToken"],
+      "properties": {
+        "type": {
+          "const": "workspace.enroll"
+        },
+        "enrollmentToken": {
+          "$ref": "common.schema.json#/$defs/OpaqueTokenId"
+        }
+      }
+    },
+    "ProjectBindCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "repositoryPath", "projectId"],
+      "properties": {
+        "type": {
+          "const": "project.bind"
+        },
+        "repositoryPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "ObservationStartCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "projectId", "providerSurface"],
+      "properties": {
+        "type": {
+          "const": "observation.start"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "providerSurface": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        }
+      }
+    },
+    "ObservationStopCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "sessionId"],
+      "properties": {
+        "type": {
+          "const": "observation.stop"
+        },
+        "sessionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "CheckpointCreateCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "reason"],
+      "properties": {
+        "type": {
+          "const": "checkpoint.create"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["manual", "session_end"]
+        }
+      }
+    },
+    "CoverageDiagnoseCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "coverage.diagnose"
+        }
+      }
+    },
+    "CompanionCommand": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/StatusGetCommand"
+        },
+        {
+          "$ref": "#/$defs/WorkspaceEnrollCommand"
+        },
+        {
+          "$ref": "#/$defs/ProjectBindCommand"
+        },
+        {
+          "$ref": "#/$defs/ObservationStartCommand"
+        },
+        {
+          "$ref": "#/$defs/ObservationStopCommand"
+        },
+        {
+          "$ref": "#/$defs/CheckpointCreateCommand"
+        },
+        {
+          "$ref": "#/$defs/CoverageDiagnoseCommand"
+        }
+      ]
+    },
+    "CompanionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "deviceId",
+        "startupChallengeId",
+        "challengeSignature",
+        "command",
+        "sentAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "companion_request"
+        },
+        "requestId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "startupChallengeId": {
+          "$ref": "common.schema.json#/$defs/OpaqueTokenId"
+        },
+        "challengeSignature": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "command": {
+          "$ref": "#/$defs/CompanionCommand"
+        },
+        "sentAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "CompanionSuccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "status", "resourceAssessment"],
+      "properties": {
+        "result": {
+          "const": "success"
+        },
+        "status": {
+          "$ref": "#/$defs/CompanionStatus"
+        },
+        "resourceAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "resourceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "CompanionFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "error"],
+      "properties": {
+        "result": {
+          "const": "failure"
+        },
+        "error": {
+          "$ref": "common.schema.json#/$defs/ProtocolError"
+        }
+      }
+    },
+    "CompanionResponseOutcome": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/CompanionSuccess"
+        },
+        {
+          "$ref": "#/$defs/CompanionFailure"
+        }
+      ]
+    },
+    "CompanionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "requestId", "outcome", "sentAt"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "companion_response"
+        },
+        "requestId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "outcome": {
+          "$ref": "#/$defs/CompanionResponseOutcome"
+        },
+        "sentAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "LocalSessionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "projectId", "provider", "state", "coverage", "startedAt"],
+      "properties": {
+        "sessionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "provider": {
+          "$ref": "provider.schema.json#/$defs/ProviderName"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "registered",
+            "observing",
+            "draining",
+            "checkpointing",
+            "ended",
+            "partial_capture"
+          ]
+        },
+        "coverage": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "startedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "CaptureGapSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["captureGapId", "sessionId", "reasonCode", "severity", "startedAt"],
+      "properties": {
+        "captureGapId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sessionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "reasonCode": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "blocking"]
+        },
+        "startedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "StatusChangedNotification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "status"],
+      "properties": {
+        "type": {
+          "const": "status.changed"
+        },
+        "status": {
+          "$ref": "#/$defs/CompanionStatus"
+        }
+      }
+    },
+    "SessionChangedNotification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "session"],
+      "properties": {
+        "type": {
+          "const": "session.changed"
+        },
+        "session": {
+          "$ref": "#/$defs/LocalSessionSummary"
+        }
+      }
+    },
+    "CaptureGapCreatedNotification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "gap"],
+      "properties": {
+        "type": {
+          "const": "capture_gap.created"
+        },
+        "gap": {
+          "$ref": "#/$defs/CaptureGapSummary"
+        }
+      }
+    },
+    "FindingAvailableNotification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "findingId"],
+      "properties": {
+        "type": {
+          "const": "finding.available"
+        },
+        "findingId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "UploadChangedNotification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "pendingBatches"],
+      "properties": {
+        "type": {
+          "const": "upload.changed"
+        },
+        "pendingBatches": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "CompanionNotificationPayload": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/StatusChangedNotification"
+        },
+        {
+          "$ref": "#/$defs/SessionChangedNotification"
+        },
+        {
+          "$ref": "#/$defs/CaptureGapCreatedNotification"
+        },
+        {
+          "$ref": "#/$defs/FindingAvailableNotification"
+        },
+        {
+          "$ref": "#/$defs/UploadChangedNotification"
+        }
+      ]
+    },
+    "CompanionNotification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "notificationId", "payload", "sentAt"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "companion_notification"
+        },
+        "notificationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "payload": {
+          "$ref": "#/$defs/CompanionNotificationPayload"
+        },
+        "sentAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+export type CanonicalJsonPrimitive = boolean | null | number | string;
+
+export interface CanonicalJsonObject {
+  readonly [key: string]: CanonicalJsonValue;
+}
+
+export type CanonicalJsonValue =
+  CanonicalJsonPrimitive | CanonicalJsonObject | readonly CanonicalJsonValue[];
+
+export type Sha256Digest = `sha256:${string}`;
+
+/**
+ * Supplies wall-clock time without coupling deterministic services to the
+ * process clock.
+ */
+export interface Clock {
+  monotonicNanoseconds(): bigint;
+  now(): Date;
+}
+
+/**
+ * Produces opaque identifiers. Implementations own uniqueness and formatting.
+ */
+export interface IdGenerator {
+  generate(): string;
+}
+
+/**
+ * Hashes bytes, UTF-8 text, or canonical JSON without exposing a specific
+ * cryptographic runtime to domain services.
+ */
+export interface ContentHasher {
+  hashBytes(content: Uint8Array): Promise<Sha256Digest>;
+  hashCanonicalJson(content: CanonicalJsonValue): Promise<Sha256Digest>;
+  hashText(content: string): Promise<Sha256Digest>;
+}

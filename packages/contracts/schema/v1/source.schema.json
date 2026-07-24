@@ -1,0 +1,466 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/source.schema.json",
+  "title": "Environment Reconciler Source and Object Contracts v1",
+  "$defs": {
+    "SubmoduleIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "path",
+        "repositoryIdentity",
+        "commitId",
+        "contentDigest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "submodule_identity"
+        },
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "repositoryIdentity": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "commitId": {
+          "$ref": "common.schema.json#/$defs/GitObjectId"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "LfsIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "path", "oidSha256", "size", "contentState"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "lfs_identity"
+        },
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "oidSha256": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "size": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "contentState": {
+          "type": "string",
+          "enum": ["included", "pointer_only", "missing", "unsupported"]
+        }
+      }
+    },
+    "ObjectClass": {
+      "type": "string",
+      "enum": [
+        "event_batch",
+        "snapshot",
+        "inventory",
+        "source_bundle",
+        "candidate_patch",
+        "validation_diagnostics",
+        "attestation",
+        "braintrust_outbox",
+        "raw_opt_in"
+      ]
+    },
+    "ObjectCompression": {
+      "type": "string",
+      "enum": ["none", "gzip", "zstd"]
+    },
+    "ObjectAuthorizationClass": {
+      "type": "string",
+      "enum": [
+        "workspace_private",
+        "validation_job_scoped",
+        "system_outbox",
+        "private_alpha_raw_opt_in"
+      ]
+    },
+    "ObjectDeletionState": {
+      "type": "string",
+      "enum": ["active", "delete_pending", "deleted", "tombstoned"]
+    },
+    "ObjectMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "objectId",
+        "workspaceId",
+        "projectId",
+        "objectClass",
+        "storageKey",
+        "contentDigest",
+        "ciphertextDigest",
+        "contentLength",
+        "ciphertextLength",
+        "mediaType",
+        "compression",
+        "nonce",
+        "encryptionVersion",
+        "encryptionKeyVersion",
+        "authenticatedMetadataDigest",
+        "authenticatedMetadataVersion",
+        "retentionClass",
+        "authorizationClass",
+        "deletionState",
+        "deletedAtAssessment",
+        "tombstoneReasonCodes",
+        "createdAt",
+        "integrityState"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "object_metadata"
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "objectClass": {
+          "$ref": "#/$defs/ObjectClass"
+        },
+        "storageKey": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "ciphertextDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "contentLength": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "ciphertextLength": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "mediaType": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "compression": {
+          "$ref": "#/$defs/ObjectCompression"
+        },
+        "nonce": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "encryptionVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "encryptionKeyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "authenticatedMetadataDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "authenticatedMetadataVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "retentionClass": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "authorizationClass": {
+          "$ref": "#/$defs/ObjectAuthorizationClass"
+        },
+        "deletionState": {
+          "$ref": "#/$defs/ObjectDeletionState"
+        },
+        "deletedAtAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "deletedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "tombstoneReasonCodes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "integrityState": {
+          "type": "string",
+          "enum": ["verified", "pending", "failed"]
+        }
+      }
+    },
+    "GitCommitSourceInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourceInputId",
+        "workspaceId",
+        "projectId",
+        "repositoryId",
+        "commitSha",
+        "treeDigest",
+        "archiveObjectId",
+        "archiveDigest",
+        "submoduleIdentities",
+        "lfsIdentities",
+        "supportGapIds",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "source_input_git_commit"
+        },
+        "sourceInputId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "repositoryId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "commitSha": {
+          "$ref": "common.schema.json#/$defs/GitObjectId"
+        },
+        "treeDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "archiveObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "archiveDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "submoduleIdentities": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/SubmoduleIdentity"
+          }
+        },
+        "lfsIdentities": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/LfsIdentity"
+          }
+        },
+        "supportGapIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "WorkingTreeSourceInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourceInputId",
+        "workspaceId",
+        "projectId",
+        "repositoryId",
+        "baseCommitSha",
+        "resultingTreeDigest",
+        "worktreePatchDigest",
+        "untrackedBundleState",
+        "bundleObjectId",
+        "bundleDigest",
+        "includedPathManifestDigest",
+        "ignorePolicyVersion",
+        "secretScanPolicyVersion",
+        "submoduleIdentities",
+        "lfsIdentities",
+        "supportGapIds",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "source_input_working_tree"
+        },
+        "sourceInputId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "repositoryId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "baseCommitSha": {
+          "$ref": "common.schema.json#/$defs/GitObjectId"
+        },
+        "resultingTreeDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "worktreePatchDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "untrackedBundleState": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "untrackedBundleDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "bundleObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "bundleDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "includedPathManifestDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "ignorePolicyVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "secretScanPolicyVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "submoduleIdentities": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/SubmoduleIdentity"
+          }
+        },
+        "lfsIdentities": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/LfsIdentity"
+          }
+        },
+        "supportGapIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "SourceInput": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GitCommitSourceInput"
+        },
+        {
+          "$ref": "#/$defs/WorkingTreeSourceInput"
+        }
+      ]
+    },
+    "WorkingTreeBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "bundleId",
+        "sourceInputId",
+        "baseCommitSha",
+        "resultingTreeDigest",
+        "patchObjectId",
+        "includedPathDigests",
+        "excludedPathReasonCodes",
+        "secretScanAssessment",
+        "contentDigest"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "working_tree_bundle"
+        },
+        "bundleId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "baseCommitSha": {
+          "$ref": "common.schema.json#/$defs/GitObjectId"
+        },
+        "resultingTreeDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "patchObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "untrackedObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "includedPathDigests": {
+          "type": "object",
+          "maxProperties": 10000,
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/Sha256Digest"
+          }
+        },
+        "excludedPathReasonCodes": {
+          "type": "object",
+          "maxProperties": 10000,
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "secretScanAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,852 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/candidate.schema.json",
+  "title": "Environment Reconciler Candidate Contracts v1",
+  "$defs": {
+    "PackageOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "ecosystem",
+        "manager",
+        "packageName",
+        "requestedVersion",
+        "scope",
+        "realmId"
+      ],
+      "properties": {
+        "operationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "operationKind": {
+          "type": "string",
+          "enum": ["package_add", "package_remove", "package_update"]
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "ecosystem": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "manager": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "packageName": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "requestedVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "scope": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "RuntimeSelectionOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "runtime",
+        "version",
+        "realmId"
+      ],
+      "properties": {
+        "operationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "operationKind": {
+          "const": "runtime_select"
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "runtime": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "LockfileOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "manager",
+        "manifestPath",
+        "lockfilePath",
+        "realmId"
+      ],
+      "properties": {
+        "operationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "operationKind": {
+          "const": "lockfile_regenerate"
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "manager": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "manifestPath": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "lockfilePath": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "ConfigurationEditOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "filePath",
+        "semanticPath",
+        "editKind",
+        "newValue",
+        "realmId"
+      ],
+      "properties": {
+        "operationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "operationKind": {
+          "const": "configuration_edit"
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "filePath": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "semanticPath": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "editKind": {
+          "type": "string",
+          "enum": ["set", "remove", "append", "merge"]
+        },
+        "newValue": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "CandidateOperation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PackageOperation"
+        },
+        {
+          "$ref": "#/$defs/RuntimeSelectionOperation"
+        },
+        {
+          "$ref": "#/$defs/LockfileOperation"
+        },
+        {
+          "$ref": "#/$defs/ConfigurationEditOperation"
+        }
+      ]
+    },
+    "ExpectedGraphChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graphKind",
+        "changeKind",
+        "subject",
+        "expectedBefore",
+        "expectedAfter",
+        "findingIds"
+      ],
+      "properties": {
+        "graphKind": {
+          "type": "string",
+          "enum": [
+            "declared",
+            "locked",
+            "resolved",
+            "installed",
+            "used",
+            "observed_action",
+            "validated"
+          ]
+        },
+        "changeKind": {
+          "type": "string",
+          "enum": ["add", "remove", "update", "resolve_contradiction", "no_change_expected"]
+        },
+        "subject": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "expectedBefore": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "expectedAfter": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "ExpectedValidationImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetId", "behaviorStepIds", "expectedOutcome", "risk"],
+      "properties": {
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "behaviorStepIds": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "expectedOutcome": {
+          "type": "string",
+          "enum": ["improve", "no_regression", "unknown"]
+        },
+        "risk": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        }
+      }
+    },
+    "ProbeProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "probeId",
+        "phase",
+        "executable",
+        "arguments",
+        "workingDirectory",
+        "timeoutSeconds",
+        "expectedExitStatuses",
+        "rationale"
+      ],
+      "properties": {
+        "probeId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "phase": {
+          "type": "string",
+          "enum": ["preflight", "resolve", "install", "build", "test", "smoke", "benchmark"]
+        },
+        "executable": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "workingDirectory": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "expectedExitStatuses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "rationale": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        }
+      }
+    },
+    "CandidatePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "candidatePlanId",
+        "workspaceId",
+        "projectId",
+        "sourceInputDigest",
+        "findingIds",
+        "operations",
+        "evidenceReferenceIds",
+        "affectedFiles",
+        "rationale",
+        "expectedGraphChanges",
+        "expectedValidationImpact",
+        "assumptions",
+        "risks",
+        "proposedValidationProbes",
+        "generationSource",
+        "policyDigest",
+        "behaviorContractDigest",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "candidate_plan"
+        },
+        "candidatePlanId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/CandidateOperation"
+          }
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2048,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "affectedFiles": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "common.schema.json#/$defs/RelativePath"
+          }
+        },
+        "rationale": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "expectedGraphChanges": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/ExpectedGraphChange"
+          }
+        },
+        "expectedValidationImpact": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/ExpectedValidationImpact"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/BoundedString"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/BoundedString"
+          }
+        },
+        "proposedValidationProbes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/ProbeProposal"
+          }
+        },
+        "generationSource": {
+          "type": "string",
+          "enum": ["fireworks", "deterministic_rule", "user_authored"]
+        },
+        "policyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "behaviorContractDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "PatchFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "changeKind",
+        "beforeDigestAssessment",
+        "afterDigestAssessment",
+        "generatedFile",
+        "operationIds"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "changeKind": {
+          "type": "string",
+          "enum": ["added", "modified", "deleted", "renamed"]
+        },
+        "beforeDigestAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "beforeDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "afterDigestAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "afterDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "generatedFile": {
+          "type": "boolean"
+        },
+        "operationIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "PatchGuardResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["guard", "state", "reasonCodes", "evidenceReferenceIds"],
+      "properties": {
+        "guard": {
+          "type": "string",
+          "enum": [
+            "schema",
+            "path_scope",
+            "secret_scan",
+            "diff_size",
+            "semantic_parse",
+            "manifest_lock_coherence",
+            "generated_file",
+            "policy",
+            "operation_traceability",
+            "static_contradiction"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["passed", "failed", "inconclusive", "unsupported"]
+        },
+        "reasonCodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "CandidatePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "candidatePatchId",
+        "candidatePlanId",
+        "workspaceId",
+        "projectId",
+        "sourceInputDigest",
+        "patchObjectId",
+        "patchDigest",
+        "resultingTreeDigest",
+        "files",
+        "operations",
+        "guardResults",
+        "materializerVersions",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "candidate_patch"
+        },
+        "candidatePatchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidatePlanId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "patchObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "patchDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "resultingTreeDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/PatchFile"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/CandidateOperation"
+          }
+        },
+        "guardResults": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/PatchGuardResult"
+          }
+        },
+        "materializerVersions": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "VerifiedCandidateState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "attestationId"],
+      "properties": {
+        "state": {
+          "const": "verified"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "UnverifiedCandidateState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reasonCodes"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "static_rejected",
+            "ready_for_validation",
+            "validating",
+            "validation_failed",
+            "inconclusive",
+            "stale"
+          ]
+        },
+        "reasonCodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        }
+      }
+    },
+    "ApprovedCandidateState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "attestationId", "approvalId"],
+      "properties": {
+        "state": {
+          "const": "approved"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "approvalId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "AppliedCandidateState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "attestationId", "approvalId", "externalOperationId"],
+      "properties": {
+        "state": {
+          "const": "applied"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "approvalId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "externalOperationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "CandidateState": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/VerifiedCandidateState"
+        },
+        {
+          "$ref": "#/$defs/UnverifiedCandidateState"
+        },
+        {
+          "$ref": "#/$defs/ApprovedCandidateState"
+        },
+        {
+          "$ref": "#/$defs/AppliedCandidateState"
+        }
+      ]
+    },
+    "CandidateTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transitionId",
+        "fromState",
+        "toState",
+        "idempotencyKey",
+        "actorId",
+        "reasonCodes",
+        "occurredAt"
+      ],
+      "properties": {
+        "transitionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "fromState": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "toState": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "actorId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "occurredAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "CandidateLifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "candidateId",
+        "candidatePlanId",
+        "candidatePatchAssessment",
+        "workspaceId",
+        "projectId",
+        "currentState",
+        "transitions",
+        "invalidationInputDigests",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "candidate_lifecycle"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidatePlanId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidatePatchAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "candidatePatchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "currentState": {
+          "$ref": "#/$defs/CandidateState"
+        },
+        "transitions": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/CandidateTransition"
+          }
+        },
+        "invalidationInputDigests": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/Sha256Digest"
+          }
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

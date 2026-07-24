@@ -1,0 +1,216 @@
+{
+  "cases": [
+    {
+      "caseId": "unsupported-schema-version",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "workspace",
+        "name": "example",
+        "retentionClass": "example",
+        "schemaVersion": 2,
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "unsupported_schema_version"
+    },
+    {
+      "caseId": "unknown-durable-property",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "workspace",
+        "name": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "unexpected": true,
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "invalid_value"
+    },
+    {
+      "caseId": "invalid-rfc3339-timestamp",
+      "document": {
+        "createdAt": "not-a-timestamp",
+        "kind": "workspace",
+        "name": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "invalid_value"
+    },
+    {
+      "caseId": "invalid-sha256-digest",
+      "document": {
+        "authenticatedMetadataDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "authenticatedMetadataVersion": 1,
+        "authorizationClass": "workspace_private",
+        "ciphertextDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "ciphertextLength": 0,
+        "compression": "none",
+        "contentDigest": "sha256:not-a-digest",
+        "contentLength": 0,
+        "createdAt": "2026-01-02T03:04:05Z",
+        "deletedAtAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "deletionState": "active",
+        "encryptionKeyVersion": 1,
+        "encryptionVersion": 1,
+        "integrityState": "verified",
+        "kind": "object_metadata",
+        "mediaType": "example",
+        "nonce": "AAxx",
+        "objectClass": "event_batch",
+        "objectId": "example",
+        "projectId": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "storageKey": "fixture.txt",
+        "tombstoneReasonCodes": [],
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "invalid_value"
+    },
+    {
+      "caseId": "standalone-verification-boolean",
+      "document": {
+        "adapterVersions": {},
+        "attestationDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "attestationId": "example",
+        "attestedTargets": [
+          {
+            "cacheAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "immutableBase": {
+              "imageDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "imageReference": "example",
+              "provider": "example",
+              "snapshotAssessment": {
+                "evidenceReferenceIds": [],
+                "reasonCodes": [],
+                "state": "known"
+              },
+              "toolchainDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "targetDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "targetId": "example",
+            "validationJobDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "behaviorContract": { "id": "example", "version": 1 },
+        "behaviorContractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "candidateId": "example",
+        "candidatePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "isVerified": true,
+        "kind": "validation_attestation",
+        "limitations": [],
+        "nativeToolVersions": {},
+        "policy": { "id": "example", "version": 1 },
+        "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "projectId": "example",
+        "requiredTargetIds": ["example"],
+        "result": "reconstruction_passed",
+        "ruleVersions": {},
+        "schemaVersion": 1,
+        "sourceInput": {
+          "archiveDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "archiveObjectId": "example",
+          "commitSha": "0000000000000000000000000000000000000000",
+          "createdAt": "2026-01-02T03:04:05Z",
+          "kind": "source_input_git_commit",
+          "lfsIdentities": [],
+          "projectId": "example",
+          "repositoryId": "example",
+          "schemaVersion": 1,
+          "sourceInputId": "example",
+          "submoduleIdentities": [],
+          "supportGapIds": [],
+          "treeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "validatorVersion": "example",
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "invalid_value"
+    },
+    {
+      "caseId": "unscoped-validation-attestation",
+      "document": {
+        "adapterVersions": {},
+        "attestationDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "attestationId": "example",
+        "attestedTargets": [
+          {
+            "cacheAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "immutableBase": {
+              "imageDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "imageReference": "example",
+              "provider": "example",
+              "snapshotAssessment": {
+                "evidenceReferenceIds": [],
+                "reasonCodes": [],
+                "state": "known"
+              },
+              "toolchainDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "targetDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "targetId": "example",
+            "validationJobDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "behaviorContract": { "id": "example", "version": 1 },
+        "behaviorContractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "candidateId": "example",
+        "candidatePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "validation_attestation",
+        "limitations": [],
+        "nativeToolVersions": {},
+        "policy": { "id": "example", "version": 1 },
+        "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "projectId": "example",
+        "requiredTargetIds": ["example"],
+        "result": "reconstruction_passed",
+        "ruleVersions": {},
+        "schemaVersion": 1,
+        "sourceInput": {
+          "archiveDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "archiveObjectId": "example",
+          "commitSha": "0000000000000000000000000000000000000000",
+          "createdAt": "2026-01-02T03:04:05Z",
+          "kind": "source_input_git_commit",
+          "lfsIdentities": [],
+          "projectId": "example",
+          "repositoryId": "example",
+          "schemaVersion": 1,
+          "sourceInputId": "example",
+          "submoduleIdentities": [],
+          "supportGapIds": [],
+          "treeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "validatorVersion": "example",
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "invalid_value"
+    },
+    {
+      "caseId": "raw-secret-property",
+      "document": {
+        "allowedHosts": ["example"],
+        "createdAt": "2026-01-02T03:04:05Z",
+        "expiryAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "kind": "secret_reference",
+        "opaqueProviderReference": "examplexxxxxxxxx",
+        "permittedTargetIds": ["example"],
+        "provider": "daytona_host_restricted",
+        "schemaVersion": 1,
+        "secretReferenceId": "example",
+        "secretValue": "synthetic-secret-that-must-never-be-durable",
+        "versionIdentity": "example",
+        "workspaceId": "example"
+      },
+      "expectedErrorCode": "invalid_value"
+    }
+  ],
+  "fixtureVersion": 1,
+  "protocolSchemaVersion": 1
+}

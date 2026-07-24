@@ -1,0 +1,719 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-reconciler.dev/v1/api.schema.json",
+  "title": "Environment Reconciler Public API Contracts v1",
+  "$defs": {
+    "DeviceEnrollmentRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "enrollmentToken",
+        "devicePublicKey",
+        "deviceName",
+        "platform",
+        "companionVersion"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "device_enrollment_request"
+        },
+        "enrollmentToken": {
+          "$ref": "common.schema.json#/$defs/OpaqueTokenId"
+        },
+        "devicePublicKey": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "deviceName": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["windows", "linux", "macos"]
+        },
+        "companionVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        }
+      }
+    },
+    "DeviceEnrollmentResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "deviceId",
+        "deviceCredential",
+        "credentialExpiresAt",
+        "serverPublicKey",
+        "issuedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "device_enrollment_response"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceCredential": {
+          "$ref": "common.schema.json#/$defs/OpaqueTokenId"
+        },
+        "credentialExpiresAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "serverPublicKey": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "issuedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ObservationEventBatchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "batchId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "streamId",
+        "firstSequence",
+        "lastSequence",
+        "eventCount",
+        "previousChainHashAssessment",
+        "chainEndHash",
+        "objectId",
+        "contentDigest",
+        "signature",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "observation_event_batch_request"
+        },
+        "batchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "streamId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "firstSequence": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        },
+        "lastSequence": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        },
+        "eventCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "previousChainHashAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "previousChainHash": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "chainEndHash": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "signature": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "IngestAcceptedResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "acceptedResourceId",
+        "deduplicated",
+        "acceptedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "ingest_accepted_response"
+        },
+        "requestId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "acceptedResourceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deduplicated": {
+          "type": "boolean"
+        },
+        "acceptedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "SnapshotIngestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "snapshotId",
+        "snapshotObjectId",
+        "snapshotDigest",
+        "signature",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "snapshot_ingest_request"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "snapshotId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "snapshotObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "snapshotDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "signature": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "CapabilityProfilePublishRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "profile",
+        "signature",
+        "publishedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "capability_profile_publish_request"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "profile": {
+          "$ref": "provider.schema.json#/$defs/ProviderCapabilityProfile"
+        },
+        "signature": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "publishedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ChainAnchorPublishRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "chainAnchorId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "streamId",
+        "sequence",
+        "chainHash",
+        "signature",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "chain_anchor_publish_request"
+        },
+        "chainAnchorId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "streamId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sequence": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        },
+        "chainHash": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "signature": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "CheckpointCreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "reason",
+        "sourceInputId",
+        "snapshotIds",
+        "sessionIds",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "checkpoint_create_request"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["manual", "session_end", "pull_request", "source_change"]
+        },
+        "sourceInputId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "snapshotIds": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "sessionIds": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "CheckpointCreateResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "checkpointId", "state", "deduplicated", "createdAt"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "checkpoint_create_response"
+        },
+        "checkpointId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["queued", "reconciling", "complete", "failed"]
+        },
+        "deduplicated": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ObjectUploadAuthorizationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "objectClass",
+        "contentDigest",
+        "ciphertextDigest",
+        "contentLength",
+        "mediaType",
+        "uploaderEphemeralPublicKey",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "object_upload_authorization_request"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "objectClass": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "ciphertextDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "contentLength": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "mediaType": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "uploaderEphemeralPublicKey": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "EphemeralObjectAuthorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "authorizationId",
+        "objectId",
+        "method",
+        "url",
+        "headers",
+        "sealedObjectKey",
+        "retention",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "ephemeral_object_authorization"
+        },
+        "authorizationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "PUT"]
+        },
+        "url": {
+          "$ref": "common.schema.json#/$defs/HttpUrl"
+        },
+        "headers": {
+          "$ref": "common.schema.json#/$defs/StringMap"
+        },
+        "sealedObjectKey": {
+          "$ref": "common.schema.json#/$defs/Base64"
+        },
+        "retention": {
+          "const": "ephemeral"
+        },
+        "expiresAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ObjectFinalizeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "authorizationId",
+        "objectId",
+        "workspaceId",
+        "contentDigest",
+        "ciphertextDigest",
+        "contentLength",
+        "nonce",
+        "encryptionKeyVersion",
+        "authenticatedMetadataDigest",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "object_finalize_request"
+        },
+        "authorizationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "ciphertextDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "contentLength": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "nonce": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "encryptionKeyVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "authenticatedMetadataDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "ObjectKeyExchangeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "objectId",
+        "workspaceId",
+        "validationJobId",
+        "sandboxId",
+        "sandboxEphemeralPublicKey",
+        "oneTimeAccessToken"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "object_key_exchange_request"
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sandboxId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sandboxEphemeralPublicKey": {
+          "$ref": "common.schema.json#/$defs/Base64Url"
+        },
+        "oneTimeAccessToken": {
+          "$ref": "common.schema.json#/$defs/OpaqueTokenId"
+        }
+      }
+    },
+    "ObjectKeyExchangeResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "objectId",
+        "sealedObjectKey",
+        "authenticatedMetadataDigest",
+        "retention",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "object_key_exchange_response"
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sealedObjectKey": {
+          "$ref": "common.schema.json#/$defs/Base64"
+        },
+        "authenticatedMetadataDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "retention": {
+          "const": "ephemeral"
+        },
+        "expiresAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ReconcileQueueMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "messageId",
+        "workspaceId",
+        "projectId",
+        "checkpointId",
+        "sourceInputId",
+        "idempotencyKey",
+        "attempt",
+        "enqueuedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "reconcile_queue_message"
+        },
+        "messageId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "checkpointId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "enqueuedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ApiErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "requestId", "error", "occurredAt"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "api_error_response"
+        },
+        "requestId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "error": {
+          "$ref": "common.schema.json#/$defs/ProtocolError"
+        },
+        "occurredAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}
