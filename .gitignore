@@ -1,0 +1,33 @@
+# Local application and Cloudflare development secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Downloaded or generated credentials
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+
+# Node.js and Wrangler build state
+node_modules/
+.npm-cache/
+.pnpm-store/
+.wrangler/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+worker-configuration.d.ts
+worker-startup.cpuprofile
+
+# Rust build state
+target/
+
+# Packaged extension artifacts
+*.vsix
