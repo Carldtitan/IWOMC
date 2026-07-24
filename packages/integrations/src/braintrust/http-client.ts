@@ -75,11 +75,13 @@ export class BraintrustIntegrationError extends Error {
     | "provider_error"
     | "provider_response_invalid"
     | "timeout";
+  readonly providerStatus: number | undefined;
 
-  constructor(code: BraintrustIntegrationError["code"]) {
+  constructor(code: BraintrustIntegrationError["code"], providerStatus?: number) {
     super(code);
     this.name = "BraintrustIntegrationError";
     this.code = code;
+    this.providerStatus = providerStatus;
   }
 }
 
@@ -91,6 +93,7 @@ export type BraintrustBestEffortResult =
   | {
       readonly delivery: "deferred";
       readonly failureClass: "configuration" | "provider" | "timeout" | "unknown";
+      readonly providerStatus?: number;
     };
 
 type BraintrustFailureClass = "configuration" | "provider" | "timeout" | "unknown";
@@ -313,7 +316,7 @@ export class BraintrustHttpClient implements BraintrustPort {
       Math.min(this.#requestTimeoutMs, request.context.budget.timeoutMs)
     );
     if (!response.ok) {
-      throw new BraintrustIntegrationError("provider_error");
+      throw new BraintrustIntegrationError("provider_error", response.status);
     }
     let responseValue: unknown;
     try {
@@ -398,7 +401,10 @@ export async function exportAllowlistedTracesBestEffort(
   } catch (error: unknown) {
     return {
       delivery: "deferred",
-      failureClass: classifyFailure(error)
+      failureClass: classifyFailure(error),
+      ...(error instanceof BraintrustIntegrationError && error.providerStatus !== undefined
+        ? { providerStatus: error.providerStatus }
+        : {})
     };
   }
 }

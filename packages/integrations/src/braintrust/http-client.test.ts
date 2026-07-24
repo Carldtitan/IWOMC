@@ -164,7 +164,11 @@ describe("Braintrust allowlisted HTTP exporter", () => {
       exportRequest([traceRecord()])
     );
 
-    expect(delivery).toEqual({ delivery: "deferred", failureClass: "provider" });
+    expect(delivery).toEqual({
+      delivery: "deferred",
+      failureClass: "provider",
+      providerStatus: 503
+    });
     expect(candidateTruth).toEqual({
       findingId: "finding-1",
       nativeOperationKind: "npm_package_add",
