@@ -213,25 +213,25 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 
 - [ ] 11. Implement the native adapter registry and npm adapter
   - [ ] 11.1 Define the shared AdapterManifest/graph protocol, explicit local-inventory/repository-parsing/mutation/validation capabilities, generated-file rules, precedence rules, manager-selection rules, Rust `LocalInventoryAdapter`, TypeScript `RepositoryAdapter`, isolated `IsolatedAdapterRunner`, support levels, and registry; do not create one cross-runtime adapter object.
-  - [ ] 11.2 Implement generic observed-only discovery that can record unknown files/actions but cannot propose mutations.
-  - [ ] 11.3 Implement `packages/adapters/src/node/npm.ts`.
-  - [ ] 11.4 Discover npm project roots and workspaces without crossing repository boundaries.
-  - [ ] 11.5 Parse `package.json` and supported `package-lock.json` versions semantically.
+  - [x] 11.2 Implement generic observed-only discovery that can record unknown files/actions but cannot propose mutations.
+  - [x] 11.3 Implement `packages/adapters/src/node/npm.ts`.
+  - [x] 11.4 Discover npm project roots and workspaces without crossing repository boundaries.
+  - [x] 11.5 Parse `package.json` and supported `package-lock.json` versions semantically.
   - [ ] 11.6 Implement `crates/companion/src/inventory/node_npm.rs` for safe local read-only Node/npm version, scope, layer, and structured `npm ls --json` inventory.
   - [ ] 11.7 Parse the local native result in TypeScript and obtain resolved graphs through structured npm output only in the isolated runner.
-  - [ ] 11.8 Preserve production/development/optional/peer, direct/transitive, workspace, platform, and engine semantics.
-  - [ ] 11.9 Implement conservative JS/TS import and executable-use evidence for the vertical fixture while marking dynamic use uncertain.
-  - [ ] 11.10 Define structured native operations for add, remove, update, lock, clean install, graph, build, test, and smoke.
+  - [x] 11.8 Preserve production/development/optional/peer, direct/transitive, workspace, platform, and engine semantics.
+  - [x] 11.9 Implement conservative JS/TS import and executable-use evidence for the vertical fixture while marking dynamic use uncertain.
+  - [x] 11.10 Define structured native operations for add, remove, update, lock, clean install, graph, build, test, and smoke.
   - [ ] 11.11 Add npm conformance fixtures for workspaces, peer dependencies, malformed/stale locks, global-versus-local scope, unsupported lock versions, lifecycle scripts, and idempotent parsing.
-  - [ ] 11.12 Prevent a second package manager or text-only lockfile edit from entering an npm candidate.
+  - [x] 11.12 Prevent a second package manager or text-only lockfile edit from entering an npm candidate.
   - [ ] 11.13 Test the Rust inventory result against the canonical schema and the TypeScript parser so the same manager/version/scope identities survive the runtime boundary.
   - [ ] 11.14 Seed observed-only recognizers and fixtures for Poetry, Conda/Mamba/Micromamba, pnpm, Yarn, Bun, Cargo/rustup, CMake, vcpkg, Conan, HTML/CSS ownership, Dockerfiles, Compose, Dev Containers, and common CI/bootstrap files named by R7.5.
   - **Exit:** npm has complete repository/local/isolated implementation ready for Daytona conformance; named and unknown managers have honest observed-only profiles. npm remains `native_validation` until Task 22 passes the full R22.5 conformance suite.
   - _Requirements: R7.1-R7.5, R7.7-R7.10, R12.1-R12.4, R22.5_
 
 - [ ] 12. Implement the seven graphs and first deterministic rules
-  - [ ] 12.1 Create immutable node, edge, graph-set, source-location, adapter/input identity, confidence, and canonicalization types in `packages/reconciler/src/graphs/`.
-  - [ ] 12.2 Build declared, locked, resolved, installed, used, observed-action, and validated graph fragments from normalized inputs.
+  - [x] 12.1 Create immutable node, edge, graph-set, source-location, adapter/input identity, confidence, and canonicalization types in `packages/reconciler/src/graphs/`.
+  - [x] 12.2 Build declared, locked, resolved, installed, used, observed-action, and validated graph fragments from normalized inputs.
   - [ ] 12.3 Implement deterministic rules for:
     - used and installed but undeclared;
     - observed installation without matching declaration;
@@ -244,11 +244,11 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - redundant, stale, shadowed, or apparently unused dependency, conservatively labelled when necessity evidence is incomplete;
     - failed installation without installed-state effect;
     - unsupported or incomplete capture.
-  - [ ] 12.4 Attach evidence, counterevidence, affected targets, plausible alternatives, realm/layer, source locations, adapter/input versions, support level, rule version, gaps, and independent observation/attribution/semantics/necessity/validation confidence.
-  - [ ] 12.5 Keep actor attribution separate from environment effect and dependency necessity.
-  - [ ] 12.6 Ensure an installed package alone and a missing static import alone never trigger add/remove recommendations.
+  - [x] 12.4 Attach evidence, counterevidence, affected targets, plausible alternatives, realm/layer, source locations, adapter/input versions, support level, rule version, gaps, and independent observation/attribution/semantics/necessity/validation confidence.
+  - [x] 12.5 Keep actor attribution separate from environment effect and dependency necessity.
+  - [x] 12.6 Ensure an installed package alone and a missing static import alone never trigger add/remove recommendations.
   - [ ] 12.7 Add stable finding identifiers and supersession behavior across repeated checkpoints.
-  - [ ] 12.8 Use property tests to prove deterministic output, ecosystem identity isolation, attribution restraint, gap preservation, and installed-state restraint.
+  - [x] 12.8 Use property tests to prove deterministic output, ecosystem identity isolation, attribution restraint, gap preservation, and installed-state restraint.
   - [ ] 12.9 Implement `apps/worker/src/services/reconcile-checkpoint.ts` and wire the Queue consumer to load durable inputs, build graphs, run rules, persist/supersede findings, and enqueue candidate-generation work idempotently for material-action-stabilized, session-end, PR-update, and manual-scan triggers.
   - **Exit:** The npm fixture deterministically produces one evidence-backed hidden-dependency finding, while every negative fixture produces its expected non-finding or uncertainty state.
   - _Requirements: R8, R9, R16.2, R22.2-R22.3_
