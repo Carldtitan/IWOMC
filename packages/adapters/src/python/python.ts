@@ -383,9 +383,7 @@ interface ParsedDependency {
 
 function dependency(specifier: string): ParsedDependency | undefined {
   const [requirement = "", marker] = specifier.split(/\s*;\s*/, 2);
-  const local = /^([A-Za-z0-9][A-Za-z0-9_.-]*)(?:\[([^\]]+)\])?\s*@\s*(.+)$/.exec(
-    requirement
-  );
+  const local = /^([A-Za-z0-9][A-Za-z0-9_.-]*)(?:\[([^\]]+)\])?\s*@\s*(.+)$/.exec(requirement);
   if (local?.[1] !== undefined && local[3] !== undefined) {
     return {
       name: local[1],
