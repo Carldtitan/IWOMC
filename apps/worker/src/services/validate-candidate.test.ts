@@ -83,7 +83,7 @@ function materializer(calls: string[]): ValidationMaterializer {
 }
 
 describe("CandidateValidationService", () => {
-  it("verifies only a failing baseline and passing candidate in separate clean sandboxes", async () => {
+  it("does not verify a failing baseline without a trusted passing control canary", async () => {
     const daytona = new FakeDaytona();
     daytona.enqueueCommandResult({
       exitCode: 1,
@@ -103,13 +103,11 @@ describe("CandidateValidationService", () => {
       plan()
     );
 
-    expect(result.status).toBe("verified");
-    expect(result.attestation).toEqual({
-      behaviorContractDigest: contractDigest,
-      candidatePatchDigest: patchDigest,
-      policyDigest,
-      sourceInputDigest: sourceDigest,
-      targetDigest
+    expect(result.status).toBe("inconclusive");
+    expect(result.attestation).toBeUndefined();
+    expect(result.baseline?.classification).toMatchObject({
+      origin: "unknown",
+      terminalClass: "inconclusive"
     });
     expect(result.baseline?.cleanupConfirmed).toBe(true);
     expect(result.candidate?.cleanupConfirmed).toBe(true);
@@ -124,6 +122,64 @@ describe("CandidateValidationService", () => {
       "cleanup"
     ]);
     expect(result.candidate?.phases.every(({ durationMs }) => durationMs >= 0)).toBe(true);
+  });
+
+  it("never verifies when the baseline times out and the candidate passes", async () => {
+    const daytona = new FakeDaytona();
+    daytona.enqueueCommandResult({
+      exitCode: null,
+      stderr: await excerpt(daytona, "timed out"),
+      stdout: await excerpt(daytona, ""),
+      timedOut: true
+    });
+    daytona.enqueueCommandResult({
+      exitCode: 0,
+      stderr: await excerpt(daytona, ""),
+      stdout: await excerpt(daytona, "tests passed"),
+      timedOut: false
+    });
+
+    const result = await new CandidateValidationService(daytona, materializer([])).validate(plan());
+
+    expect(result.status).toBe("inconclusive");
+    expect(result.attestation).toBeUndefined();
+    expect(result.baseline?.classification.terminalClass).toBe("inconclusive");
+  });
+
+  it("cleans recovered sandboxes without rematerializing or using them as proof", async () => {
+    const daytona = new FakeDaytona();
+    for (const kind of ["baseline", "candidate"] as const) {
+      const operationKey = `batch-1:${kind}:provision`;
+      await daytona.provisionSandbox({
+        autoDeleteAfterSeconds: 900,
+        context: {
+          attemptNumber: 1,
+          budget: { maxAttempts: 2, timeoutMs: 90_000 },
+          operationKey,
+          requestDigest: sourceDigest
+        },
+        labels: [
+          { key: "operation-key", value: operationKey },
+          { key: "organization-pseudonym", value: workspacePseudonym },
+          { key: "project-pseudonym", value: projectPseudonym },
+          { key: "run-pseudonym", value: runPseudonym },
+          { key: "target-digest", value: targetDigest }
+        ],
+        maxProvisioningTimeMs: 90_000,
+        target: plan().target
+      });
+    }
+    const calls: string[] = [];
+
+    const result = await new CandidateValidationService(daytona, materializer(calls)).validate(
+      plan()
+    );
+
+    expect(result.status).toBe("infrastructure_error");
+    expect(result.attestation).toBeUndefined();
+    expect(calls).toEqual([]);
+    expect(result.baseline?.cleanupConfirmed).toBe(true);
+    expect(result.candidate?.cleanupConfirmed).toBe(true);
   });
 
   it("does not provision or verify without an accepted behavior contract", async () => {
