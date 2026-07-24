@@ -654,7 +654,7 @@ class BoundedByteReader {
 
 function validateInput(input: NpmValidationMaterializeInput): void {
   if (
-    input.archiveFormat !== "tar.gz" ||
+    !isTarGzipFormat(input.archiveFormat) ||
     !digestPattern.test(input.archiveDigest) ||
     input.operationKey.length < 1 ||
     input.operationKey.length > 160 ||
@@ -765,7 +765,7 @@ function normalizeArchivePath(path: string): {
     normalized.length === 0 ||
     normalized.startsWith("/") ||
     normalized.includes("\\") ||
-    /[\u0000-\u001f\u007f]/u.test(normalized) ||
+    hasControlCharacter(normalized) ||
     new TextEncoder().encode(normalized).byteLength > maximumArchivePathBytes
   ) {
     throw new NpmValidationMaterializationError("invalid_archive");
@@ -977,4 +977,15 @@ function decodeTarText(bytes: REDACTED string {
   } catch {
     throw new NpmValidationMaterializationError("invalid_archive");
   }
+}
+
+function isTarGzipFormat(value: unknown): value is "tar.gz" {
+  return value === "tar.gz";
+}
+
+function hasControlCharacter(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint !== undefined && (codePoint <= 0x1f || codePoint === 0x7f);
+  });
 }
