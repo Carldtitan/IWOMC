@@ -57,39 +57,47 @@ export class RuntimeBraintrustDemoTraceExporter implements DemoTraceExporter {
         projectId,
         requestTimeoutMs: 5_000
       });
-      return (
-        await exportAllowlistedTracesBestEffort(braintrust, {
-          context: {
-            attemptNumber: 1,
-            budget: { maxAttempts: 1, timeoutMs: 5_000 },
-            operationKey: `${input.traceId}:braintrust`,
-            requestDigest: input.runDigest
-          },
-          maxEncodedBytes: 8_192,
-          maxRecords: 1,
-          projectName: this.#environment.BRAINTRUST_PROJECT_NAME,
-          records: [
-            {
-              adapterVersion: "demo-sponsor-run-v1",
-              attemptCount: 1,
-              durationMs: input.durationMs,
-              inputDigest: input.runDigest,
-              operation: "validate",
-              organizationPseudonym: input.organizationPseudonym,
-              outcome: input.commandPassed ? "succeeded" : "failed",
-              policyVersion: "demo-probe-v1",
-              projectPseudonym: input.projectPseudonym,
-              runPseudonym: input.runDigest,
-              spanId: `${input.traceId}-daytona`,
-              startedAt: new Date(Date.now() - input.durationMs).toISOString(),
-              traceId: input.traceId,
-              validationPassCount: input.commandPassed ? 1 : 0,
-              validationTargetCount: 1
-            }
-          ]
-        })
-      ).delivery;
+      const result = await exportAllowlistedTracesBestEffort(braintrust, {
+        context: {
+          attemptNumber: 1,
+          budget: { maxAttempts: 1, timeoutMs: 5_000 },
+          operationKey: `${input.traceId}:braintrust`,
+          requestDigest: input.runDigest
+        },
+        maxEncodedBytes: 8_192,
+        maxRecords: 1,
+        projectName: this.#environment.BRAINTRUST_PROJECT_NAME,
+        records: [
+          {
+            adapterVersion: "demo-sponsor-run-v1",
+            attemptCount: 1,
+            durationMs: input.durationMs,
+            inputDigest: input.runDigest,
+            operation: "validate",
+            organizationPseudonym: input.organizationPseudonym,
+            outcome: input.commandPassed ? "succeeded" : "failed",
+            policyVersion: "demo-probe-v1",
+            projectPseudonym: input.projectPseudonym,
+            runPseudonym: input.runDigest,
+            spanId: `${input.traceId}-daytona`,
+            startedAt: new Date(Date.now() - input.durationMs).toISOString(),
+            traceId: input.traceId,
+            validationPassCount: input.commandPassed ? 1 : 0,
+            validationTargetCount: 1
+          }
+        ]
+      });
+      if (result.delivery === "deferred") {
+        console.error(
+          JSON.stringify({
+            failureClass: result.failureClass,
+            message: "Braintrust demo trace delivery deferred"
+          })
+        );
+      }
+      return result.delivery;
     } catch {
+      console.error(JSON.stringify({ message: "Braintrust demo trace setup failed" }));
       return "deferred";
     }
   }
