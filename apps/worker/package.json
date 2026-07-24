@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@environment-reconciler/contracts": "workspace:*",
+    "@environment-reconciler/integrations": "workspace:*",
     "hono": "^4.12.32"
   },
   "devDependencies": {
