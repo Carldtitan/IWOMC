@@ -43,6 +43,7 @@ export interface DemoSponsorRunEnvironment {
   readonly DAYTONA_API_URL: string;
   readonly DAYTONA_TARGET: string;
   readonly FIREWORKS_API_KEY: string;
+  readonly SPONSOR_PROOF_RATE_LIMITER?: RateLimit;
 }
 
 export type DemoSponsorRunExecutorFactory = (
@@ -79,6 +80,16 @@ export function createDemoSponsorRunRoutes(
     if (!(await hasEmptyBoundedBody(context.req.raw))) {
       return context.json({ error: "invalid_request" }, 400, responseHeaders(origin));
     }
+    const rateLimiter = sponsorProofRateLimiter(context.env);
+    if (
+      rateLimiter !== undefined &&
+      !(await rateLimiter.limit({ key: "public-sponsor-proof-v1" })).success
+    ) {
+      return context.json({ error: "sponsor_run_rate_limited" }, 429, {
+        ...responseHeaders(origin),
+        "retry-after": "60"
+      });
+    }
     if (activeRun) {
       return context.json({ error: "sponsor_run_already_active" }, 409, responseHeaders(origin));
     }
@@ -99,6 +110,12 @@ export function createDemoSponsorRunRoutes(
     }
   });
   return routes;
+}
+
+function sponsorProofRateLimiter(
+  environment: DemoSponsorRunEnvironment | undefined
+): RateLimit | undefined {
+  return environment?.SPONSOR_PROOF_RATE_LIMITER;
 }
 
 async function hasEmptyBoundedBody(request: Request): Promise<boolean> {

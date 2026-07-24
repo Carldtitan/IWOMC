@@ -60,6 +60,16 @@
       "localConnectionString": "postgresql://reconciler:reconciler@127.0.0.1:5432/reconciler"
     }
   ],
+  "ratelimits": [
+    {
+      "name": "SPONSOR_PROOF_RATE_LIMITER",
+      "namespace_id": "43701",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    }
+  ],
   "observability": {
     "enabled": true,
     "logs": {
