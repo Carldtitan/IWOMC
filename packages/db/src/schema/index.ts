@@ -273,7 +273,9 @@ export const deviceCredentials = pgTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
     deviceId: uuid("device_id").notNull(),
+    credentialDigest: text("credential_digest"),
     publicKeyFingerprint: digest("public_key_fingerprint"),
+    publicSigningKey: text("public_signing_key"),
     keyAlgorithm: text("key_algorithm").notNull(),
     keyVersion: integer("key_version").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
@@ -282,6 +284,7 @@ export const deviceCredentials = pgTable(
   },
   (table) => [
     uniqueIndex("device_credentials_ws_id_uq").on(table.workspaceId, table.id),
+    uniqueIndex("device_credentials_credential_digest_uq").on(table.credentialDigest),
     uniqueIndex("device_credentials_fingerprint_uq").on(table.publicKeyFingerprint),
     uniqueIndex("device_credentials_version_uq").on(
       table.workspaceId,
@@ -293,7 +296,15 @@ export const deviceCredentials = pgTable(
       foreignColumns: [devices.workspaceId, devices.id],
       name: "device_credentials_device_fk"
     }).onDelete("cascade"),
-    check("device_credentials_version_ck", sql`${table.keyVersion} > 0`)
+    check("device_credentials_version_ck", sql`${table.keyVersion} > 0`),
+    check(
+      "device_credentials_material_ck",
+      sql`(${table.credentialDigest} is null and ${table.publicSigningKey} is null) or (${table.credentialDigest} is not null and ${table.publicSigningKey} is not null and ${table.keyAlgorithm} = 'Ed25519')`
+    ),
+    check(
+      "device_credentials_public_key_ck",
+      sql`${table.publicSigningKey} is null or octet_length(decode(${table.publicSigningKey}, 'base64')) = 32`
+    )
   ]
 );
 
@@ -615,6 +626,7 @@ export const eventStreams = pgTable(
     lastMonotonicSequence: bigint("last_monotonic_sequence", { mode: "number" })
       .default(0)
       .notNull(),
+    chainHead: text("chain_head"),
     closedAt: timestamp("closed_at", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt()
@@ -642,6 +654,73 @@ export const eventStreams = pgTable(
       foreignColumns: [realms.workspaceId, realms.id],
       name: "event_streams_realm_fk"
     }).onDelete("restrict")
+  ]
+);
+
+export const ingestBatches = pgTable(
+  "ingest_batches",
+  {
+    id: requiredId(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id").notNull(),
+    deviceId: uuid("device_id").notNull(),
+    eventStreamId: uuid("event_stream_id").notNull(),
+    batchId: text("batch_id").notNull(),
+    logicalDigest: digest("logical_digest"),
+    objectMetadataId: uuid("object_metadata_id").notNull(),
+    objectKey: text("object_key").notNull(),
+    objectVersionId: text("object_version_id").notNull(),
+    firstSequence: bigint("first_sequence", { mode: "number" }).notNull(),
+    lastSequence: bigint("last_sequence", { mode: "number" }).notNull(),
+    chainHead: digest("chain_head"),
+    state: text("state").default("stored_not_enqueued").notNull(),
+    enqueuedAt: timestamp("enqueued_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt()
+  },
+  (table) => [
+    uniqueIndex("ingest_batches_ws_id_uq").on(table.workspaceId, table.id),
+    uniqueIndex("ingest_batches_identity_uq").on(table.workspaceId, table.batchId),
+    uniqueIndex("ingest_batches_object_uq").on(table.workspaceId, table.objectMetadataId),
+    uniqueIndex("ingest_batches_stream_sequence_uq").on(
+      table.workspaceId,
+      table.eventStreamId,
+      table.firstSequence,
+      table.lastSequence
+    ),
+    index("ingest_batches_project_created_idx").on(
+      table.workspaceId,
+      table.projectId,
+      table.createdAt
+    ),
+    index("ingest_batches_delivery_idx").on(table.workspaceId, table.state, table.createdAt),
+    foreignKey({
+      columns: [table.workspaceId, table.projectId],
+      foreignColumns: [projects.workspaceId, projects.id],
+      name: "ingest_batches_project_fk"
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.workspaceId, table.deviceId],
+      foreignColumns: [devices.workspaceId, devices.id],
+      name: "ingest_batches_device_fk"
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.workspaceId, table.eventStreamId],
+      foreignColumns: [eventStreams.workspaceId, eventStreams.id],
+      name: "ingest_batches_stream_fk"
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.workspaceId, table.objectMetadataId],
+      foreignColumns: [objectMetadata.workspaceId, objectMetadata.id],
+      name: "ingest_batches_object_fk"
+    }).onDelete("restrict"),
+    check(
+      "ingest_batches_sequence_ck",
+      sql`${table.firstSequence} > 0 and ${table.lastSequence} >= ${table.firstSequence}`
+    ),
+    check("ingest_batches_state_ck", sql`${table.state} in ('stored_not_enqueued', 'enqueued')`)
   ]
 );
 

@@ -4,14 +4,7 @@ import type {
   ProjectAuthorizationPort
 } from "../../domain/ingestion/ports.js";
 
-/**
- * Transactional boundary a real Hyperdrive-compatible PostgreSQL driver must
- * implement. In particular, `commitStoredBatch` must compare-and-advance the
- * stream anchor and insert the idempotency record in one database transaction.
- *
- * The Worker currently has a Hyperdrive binding but no PostgreSQL client
- * dependency, so this module deliberately does not pretend to persist data.
- */
+/** Compatibility boundary for ingestion metadata drivers. */
 export interface NeonIngestionDriver
   extends DeviceAuthenticationPort, IngestMetadataPort, ProjectAuthorizationPort {}
 
