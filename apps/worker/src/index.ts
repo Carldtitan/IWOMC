@@ -3,16 +3,21 @@ import { secureHeaders } from "hono/secure-headers";
 
 import { createIngestionRoutes } from "./api/ingestion/index.js";
 import { createUnavailableIntegrationStatusRoutes } from "./api/integration-status/index.js";
-import { createCloudflareIngestionApi } from "./infrastructure/ingestion/index.js";
+import {
+  CloudflarePayloadProtection,
+  CloudflareR2VerifiedObjectReader,
+  HyperdrivePostgresConnectionFactory,
+  HyperdriveProcessedBatchMarkerPersistence,
+  createCloudflareIngestionApi
+} from "./infrastructure/ingestion/index.js";
+import {
+  EventBatchConsumer,
+  EventConsumerError,
+  handleCloudflareEventBatch
+} from "./queues/index.js";
 
 interface WorkerBindings {
   Bindings: Env;
-}
-
-export interface IngestPointer {
-  readonly objectKey: string;
-  readonly objectDigest: string;
-  readonly workspaceId: string;
 }
 
 const app = new Hono<WorkerBindings>();
@@ -164,19 +169,37 @@ app.onError((error, context) => {
 
 const worker = {
   fetch: app.fetch,
-  queue(batch: MessageBatch<IngestPointer>): void {
-    for (const message of batch.messages) {
-      console.error(
-        JSON.stringify({
-          message: "queue consumer not implemented",
-          queue: batch.queue,
-          messageId: message.id
-        })
+  async queue(batch: MessageBatch<unknown>, environment: Env): Promise<void> {
+    let consumer;
+    try {
+      const protection = new CloudflarePayloadProtection(environment.DATA_ENCRYPTION_KEY);
+      const connections = new HyperdrivePostgresConnectionFactory(
+        environment.DATABASE.connectionString
       );
-      message.retry({ delaySeconds: 60 });
+      consumer = new EventBatchConsumer({
+        deadLetters: {
+          publish: () =>
+            Promise.reject(new EventConsumerError("direct_dead_letter_publish_unavailable", true))
+        },
+        objects: new CloudflareR2VerifiedObjectReader(environment.OBJECTS, protection),
+        persistence: new HyperdriveProcessedBatchMarkerPersistence(connections),
+        reconcileQueue: {
+          publish: () => Promise.reject(new EventConsumerError("reconcile_queue_unavailable", true))
+        }
+      });
+    } catch {
+      consumer = {
+        consume: () =>
+          Promise.reject(new EventConsumerError("consumer_configuration_invalid", true))
+      };
     }
+    await handleCloudflareEventBatch(batch, consumer, (entry) => {
+      console.error(
+        JSON.stringify({ message: "ingest queue delivery not acknowledged", ...entry })
+      );
+    });
   }
-} satisfies ExportedHandler<Env, IngestPointer>;
+} satisfies ExportedHandler<Env, unknown>;
 
 export { ValidationWorkflow } from "./workflows/validation.js";
 export default worker;
