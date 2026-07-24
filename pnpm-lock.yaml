@@ -122,6 +122,9 @@ importers:
       "@environment-REDACTED/contracts":
         specifier: workspace:*
         version: link:../../packages/contracts
+      "@environment-REDACTED/integrations":
+        specifier: workspace:*
+        version: link:../../packages/integrations
       hono:
         specifier: ^4.12.32
         version: 4.12.32

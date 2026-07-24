@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@environment-REDACTED/contracts": "workspace:*",
+    "@environment-REDACTED/integrations": "workspace:*",
     "hono": "^4.12.32"
   },
   "devDependencies": {
