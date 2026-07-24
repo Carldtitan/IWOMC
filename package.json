@@ -18,7 +18,7 @@
     "extension:package": "pnpm --dir apps/extension run package",
     "format": "prettier --write --cache .",
     "format:check": "prettier --check --cache .",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "pnpm run types && eslint . --max-warnings 0",
     "playwright": "playwright test",
     "rust:check": "cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings && cargo test --workspace --all-features",
     "test:github-app": "node --env-file=.env scripts/test-github-app.mjs",
