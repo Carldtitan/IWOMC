@@ -94,27 +94,27 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 
 ### Milestone 2: Durable application and local privacy boundary
 
-- [ ] 4. Implement the Neon persistence model and migrations
-  - [ ] 4.1 Create Drizzle schemas under `packages/db/src/schema/` for all tables named in `design.md`.
-  - [ ] 4.2 Add workspace ID to every tenant-owned table and centralize workspace-scoped query helpers.
-  - [ ] 4.3 Add unique constraints for observation event IDs, stream sequences, upload batches, GitHub delivery IDs, workflow idempotency keys, candidate-target jobs, and attestation digests.
-  - [ ] 4.4 Store only indexes and metadata for large objects; create `object_metadata` references for private R2 payloads.
-  - [ ] 4.5 Add explicit candidate, validation-job, recommendation, and cleanup state-transition constraints.
-  - [ ] 4.6 Add policy version, behavior-contract version, support capability, consent, retention, deletion, and audit metadata.
-  - [ ] 4.7 Generate the first migration in `packages/db/migrations/`.
-  - [ ] 4.8 Implement development seed data containing one user, workspace, repository, device, and project without synthetic verification results.
-  - [ ] 4.9 Test migration application, idempotent insertion, unique constraints, state transitions, foreign keys, and cross-workspace isolation.
-  - [ ] 4.10 Add and test the external-operation ledger, Braintrust trace outbox, source-input/bundle, invitation/comment, device-credential, support-registry, cache/dedup/lease, retention/export/delete, secret-reference, and cleanup-lease tables named in `design.md`.
-  - [ ] 4.11 Implement an append-only audit service for authentication/installation changes, policy/contract edits, approvals, external side effects, GitHub writes, retention/export/deletion actions, and cleanup escalation; test actor, workspace, object, time, and outcome binding.
+- [x] 4. Implement the Neon persistence model and migrations
+  - [x] 4.1 Create Drizzle schemas under `packages/db/src/schema/` for all tables named in `design.md`.
+  - [x] 4.2 Add workspace ID to every tenant-owned table and centralize workspace-scoped query helpers.
+  - [x] 4.3 Add unique constraints for observation event IDs, stream sequences, upload batches, GitHub delivery IDs, workflow idempotency keys, candidate-target jobs, and attestation digests.
+  - [x] 4.4 Store only indexes and metadata for large objects; create `object_metadata` references for private R2 payloads.
+  - [x] 4.5 Add explicit candidate, validation-job, recommendation, and cleanup state-transition constraints.
+  - [x] 4.6 Add policy version, behavior-contract version, support capability, consent, retention, deletion, and audit metadata.
+  - [x] 4.7 Generate the first migration in `packages/db/migrations/`.
+  - [x] 4.8 Implement development seed data containing one user, workspace, repository, device, and project without synthetic verification results.
+  - [x] 4.9 Test migration application, idempotent insertion, unique constraints, state transitions, foreign keys, and cross-workspace isolation.
+  - [x] 4.10 Add and test the external-operation ledger, Braintrust trace outbox, source-input/bundle, invitation/comment, device-credential, support-registry, cache/dedup/lease, retention/export/delete, secret-reference, and cleanup-lease tables named in `design.md`.
+  - [x] 4.11 Implement an append-only audit service for authentication/installation changes, policy/contract edits, approvals, external side effects, GitHub writes, retention/export/deletion actions, and cleanup escalation; test actor, workspace, object, time, and outcome binding.
   - **Exit:** A disposable Neon/local Postgres database can migrate from empty, seed, accept duplicate inputs safely, and reject cross-workspace queries in integration tests.
   - _Requirements: R2, R6.4, R12.6-R12.7, R17, R18.4, R20.9, R21.7_
 
-- [ ] 5. Build the Companion foundation, key storage, redaction, and encrypted spool
-  - [ ] 5.1 Implement configuration, structured local logging, graceful shutdown, and health reporting in `crates/companion/src/main.rs`.
-  - [ ] 5.2 Implement OS credential-store access for the device signing key, local encryption key, and device-scoped HMAC key.
-  - [ ] 5.3 Implement the local SQLite WAL schema in `crates/companion/src/spool/`.
-  - [ ] 5.4 Encrypt sensitive spool fields with a versioned authenticated-encryption envelope and never store the plaintext data key in SQLite.
-  - [ ] 5.5 Implement local redaction modules for:
+- [x] 5. Build the Companion foundation, key storage, redaction, and encrypted spool
+  - [x] 5.1 Implement configuration, structured local logging, graceful shutdown, and health reporting in `crates/companion/src/main.rs`.
+  - [x] 5.2 Implement OS credential-store access for the device signing key, local encryption key, and device-scoped HMAC key.
+  - [x] 5.3 Implement the local SQLite WAL schema in `crates/companion/src/spool/`.
+  - [x] 5.4 Encrypt sensitive spool fields with a versioned authenticated-encryption envelope and never store the plaintext data key in SQLite.
+  - [x] 5.5 Implement local redaction modules for:
     - environment-variable values;
     - command arguments and output;
     - credential-shaped strings;
@@ -123,11 +123,11 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - repository, username, host, and home-path pseudonyms;
     - provider payload fields;
     - user-defined patterns.
-  - [ ] 5.6 Implement device-scoped keyed equality fingerprints for selected environment variables.
-  - [ ] 5.7 Implement mandatory monotonic `localSequence`, optional provider/source sequence, append-only hash chaining over local sequence, and Ed25519 chain-head signing.
-  - [ ] 5.8 Implement offline batch creation, acknowledgement, retry cursor, and safe deletion after server acknowledgement.
-  - [ ] 5.9 Test restart recovery, network loss, duplicate acknowledgement, key rotation, hash-chain tampering, spool corruption, and disk-pressure behavior.
-  - [ ] 5.10 Run the seeded secret corpus against logs, SQLite, serialized batches, crash messages, and HMAC output.
+  - [x] 5.6 Implement device-scoped keyed equality fingerprints for selected environment variables.
+  - [x] 5.7 Implement mandatory monotonic `localSequence`, optional provider/source sequence, append-only hash chaining over local sequence, and Ed25519 chain-head signing.
+  - [x] 5.8 Implement offline batch creation, acknowledgement, retry cursor, and safe deletion after server acknowledgement.
+  - [x] 5.9 Test restart recovery, network loss, duplicate acknowledgement, key rotation, hash-chain tampering, spool corruption, and disk-pressure behavior.
+  - [x] 5.10 Run the seeded secret corpus against logs, SQLite, serialized batches, crash messages, and HMAC output.
   - **Exit:** A redacted event can be durably accepted offline, survive restart, upload idempotently later, and reveal no seeded plaintext secret.
   - _Requirements: R6.2-R6.7, R20.1-R20.6, R20.10, R21.3-R21.4, R22.4_
 

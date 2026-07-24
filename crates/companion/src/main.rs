@@ -8,6 +8,7 @@ use environment_reconciler_companion::{
     logging::{LogLevel, emit_stderr},
     redaction::Redactor,
     shutdown::ShutdownToken,
+    spool::{EncryptedSpool, SpoolLimits},
 };
 use serde_json::json;
 
@@ -17,13 +18,27 @@ fn main() -> Result<(), Box<dyn Error>> {
     let key_manager = DeviceKeyManager::new(OsCredentialStore::new(&config.credential_service));
     let keys = key_manager.load_or_create()?;
     let redactor = Redactor::new(keys.equality_hmac, &[])?;
+    let spool = EncryptedSpool::open(
+        &config.spool_path,
+        SpoolLimits {
+            maximum_encrypted_payload_bytes: config.max_spool_bytes,
+            maximum_pending_events: config.max_pending_events,
+            maximum_batch_events: config.batch_size,
+        },
+        keys.encryption,
+        keys.signing,
+        redactor,
+    )?;
+    spool.verify_integrity()?;
     let health = HealthReporter::default();
     health.set_component("credential_store", ComponentState::Healthy, None);
-    health.set_component("spool", ComponentState::Unknown, Some("not_opened"));
+    health.set_component("spool", ComponentState::Healthy, None);
+    let stats = spool.stats()?;
+    health.set_queue_depth(stats.pending_events, stats.pending_batches);
 
     let info = build_info();
     emit_stderr(
-        &redactor,
+        spool.redactor(),
         LogLevel::Info,
         "companion.starting",
         "environment reconciler companion starting",
@@ -43,7 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     ctrlc::set_handler(move || signal_token.request())?;
     while !shutdown.wait_timeout(config.health_interval) {
         emit_stderr(
-            &redactor,
+            spool.redactor(),
             LogLevel::Debug,
             "companion.health",
             "periodic companion health",
@@ -51,7 +66,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
     }
     emit_stderr(
-        &redactor,
+        spool.redactor(),
         LogLevel::Info,
         "companion.stopped",
         "graceful shutdown completed",

@@ -144,7 +144,7 @@ impl Redactor {
                 RedactionCategory::RegistryCredential,
             ),
             (
-                r"(?mi)^([A-Z][A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY)[A-Z0-9_]*\s*=\s*).+$",
+                r"(?i)\b[A-Z][A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|PRIVATE_KEY)[A-Z0-9_]*\s*=\s*[^\s]+",
                 "<redacted:dotenv-value>",
                 RedactionCategory::DotenvValue,
             ),
