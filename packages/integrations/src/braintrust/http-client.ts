@@ -99,6 +99,17 @@ function isFiniteNonNegative(value: number): boolean {
   return Number.isFinite(value) && value >= 0;
 }
 
+function normalizeApiV1BaseUrl(baseUrl: URL): URL {
+  const pathSegments = baseUrl.pathname.split("/").filter((segment) => segment.length > 0);
+  if (pathSegments.at(-1) !== "v1") {
+    pathSegments.push("v1");
+  }
+  baseUrl.pathname = `/${pathSegments.join("/")}/`;
+  baseUrl.search = "";
+  baseUrl.hash = "";
+  return baseUrl;
+}
+
 function recordIsValid(record: AllowlistedTraceRecord): boolean {
   const startedAt = Date.parse(record.startedAt);
   if (
@@ -217,7 +228,7 @@ export class BraintrustHttpClient implements BraintrustPort {
     const requestTimeoutMs = configuration.requestTimeoutMs ?? 10_000;
     let baseUrl: URL;
     try {
-      baseUrl = new URL(configuration.apiBaseUrl ?? DEFAULT_API_BASE_URL);
+      baseUrl = normalizeApiV1BaseUrl(new URL(configuration.apiBaseUrl ?? DEFAULT_API_BASE_URL));
     } catch {
       throw new BraintrustIntegrationError("invalid_configuration");
     }

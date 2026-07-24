@@ -1,6 +1,7 @@
 import { Hono, type Handler } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
+import { createDemoSponsorRunRoutes } from "./api/demo-sponsor-run/routes.js";
 import { createIngestionRoutes } from "./api/ingestion/index.js";
 import { createUnavailableIntegrationStatusRoutes } from "./api/integration-status/index.js";
 import {
@@ -104,6 +105,16 @@ const ingestRequest: Handler<WorkerBindings> = (context) => {
 
 app.post("/v1/projects/:id/events/batches", ingestRequest);
 app.get("/v1/devices/:id/status", ingestRequest);
+app.route(
+  "/",
+  createDemoSponsorRunRoutes((environment) => ({
+    async run(input) {
+      const { createRuntimeDemoSponsorRunExecutor } =
+        await import("./api/demo-sponsor-run/runtime.js");
+      return createRuntimeDemoSponsorRunExecutor(environment).run(input);
+    }
+  }))
+);
 app.route("/", createUnavailableIntegrationStatusRoutes());
 
 app.get("/v1/auth/github/start", (context) =>

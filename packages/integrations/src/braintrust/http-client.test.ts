@@ -54,6 +54,28 @@ function exportRequest(records: readonly AllowlistedTraceRecord[]): ExportAllowl
 }
 
 describe("Braintrust allowlisted HTTP exporter", () => {
+  it.each([
+    ["host-root base", "https://api.braintrust.dev"],
+    ["versioned base", "https://api.braintrust.dev/v1"]
+  ])("targets the official v1 project-log endpoint for a %s", async (_label, apiBaseUrl) => {
+    let capturedUrl = "";
+    const fetchImplementation: typeof fetch = (input) => {
+      capturedUrl =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      return Promise.resolve(new Response(JSON.stringify({ row_ids: ["row-1"] }), { status: 200 }));
+    };
+    const client = new BraintrustHttpClient({
+      apiBaseUrl,
+      apiKey: "braintrust-test-key",
+      fetch: fetchImplementation,
+      projectId
+    });
+
+    await client.exportAllowlistedTraces(exportRequest([traceRecord()]));
+
+    expect(capturedUrl).toBe(`https://api.braintrust.dev/v1/project_logs/${projectId}/insert`);
+  });
+
   it("exports metadata-only project-log events and rejects runtime fields outside the allowlist", async () => {
     let capturedBody = "";
     const fetchImplementation: typeof fetch = (_input, init) => {
