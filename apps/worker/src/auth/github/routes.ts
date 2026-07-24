@@ -6,9 +6,9 @@ import {
   browserReadableCookie,
   cookieValue,
   expireSecureCookie,
-  issueProductSession,
   secureCookie
 } from "../session.js";
+import { BrowserSessionService, type BrowserSessionRepository } from "../browser-session.js";
 import {
   GitHubClientError,
   exchangeGitHubOAuthCode,
@@ -37,7 +37,7 @@ export interface StoredGitHubIdentity {
   readonly updatedAtEpochSeconds: number;
 }
 
-export interface GitHubIdentityStore {
+export interface GitHubIdentityStore extends BrowserSessionRepository {
   upsertIdentity(identity: StoredGitHubIdentity): Promise<void>;
 }
 
@@ -169,10 +169,12 @@ export async function handleGitHubOAuthCallback(
           }),
       updatedAtEpochSeconds: nowEpochSeconds
     });
-    const session = await issueProductSession({
+    const session = await new BrowserSessionService(
+      identityStore,
+      environment.APP_SESSION_SECRET
+    ).create({
       lifetimeSeconds: PRODUCT_SESSION_SECONDS,
       nowEpochSeconds,
-      sessionSecret: environment.APP_SESSION_SECRET,
       REDACTEDId: githubUser.id
     });
     const headers = new Headers({ Location: new URL("/", environment.PUBLIC_APP_URL).toString() });
