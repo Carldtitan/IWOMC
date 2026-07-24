@@ -2,6 +2,7 @@ import { Hono, type Handler } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
 import { createIngestionRoutes } from "./api/ingestion/index.js";
+import { createUnavailableIntegrationStatusRoutes } from "./api/integration-status/index.js";
 import { createCloudflareIngestionApi } from "./infrastructure/ingestion/index.js";
 
 interface WorkerBindings {
@@ -98,6 +99,7 @@ const ingestRequest: Handler<WorkerBindings> = (context) => {
 
 app.post("/v1/projects/:id/events/batches", ingestRequest);
 app.get("/v1/devices/:id/status", ingestRequest);
+app.route("/", createUnavailableIntegrationStatusRoutes());
 
 app.get("/v1/auth/github/start", (context) =>
   context.json(
