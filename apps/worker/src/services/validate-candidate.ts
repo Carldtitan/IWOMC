@@ -7,6 +7,8 @@ import type {
   Sha256Digest
 } from "@environment-REDACTED/integrations/ports";
 
+import { classifyValidationFault, type ClassifiedValidationFault } from "./validation-safety.js";
+
 export interface ValidationCommand {
   readonly arguments: readonly string[];
   readonly executable: string;
@@ -64,6 +66,7 @@ export interface ValidationPhaseResult {
 }
 
 export interface ValidationRunResult {
+  readonly classification: ClassifiedValidationFault;
   readonly cleanupConfirmed: boolean;
   readonly kind: "baseline" | "candidate";
   readonly outcome: "REDACTEDed" | "failed" | "timed_out" | "infrastructure_error" | "cleanup_failed";
@@ -87,7 +90,8 @@ export interface CandidateValidationResult {
     | "baseline_already_REDACTEDed"
     | "candidate_failed"
     | "infrastructure_error"
-    | "cleanup_failed";
+    | "cleanup_failed"
+    | "inconclusive";
 }
 
 function operationContext(
@@ -172,16 +176,26 @@ export class CandidateValidationService {
       return { baseline, candidate, status: "cleanup_failed" };
     }
     if (
-      baseline.outcome === "infrastructure_error" ||
-      candidate.outcome === "infrastructure_error"
+      baseline.classification.terminalClass === "infrastructure_failed" ||
+      candidate.classification.terminalClass === "infrastructure_failed"
     ) {
       return { baseline, candidate, status: "infrastructure_error" };
     }
-    if (baseline.outcome === "REDACTEDed") {
+    if (baseline.classification.terminalClass === "REDACTEDed") {
       return { baseline, candidate, status: "baseline_already_REDACTEDed" };
     }
-    if (candidate.outcome !== "REDACTEDed") {
-      return { baseline, candidate, status: "candidate_failed" };
+    if (baseline.classification.terminalClass !== "project_or_candidate_failed") {
+      return { baseline, candidate, status: "inconclusive" };
+    }
+    if (candidate.classification.terminalClass !== "REDACTEDed") {
+      return {
+        baseline,
+        candidate,
+        status:
+          candidate.classification.terminalClass === "project_or_candidate_failed"
+            ? "candidate_failed"
+            : "inconclusive"
+      };
     }
     return {
       attestation: {
@@ -206,6 +220,8 @@ export class CandidateValidationService {
     const provisionKey = `${plan.validationBatchId}:${kind}:provision`;
     let sandbox: DaytonaSandboxReference | undefined;
     let cleanupConfirmed = false;
+    let cleanupReason: "completed" | "failed" | "orphan-recovery" = "completed";
+    let currentPhase: ValidationPhaseResult["phase"] = "provision";
     try {
       const provisionStartedAt = this.#now();
       const existing = await this.#daytona.findSandboxByOperationKey({
@@ -214,6 +230,8 @@ export class CandidateValidationService {
       });
       if (existing.sandbox !== null) {
         sandbox = existing.sandbox;
+        cleanupReason = "orphan-recovery";
+        throw new Error("recovered_sandbox_not_clean");
       } else {
         const provisioned = await this.#daytona.provisionSandbox({
           autoDeleteAfterSeconds: 15 * 60,
@@ -223,6 +241,10 @@ export class CandidateValidationService {
           target: plan.target
         });
         sandbox = provisioned.sandbox;
+        if (!provisioned.created) {
+          cleanupReason = "orphan-recovery";
+          throw new Error("reconciled_sandbox_not_clean");
+        }
       }
       const inspected = await this.#daytona.inspectSandbox({
         context: operationContext(`${provisionKey}:authoritative-read`, plan.targetDigest, 30_000),
@@ -240,6 +262,7 @@ export class CandidateValidationService {
         phase: "provision",
         status: "REDACTEDed"
       });
+      currentPhase = "source";
       const sourceStartedAt = this.#now();
       await this.#materializer.materializeSource({
         sandbox,
@@ -251,6 +274,7 @@ export class CandidateValidationService {
         status: "REDACTEDed"
       });
       if (kind === "candidate") {
+        currentPhase = "candidate";
         const candidateStartedAt = this.#now();
         await this.#materializer.materializeCandidate({
           candidatePatchDigest: plan.candidatePatchDigest,
@@ -264,6 +288,7 @@ export class CandidateValidationService {
         });
       }
       for (const [index, command] of commands.entries()) {
+        currentPhase = command.phase;
         const result = await this.#daytona.executeCommand({
           arguments: command.arguments,
           context: operationContext(
@@ -289,9 +314,12 @@ export class CandidateValidationService {
         }
       }
     } catch {
+      if (cleanupReason === "completed") {
+        cleanupReason = "failed";
+      }
       phases.push({
         durationMs: 0,
-        phase: phases.length === 0 ? "provision" : "source",
+        phase: currentPhase,
         status: "infrastructure_error"
       });
     } finally {
@@ -306,7 +334,7 @@ export class CandidateValidationService {
             ),
             expectedRunDigest: plan.runPseudonym,
             maxCleanupTimeMs: 60_000,
-            reasonCode: "completed",
+            reasonCode: cleanupReason,
             sandbox
           });
           cleanupConfirmed = cleanup.deleted;
@@ -325,6 +353,7 @@ export class CandidateValidationService {
       }
     }
     return {
+      classification: classifyRun(phases, cleanupConfirmed),
       cleanupConfirmed,
       kind,
       outcome: terminalOutcome(phases, cleanupConfirmed),
@@ -332,6 +361,24 @@ export class CandidateValidationService {
       ...(sandbox === undefined ? {} : { sandboxId: sandbox.sandboxId })
     };
   }
+}
+
+function classifyRun(
+  phases: readonly ValidationPhaseResult[],
+  cleanupConfirmed: boolean
+): ClassifiedValidationFault {
+  const infrastructureFailed = phases.some((phase) => phase.status === "infrastructure_error");
+  return classifyValidationFault({
+    cleanupConfirmed,
+    commandFailed: phases.some((phase) => phase.status === "failed"),
+    commandTimedOut: phases.some((phase) => phase.status === "timed_out"),
+    preflightReady:
+      !infrastructureFailed &&
+      phases.some((phase) => phase.phase === "provision" && phase.status === "REDACTEDed"),
+    resourceBudgetExceeded: false,
+    securityPolicyBlocked: false,
+    targetSupported: true
+  });
 }
 
 function elapsed(now: () => number, startedAt: number): number {
