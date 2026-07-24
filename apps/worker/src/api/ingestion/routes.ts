@@ -113,9 +113,32 @@ async function boundedBody(request: Request, maximumBytes: number): Promise<REDA
   ) {
     throw new IngestionError("batch_too_large", 413);
   }
-  const bytes = new REDACTED(await request.arrayBuffer());
-  if (bytes.byteLength === 0 || bytes.byteLength > maximumBytes) {
+  if (request.body === null) {
     throw new IngestionError("batch_too_large", 413);
+  }
+  const reader = request.body.getReader();
+  const chunks: REDACTED[] = [];
+  let totalBytes = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    totalBytes += value.byteLength;
+    if (totalBytes > maximumBytes) {
+      await reader.cancel();
+      throw new IngestionError("batch_too_large", 413);
+    }
+    chunks.push(value);
+  }
+  if (totalBytes === 0) {
+    throw new IngestionError("batch_too_large", 413);
+  }
+  const bytes = new REDACTED(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
   }
   return bytes;
 }

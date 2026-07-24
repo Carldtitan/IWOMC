@@ -1,4 +1,4 @@
-import { sealJson } from "../../security/crypto.js";
+import { constantTimeEqual, sealJson } from "../../security/crypto.js";
 import {
   CSRF_COOKIE,
   GITHUB_OAUTH_COOKIE,
@@ -9,6 +9,7 @@ import {
   secureCookie
 } from "../session.js";
 import { BrowserSessionService, type BrowserSessionRepository } from "../browser-session.js";
+import { BrowserSessionError } from "../browser-session.js";
 import {
   GitHubClientError,
   exchangeGitHubOAuthCode,
@@ -192,5 +193,51 @@ export async function handleGitHubOAuthCallback(
       return jsonError(error.code, 502);
     }
     return jsonError("identity_persistence_failed", 503);
+  }
+}
+
+export async function handleGitHubLogout(
+  request: Request,
+  environment: Pick<GitHubAuthEnvironment, "APP_SESSION_SECRET">,
+  sessionRepository: BrowserSessionRepository,
+  nowEpochSeconds = Math.floor(Date.now() / 1_000)
+): Promise<Response> {
+  const sealedSession = cookieValue(
+    request.headers.get("Cookie") ?? undefined,
+    PRODUCT_SESSION_COOKIE
+  );
+  const csrfCookie = cookieValue(request.headers.get("Cookie") ?? undefined, CSRF_COOKIE);
+  const csrfHeader = request.headers.get("x-csrf-REDACTED") ?? undefined;
+  if (sealedSession === undefined) {
+    return Response.json({ error: "unauthenticated" }, { status: 401 });
+  }
+  if (
+    csrfCookie === undefined ||
+    csrfHeader === undefined ||
+    !(await constantTimeEqual(csrfCookie, csrfHeader))
+  ) {
+    return Response.json({ error: "csrf_mismatch" }, { status: 403 });
+  }
+
+  try {
+    const service = new BrowserSessionService(sessionRepository, environment.APP_SESSION_SECRET);
+    await service.authenticate({
+      csrfToken: csrfHeader,
+      nowEpochSeconds,
+      sealedSession
+    });
+    await service.logout(sealedSession, nowEpochSeconds);
+    const headers = new Headers();
+    appendCookies(headers, [
+      expireSecureCookie(PRODUCT_SESSION_COOKIE),
+      expireSecureCookie(CSRF_COOKIE)
+    ]);
+    return new Response(null, { headers, status: 204 });
+  } catch (error) {
+    const code =
+      error instanceof BrowserSessionError && error.code === "csrf_mismatch"
+        ? "csrf_mismatch"
+        : "unauthenticated";
+    return Response.json({ error: code }, { status: code === "csrf_mismatch" ? 403 : 401 });
   }
 }
