@@ -1,6 +1,13 @@
 #![forbid(unsafe_code)]
 
+pub mod config;
 pub mod contracts;
+pub mod credentials;
+pub mod crypto;
+pub mod health;
+pub mod logging;
+pub mod redaction;
+pub mod shutdown;
 
 /// Build-time information that is safe to expose over the future local IPC
 /// health endpoint.

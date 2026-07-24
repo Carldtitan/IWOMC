@@ -1,0 +1,349 @@
+//! Versioned device keys stored behind an operating-system credential-store boundary.
+
+use std::{
+    collections::HashMap,
+    error::Error,
+    fmt,
+    sync::{Arc, Mutex},
+};
+
+use zeroize::{Zeroize, ZeroizeOnDrop};
+
+pub const KEY_BYTES: usize = 32;
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum KeyPurpose {
+    DeviceSigning,
+    LocalEncryption,
+    EqualityHmac,
+}
+
+impl KeyPurpose {
+    const fn name(self) -> &'static str {
+        match self {
+            Self::DeviceSigning => "device-signing",
+            Self::LocalEncryption => "local-encryption",
+            Self::EqualityHmac => "equality-hmac",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CredentialErrorCode {
+    InvalidValue,
+    NotFound,
+    PlatformUnavailable,
+    StoreFailure,
+}
+
+#[derive(Debug)]
+pub struct CredentialError {
+    code: CredentialErrorCode,
+}
+
+impl CredentialError {
+    const fn new(code: CredentialErrorCode) -> Self {
+        Self { code }
+    }
+
+    #[must_use]
+    pub const fn code(&self) -> CredentialErrorCode {
+        self.code
+    }
+}
+
+impl fmt::Display for CredentialError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("credential-store operation failed")
+    }
+}
+
+impl Error for CredentialError {}
+
+pub trait CredentialStore: Send + Sync {
+    /// Read a named opaque secret.
+    ///
+    /// # Errors
+    ///
+    /// Returns a classified store error without secret-bearing diagnostics.
+    fn get(&self, name: &str) -> Result<Option<Vec<u8>>, CredentialError>;
+
+    /// Store a named opaque secret.
+    ///
+    /// # Errors
+    ///
+    /// Returns a classified store error without secret-bearing diagnostics.
+    fn put(&self, name: &str, secret: &[u8]) -> Result<(), CredentialError>;
+
+    /// Delete a named opaque secret.
+    ///
+    /// # Errors
+    ///
+    /// Returns a classified store error without secret-bearing diagnostics.
+    fn delete(&self, name: &str) -> Result<(), CredentialError>;
+}
+
+#[derive(Clone, Default)]
+pub struct MemoryCredentialStore {
+    entries: Arc<Mutex<HashMap<String, Vec<u8>>>>,
+}
+
+impl CredentialStore for MemoryCredentialStore {
+    fn get(&self, name: &str) -> Result<Option<Vec<u8>>, CredentialError> {
+        Ok(self
+            .entries
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .get(name)
+            .cloned())
+    }
+
+    fn put(&self, name: &str, secret: &[u8]) -> Result<(), CredentialError> {
+        self.entries
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(name.to_owned(), secret.to_vec());
+        Ok(())
+    }
+
+    fn delete(&self, name: &str) -> Result<(), CredentialError> {
+        self.entries
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .remove(name);
+        Ok(())
+    }
+}
+
+pub struct OsCredentialStore {
+    service: String,
+}
+
+impl OsCredentialStore {
+    #[must_use]
+    pub fn new(service: impl Into<String>) -> Self {
+        Self {
+            service: service.into(),
+        }
+    }
+
+    fn entry(&self, name: &str) -> Result<keyring::Entry, CredentialError> {
+        keyring::Entry::new(&self.service, name)
+            .map_err(|_| CredentialError::new(CredentialErrorCode::PlatformUnavailable))
+    }
+}
+
+impl CredentialStore for OsCredentialStore {
+    fn get(&self, name: &str) -> Result<Option<Vec<u8>>, CredentialError> {
+        match self.entry(name)?.get_password() {
+            Ok(encoded) => hex::decode(encoded)
+                .map(Some)
+                .map_err(|_| CredentialError::new(CredentialErrorCode::InvalidValue)),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(_) => Err(CredentialError::new(CredentialErrorCode::StoreFailure)),
+        }
+    }
+
+    fn put(&self, name: &str, secret: &[u8]) -> Result<(), CredentialError> {
+        self.entry(name)?
+            .set_password(&hex::encode(secret))
+            .map_err(|_| CredentialError::new(CredentialErrorCode::StoreFailure))
+    }
+
+    fn delete(&self, name: &str) -> Result<(), CredentialError> {
+        match self.entry(name)?.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(_) => Err(CredentialError::new(CredentialErrorCode::StoreFailure)),
+        }
+    }
+}
+
+#[derive(Zeroize, ZeroizeOnDrop)]
+pub struct SecretKey {
+    bytes: [u8; KEY_BYTES],
+}
+
+impl SecretKey {
+    #[must_use]
+    pub fn from_bytes(bytes: [u8; KEY_BYTES]) -> Self {
+        Self { bytes }
+    }
+
+    /// Generate a key from the operating system's cryptographic random source.
+    ///
+    /// # Errors
+    ///
+    /// Returns a platform-unavailable error when secure randomness cannot be obtained.
+    pub fn generate() -> Result<Self, CredentialError> {
+        let mut bytes = [0_u8; KEY_BYTES];
+        getrandom::fill(&mut bytes)
+            .map_err(|_| CredentialError::new(CredentialErrorCode::PlatformUnavailable))?;
+        Ok(Self { bytes })
+    }
+
+    #[must_use]
+    pub const fn expose(&self) -> &[u8; KEY_BYTES] {
+        &self.bytes
+    }
+}
+
+impl fmt::Debug for SecretKey {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("SecretKey([REDACTED])")
+    }
+}
+
+pub struct VersionedSecretKey {
+    pub version: u32,
+    pub key: SecretKey,
+}
+
+impl fmt::Debug for VersionedSecretKey {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("VersionedSecretKey")
+            .field("version", &self.version)
+            .field("key", &self.key)
+            .finish()
+    }
+}
+
+pub struct DeviceKeySet {
+    pub signing: VersionedSecretKey,
+    pub encryption: VersionedSecretKey,
+    pub equality_hmac: VersionedSecretKey,
+}
+
+pub struct DeviceKeyManager<S> {
+    store: S,
+}
+
+impl<S: CredentialStore> DeviceKeyManager<S> {
+    pub const fn new(store: S) -> Self {
+        Self { store }
+    }
+
+    /// Load all device keys, creating version one in the credential store when absent.
+    ///
+    /// # Errors
+    ///
+    /// Returns a classified error when secure random generation or credential storage fails.
+    pub fn load_or_create(&self) -> Result<DeviceKeySet, CredentialError> {
+        Ok(DeviceKeySet {
+            signing: self.load_or_create_purpose(KeyPurpose::DeviceSigning)?,
+            encryption: self.load_or_create_purpose(KeyPurpose::LocalEncryption)?,
+            equality_hmac: self.load_or_create_purpose(KeyPurpose::EqualityHmac)?,
+        })
+    }
+
+    /// Load an exact retained key version.
+    ///
+    /// # Errors
+    ///
+    /// Returns a classified error when the version is absent or malformed.
+    pub fn load_version(
+        &self,
+        purpose: KeyPurpose,
+        version: u32,
+    ) -> Result<VersionedSecretKey, CredentialError> {
+        let name = version_name(purpose, version);
+        let bytes = self
+            .store
+            .get(&name)?
+            .ok_or_else(|| CredentialError::new(CredentialErrorCode::NotFound))?;
+        decode_key(version, &bytes)
+    }
+
+    /// Create and activate a new key version, retaining old versions for decrypt/verify.
+    ///
+    /// # Errors
+    ///
+    /// Returns a classified error without including credential contents.
+    pub fn rotate(&self, purpose: KeyPurpose) -> Result<VersionedSecretKey, CredentialError> {
+        let current = self.active_version(purpose)?.unwrap_or(0);
+        let next = current
+            .checked_add(1)
+            .ok_or_else(|| CredentialError::new(CredentialErrorCode::InvalidValue))?;
+        let key = SecretKey::generate()?;
+        self.store.put(&version_name(purpose, next), key.expose())?;
+        self.store.put(&active_name(purpose), &next.to_be_bytes())?;
+        Ok(VersionedSecretKey { version: next, key })
+    }
+
+    fn load_or_create_purpose(
+        &self,
+        purpose: KeyPurpose,
+    ) -> Result<VersionedSecretKey, CredentialError> {
+        match self.active_version(purpose)? {
+            Some(version) => self.load_version(purpose, version),
+            None => self.rotate(purpose),
+        }
+    }
+
+    fn active_version(&self, purpose: KeyPurpose) -> Result<Option<u32>, CredentialError> {
+        self.store
+            .get(&active_name(purpose))?
+            .map_or(Ok(None), |bytes| {
+                let version_bytes: [u8; 4] = bytes.try_into().map_err(|mut invalid: Vec<u8>| {
+                    invalid.zeroize();
+                    CredentialError::new(CredentialErrorCode::InvalidValue)
+                })?;
+                Ok(Some(u32::from_be_bytes(version_bytes)))
+            })
+    }
+}
+
+fn active_name(purpose: KeyPurpose) -> String {
+    format!("{}.active-version", purpose.name())
+}
+
+fn version_name(purpose: KeyPurpose, version: u32) -> String {
+    format!("{}.v{version}", purpose.name())
+}
+
+fn decode_key(version: u32, bytes: &[u8]) -> Result<VersionedSecretKey, CredentialError> {
+    let key_bytes: [u8; KEY_BYTES] = bytes
+        .try_into()
+        .map_err(|_| CredentialError::new(CredentialErrorCode::InvalidValue))?;
+    Ok(VersionedSecretKey {
+        version,
+        key: SecretKey::from_bytes(key_bytes),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DeviceKeyManager, KeyPurpose, MemoryCredentialStore};
+
+    #[test]
+    fn creates_loads_and_rotates_keys_without_exposing_debug_values() {
+        let store = MemoryCredentialStore::default();
+        let manager = DeviceKeyManager::new(store.clone());
+        let first = manager.load_or_create().expect("keys must be created");
+        let replay = DeviceKeyManager::new(store.clone())
+            .load_or_create()
+            .expect("keys must reload");
+        assert_eq!(
+            first.encryption.key.expose(),
+            replay.encryption.key.expose()
+        );
+        assert_eq!(
+            format!("{:?}", first.encryption.key),
+            "SecretKey([REDACTED])"
+        );
+
+        let rotated = manager
+            .rotate(KeyPurpose::LocalEncryption)
+            .expect("rotation must succeed");
+        assert_eq!(rotated.version, first.encryption.version + 1);
+        assert_ne!(rotated.key.expose(), first.encryption.key.expose());
+        assert_eq!(
+            manager
+                .load_version(KeyPurpose::LocalEncryption, first.encryption.version)
+                .expect("old key must remain for decryption")
+                .key
+                .expose(),
+            first.encryption.key.expose()
+        );
+    }
+}
