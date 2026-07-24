@@ -63,12 +63,10 @@
     "enabled": true,
     "logs": {
       "enabled": true,
-      "invocation_logs": true,
-      "head_sampling_rate": 1
+      "invocation_logs": false
     },
     "traces": {
-      "enabled": true,
-      "head_sampling_rate": 0.1
+      "enabled": false
     }
   }
 }
