@@ -25,7 +25,7 @@ const app = new Hono<WorkerBindings>();
 
 app.use("*", secureHeaders());
 
-app.get("/", (context) => {
+app.get("/v1/service", (context) => {
   const origin = new URL(context.req.url).origin;
 
   return context.json({

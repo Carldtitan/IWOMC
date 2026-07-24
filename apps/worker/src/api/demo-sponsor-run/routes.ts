@@ -24,7 +24,7 @@ export interface DemoSponsorRunResponse {
     | { readonly status: "live" }
     | {
         readonly reason: "REDACTED_unavailable" | "live_generation_not_required_for_probe";
-        readonly status: "deterministic_fallback";
+        readonly status: "unavailable";
       };
   readonly overall: "failed" | "partial" | "succeeded" | "timed_out";
   readonly runId: string;
@@ -169,7 +169,7 @@ function failedResponse(timedOut: boolean): DemoSponsorRunResponse {
     },
     fireworks: {
       reason: "live_generation_not_required_for_probe",
-      status: "deterministic_fallback"
+      status: "unavailable"
     },
     overall: timedOut ? "timed_out" : "failed",
     runId: crypto.randomUUID()

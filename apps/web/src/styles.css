@@ -552,15 +552,6 @@ p {
   border-top-color: #cfe8ff;
 }
 
-.fallback-dot {
-  width: 6px;
-  height: 6px;
-  margin-left: auto;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 0 3px rgb(226 163 73 / 10%);
-}
-
 .sponsor-proof {
   display: flex;
   align-items: center;

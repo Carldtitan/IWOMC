@@ -26,7 +26,7 @@ interface SponsorRunResult {
   readonly fireworks: {
     readonly model?: string;
     readonly reason?: string;
-    readonly status: "deterministic_fallback" | "live";
+    readonly status: "live" | "unavailable";
   };
   readonly overall: string;
   readonly runId: string;
@@ -710,7 +710,7 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
             <b>Fireworks</b>
             {result.fireworks.status === "live"
               ? (result.fireworks.reason ?? "Live constrained reasoning")
-              : "Deterministic fallback"}
+              : "Unavailable for this run"}
           </span>
         </div>
       </div>
@@ -883,7 +883,7 @@ function isSponsorRunResult(value: unknown): value is SponsorRunResult {
     isRecord(braintrust) &&
     typeof braintrust.status === "string" &&
     isRecord(fireworks) &&
-    (fireworks.status === "live" || fireworks.status === "deterministic_fallback")
+    (fireworks.status === "live" || fireworks.status === "unavailable")
   );
 }
 

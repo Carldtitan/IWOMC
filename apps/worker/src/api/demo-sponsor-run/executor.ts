@@ -159,7 +159,7 @@ export class RuntimeDemoSponsorRunExecutor implements DemoSponsorRunExecutor {
         reason: this.#fireworksConfigured
           ? "live_generation_not_required_for_probe"
           : "REDACTED_unavailable",
-        status: "deterministic_fallback"
+        status: "unavailable"
       },
       overall,
       runId
