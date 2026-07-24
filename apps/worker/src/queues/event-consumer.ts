@@ -23,11 +23,15 @@ export interface NormalizedEventHeader {
 export interface NormalizedEventBatchEnvelope {
   readonly batchId: string;
   readonly chainHead: Sha256Digest;
+  readonly chainHeadSignature: string;
+  readonly deviceId: string;
   readonly headers: readonly NormalizedEventHeader[];
+  readonly lastSequence: number;
   readonly logicalDigest: Sha256Digest;
   readonly payloads: readonly unknown[];
   readonly projectId: string;
   readonly schemaVersion: 1;
+  readonly signingKeyVersion: number;
   readonly streamId: string;
   readonly workspaceId: string;
 }
@@ -51,10 +55,34 @@ export interface EventObjectReaderPort {
   readVerifiedPlaintext(pointer: IngestQueuePointer): Promise<Uint8Array>;
 }
 
+export class EventObjectReadError extends Error {
+  readonly code: string;
+  readonly retryable: boolean;
+
+  constructor(code: string, retryable: boolean) {
+    super("Stored event object verification failed.");
+    this.name = "EventObjectReadError";
+    this.code = code;
+    this.retryable = retryable;
+  }
+}
+
 export interface NormalizedEventPersistencePort {
   persistEventBatch(envelope: NormalizedEventBatchEnvelope): Promise<{
     readonly reconcileRequests: readonly ReconcileRequestedMessage[];
   }>;
+}
+
+export class NormalizedPersistenceError extends Error {
+  readonly code: string;
+  readonly retryable: boolean;
+
+  constructor(code: string, retryable: boolean) {
+    super("Normalized event persistence failed.");
+    this.name = "NormalizedPersistenceError";
+    this.code = code;
+    this.retryable = retryable;
+  }
 }
 
 export interface ReconcileRequestQueuePort {
@@ -112,8 +140,10 @@ export class EventBatchConsumer {
     let plaintext: Uint8Array;
     try {
       plaintext = await this.#objects.readVerifiedPlaintext(pointer);
-    } catch {
-      throw new EventConsumerError("object_read_failed", true);
+    } catch (error) {
+      throw error instanceof EventObjectReadError
+        ? new EventConsumerError(error.code, error.retryable)
+        : new EventConsumerError("object_read_failed", true);
     }
 
     let batch: CompanionUploadBatch;
@@ -138,8 +168,10 @@ export class EventBatchConsumer {
     let persisted;
     try {
       persisted = await this.#persistence.persistEventBatch(envelope);
-    } catch {
-      throw new EventConsumerError("normalization_persist_failed", true);
+    } catch (error) {
+      throw error instanceof NormalizedPersistenceError
+        ? new EventConsumerError(error.code, error.retryable)
+        : new EventConsumerError("normalization_persist_failed", true);
     }
     for (const request of persisted.reconcileRequests) {
       assertReconcileRequestBound(request, envelope);
@@ -201,6 +233,8 @@ export function normalizeEventBatch(
   return Object.freeze({
     batchId: batch.batchId,
     chainHead: batch.chainHead,
+    chainHeadSignature: batch.chainHeadSignature,
+    deviceId: pointer.deviceId,
     headers: Object.freeze(
       batch.events.map((event, index) =>
         Object.freeze({
@@ -215,10 +249,12 @@ export function normalizeEventBatch(
         })
       )
     ),
+    lastSequence: batch.lastSequence,
     logicalDigest: pointer.logicalDigest,
     payloads: Object.freeze(batch.events.map((event) => event.payload.payload)),
     projectId: pointer.projectId,
     schemaVersion: 1,
+    signingKeyVersion: batch.signingKeyVersion,
     streamId: pointer.streamId,
     workspaceId: pointer.workspaceId
   });
@@ -233,6 +269,7 @@ function parsePointer(value: unknown): IngestQueuePointer {
     pointer.schemaVersion !== 1 ||
     pointer.type !== "ingest.event_batch_stored" ||
     !isIdentifier(pointer.batchId) ||
+    !isIdentifier(pointer.deviceId) ||
     !isIdentifier(pointer.projectId) ||
     !isIdentifier(pointer.streamId) ||
     !isIdentifier(pointer.workspaceId) ||
@@ -246,6 +283,7 @@ function parsePointer(value: unknown): IngestQueuePointer {
   return Object.freeze({
     batchId: pointer.batchId,
     chainHead: pointer.chainHead,
+    deviceId: pointer.deviceId,
     logicalDigest: pointer.logicalDigest,
     objectKey: pointer.objectKey,
     objectVersionId: pointer.objectVersionId,
@@ -277,6 +315,7 @@ function pointerFromRecord(record: StoredBatchRecord): IngestQueuePointer {
   return Object.freeze({
     batchId: record.batchId,
     chainHead: record.chainHead,
+    deviceId: record.deviceId,
     logicalDigest: record.logicalDigest,
     objectKey: record.objectKey,
     objectVersionId: record.objectVersionId,
