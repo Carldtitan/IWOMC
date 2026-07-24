@@ -1,0 +1,74 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "environment-reconciler",
+  "main": "apps/worker/src/index.ts",
+  "compatibility_date": "2026-07-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./apps/web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/", "/health", "/v1/*"]
+  },
+  "vars": {
+    "APP_ENV": "development",
+    "LOG_LEVEL": "info"
+  },
+  "r2_buckets": [
+    {
+      "binding": "OBJECTS",
+      "bucket_name": "verified-environment-reconciliation",
+      "preview_bucket_name": "verified-environment-reconciliation-preview"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "INGEST_QUEUE",
+        "queue": "environment-reconciler-ingest"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "environment-reconciler-ingest",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "retry_delay": 30,
+        "dead_letter_queue": "environment-reconciler-ingest-dlq"
+      },
+      {
+        "queue": "environment-reconciler-ingest-dlq",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "binding": "VALIDATION_WORKFLOW",
+      "name": "environment-reconciler-validation",
+      "class_name": "ValidationWorkflow"
+    }
+  ],
+  "hyperdrive": [
+    {
+      "binding": "DATABASE",
+      "id": "00000000000000000000000000000000"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "head_sampling_rate": 1
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.1
+    }
+  }
+}

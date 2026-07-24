@@ -1,0 +1,28 @@
+# Worker-runtime variables only. Copy to `.dev.vars` for `wrangler dev`.
+# Migration and Cloudflare tooling credentials intentionally do not belong here.
+APP_ENV=development
+PUBLIC_APP_URL=http://localhost:8787
+LOG_LEVEL=info
+APP_SESSION_SECRET=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+DATA_ENCRYPTION_KEY=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=
+DATABASE_URL=postgresql://reconciler:reconciler@127.0.0.1:5432/reconciler
+DAYTONA_API_KEY=local-placeholder
+DAYTONA_API_URL=https://app.daytona.io/api
+DAYTONA_TARGET=us
+FIREWORKS_API_KEY=local-placeholder
+FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
+FIREWORKS_MODEL_ID=accounts/fireworks/models/kimi-k2p7-code
+BRAINTRUST_API_KEY=local-placeholder
+BRAINTRUST_API_URL=https://api.braintrust.dev
+BRAINTRUST_PROJECT_NAME=verified-environment-reconciliation
+BRAINTRUST_ENABLED=false
+GITHUB_APP_ID=1
+GITHUB_APP_CLIENT_ID=Iv1.placeholder
+GITHUB_APP_CLIENT_SECRET=local-placeholder
+GITHUB_APP_SLUG=environment-reconciler-local
+GITHUB_APP_WEBHOOK_SECRET=local-placeholder
+GITHUB_APP_PRIVATE_KEY_BASE64=local-placeholder
+R2_S3_ENDPOINT=https://00000000000000000000000000000000.r2.cloudflarestorage.com
+R2_S3_ACCESS_KEY_ID=local-placeholder
+R2_S3_SECRET_ACCESS_KEY=local-placeholder
+R2_BUCKET_NAME=verified-environment-reconciliation
