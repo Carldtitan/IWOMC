@@ -130,10 +130,7 @@ const collaborationRequest: Handler<WorkerBindings> = (context) => {
     {
       async authenticate({ mutation, request }) {
         const cookieHeader = request.headers.get("Cookie") ?? undefined;
-        const sealedSession = cookieValue(
-          cookieHeader,
-          PRODUCT_SESSION_COOKIE
-        );
+        const sealedSession = cookieValue(cookieHeader, PRODUCT_SESSION_COOKIE);
         if (sealedSession === undefined) {
           return undefined;
         }
