@@ -74,7 +74,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   try {
     const fireworksRun = runFireworksProof(controller.signal).catch((error: unknown) => ({
       reason: error instanceof Error ? error.message : "Fireworks request failed",
-      status: "deterministic_fallback" as const
+      status: "unavailable" as const
     }));
     const result = await executor.run({ signal: controller.signal });
     const fireworks = await fireworksRun;
@@ -205,7 +205,7 @@ function loadProjectEnvironment(): ReadonlyMap<string, string> {
       values.set(match[1]!, value);
     }
   } catch {
-    // Process environment remains the fallback.
+    // Process environment remains available when no project file exists.
   }
   return values;
 }

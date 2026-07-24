@@ -14,7 +14,7 @@ IWOMC is an environment reconciler for AI-assisted software development. It obse
 
 Answer one question with evidence: **Will another clean machine reproduce what the agent made work locally?**
 
-IWOMC links provider events, process ancestry, package-manager operations, installed-state deltas, source usage, manifests, and lockfiles. It then validates the smallest evidence-grounded correction in Daytona. Braintrust records metadata-only reasoning and validation traces. Fireworks provides constrained reasoning when available; deterministic reconciliation remains the safe fallback.
+IWOMC links provider events, process ancestry, package-manager operations, installed-state deltas, source usage, manifests, and lockfiles. It then validates the smallest evidence-grounded correction in Daytona. Braintrust records metadata-only reasoning and validation traces. Fireworks provides constrained reasoning for the proposed correction.
 
 ## Product personality
 
@@ -27,7 +27,7 @@ Precise, technical, restrained, and trustworthy. The interface should feel like 
 - Never label an integration connected unless a live request has established it.
 - Never turn missing coverage into a passing state.
 - Keep the overview compact enough to explain in one screen.
-- Use a single green accent for confirmed success; amber for review or fallback; red for failure; blue for informational scope.
+- Use a single green accent for confirmed success; amber for review or unavailable services; red for failure; blue for informational scope.
 - Use familiar panels, tabs, timelines, diffs, and status pills. Avoid decorative charts, excessive nesting, gradients without meaning, and generic AI-product language.
 - Meet WCAG AA contrast, preserve keyboard focus, respect reduced motion, and never communicate state by color alone.
 

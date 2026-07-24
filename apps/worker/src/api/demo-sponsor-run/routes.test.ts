@@ -34,7 +34,7 @@ function successfulResponse(): DemoSponsorRunResponse {
     },
     fireworks: {
       reason: "live_generation_not_required_for_probe",
-      status: "deterministic_fallback"
+      status: "unavailable"
     },
     overall: "succeeded",
     runId: "run-1"
@@ -134,7 +134,7 @@ describe("RuntimeDemoSponsorRunExecutor", () => {
       },
       fireworks: {
         reason: "credential_unavailable",
-        status: "deterministic_fallback"
+        status: "unavailable"
       },
       overall: "partial"
     });
