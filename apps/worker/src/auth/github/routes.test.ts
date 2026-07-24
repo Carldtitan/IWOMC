@@ -1,8 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { GITHUB_OAUTH_COOKIE, cookieValue } from "../session.js";
+import {
+  CSRF_COOKIE,
+  GITHUB_OAUTH_COOKIE,
+  PRODUCT_SESSION_COOKIE,
+  cookieValue
+} from "../session.js";
 import {
   handleGitHubOAuthCallback,
+  handleGitHubLogout,
   handleGitHubOAuthStart,
   type GitHubAuthEnvironment,
   type StoredGitHubIdentity
@@ -115,5 +121,99 @@ describe("GitHub OAuth routes", () => {
 
     expect(response.status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("requires the double-submit CSRF token and revokes the server-side session on logout", async () => {
+    const start = await handleGitHubOAuthStart(environment, 1_000);
+    const location = new URL(start.headers.get("Location")!);
+    const transaction = cookieValue(start.headers.get("Set-Cookie")!, GITHUB_OAUTH_COOKIE)!;
+    const sessions = new Map<string, BrowserSessionRecord>();
+    const store = {
+      create(record: BrowserSessionRecord) {
+        sessions.set(record.sessionId, record);
+        return Promise.resolve();
+      },
+      find(sessionId: string) {
+        return Promise.resolve(sessions.get(sessionId));
+      },
+      revoke(sessionId: string, revokedAtEpochSeconds: number) {
+        const current = sessions.get(sessionId);
+        if (current === undefined || current.revokedAtEpochSeconds !== undefined) {
+          return Promise.resolve(false);
+        }
+        sessions.set(sessionId, { ...current, revokedAtEpochSeconds });
+        return Promise.resolve(true);
+      },
+      upsertIdentity() {
+        return Promise.resolve();
+      }
+    };
+    const callback = await handleGitHubOAuthCallback(
+      new Request(
+        `https://app.example.test/v1/auth/github/callback?code=code&state=${location.searchParams.get("state")}`,
+        { headers: { Cookie: `${GITHUB_OAUTH_COOKIE}=${transaction}` } }
+      ),
+      environment,
+      store,
+      {
+        fetcher: vi
+          .fn<typeof fetch>()
+          .mockResolvedValueOnce(
+            Response.json({
+              access_token: "access-token",
+              scope: "repo",
+              token_type: "bearer"
+            })
+          )
+          .mockResolvedValueOnce(
+            Response.json({
+              avatar_url: "https://avatars.example.test/123",
+              id: 123,
+              login: "developer"
+            })
+          ),
+        nowEpochSeconds: 1_100
+      }
+    );
+    const setCookies = callback.headers.getSetCookie();
+    const session = cookieValue(
+      setCookies.find((value) => value.startsWith(`${PRODUCT_SESSION_COOKIE}=`)),
+      PRODUCT_SESSION_COOKIE
+    );
+    const csrf = cookieValue(
+      setCookies.find((value) => value.startsWith(`${CSRF_COOKIE}=`)),
+      CSRF_COOKIE
+    );
+    if (session === undefined || csrf === undefined) {
+      throw new Error("expected callback session and CSRF cookies");
+    }
+    const cookieHeader = `${PRODUCT_SESSION_COOKIE}=${session}; ${CSRF_COOKIE}=${csrf}`;
+
+    const rejected = await handleGitHubLogout(
+      new Request("https://app.example.test/v1/auth/logout", {
+        headers: { Cookie: cookieHeader, "X-CSRF-Token": "attacker" },
+        method: "POST"
+      }),
+      environment,
+      store,
+      1_200
+    );
+    expect(rejected.status).toBe(403);
+    expect([...sessions.values()][0]?.revokedAtEpochSeconds).toBeUndefined();
+
+    const response = await handleGitHubLogout(
+      new Request("https://app.example.test/v1/auth/logout", {
+        headers: { Cookie: cookieHeader, "X-CSRF-Token": csrf },
+        method: "POST"
+      }),
+      environment,
+      store,
+      1_200
+    );
+    expect(response.status).toBe(204);
+    expect([...sessions.values()][0]?.revokedAtEpochSeconds).toBe(1_200);
+    expect(response.headers.getSetCookie().join("\n")).toContain(
+      `${PRODUCT_SESSION_COOKIE}=; Path=/; Max-Age=0`
+    );
   });
 });
