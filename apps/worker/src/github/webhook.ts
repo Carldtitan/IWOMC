@@ -26,12 +26,25 @@ export interface GitHubWebhookDelivery {
   readonly repositoryIds: readonly string[];
 }
 
+export type GitHubWebhookDeliveryReservation = "accepted" | "duplicate" | "retry_pending";
+
 export interface GitHubWebhookDeliveryStore {
   /**
-   * Atomically persists the raw delivery and its metadata. Implementations
-   * must enforce a unique constraint over `(provider, deliveryId)`.
+   * Atomically persists the raw delivery and acquires a bounded enqueue claim.
+   * Implementations must enforce a unique constraint over `(provider,
+   * deliveryId)`, return `retry_pending` for a stored-but-unhandled delivery,
+   * and allow only one active enqueue claimant at a time.
    */
-  reserve(delivery: GitHubWebhookDelivery): Promise<"accepted" | "duplicate">;
+  reserve(delivery: GitHubWebhookDelivery): Promise<GitHubWebhookDeliveryReservation>;
+  /**
+   * Marks the exact stored digest as handled only after an idempotent queue
+   * publish succeeds or an allowlisted decision intentionally ignores it.
+   */
+  markHandled(input: {
+    readonly deliveryId: string;
+    readonly outcome: "enqueued" | "ignored";
+    readonly payloadDigest: `sha256:${string}`;
+  }): Promise<void>;
 }
 
 export interface GitHubWebhookMessage {
@@ -46,6 +59,10 @@ export interface GitHubWebhookMessage {
 }
 
 export interface GitHubWebhookQueue {
+  /**
+   * Publishes idempotently by `(deliveryId, payloadDigest)`. A retry after an
+   * ambiguous publish must not create a second logical checkpoint request.
+   */
   publish(message: GitHubWebhookMessage): Promise<void>;
 }
 
@@ -292,7 +309,7 @@ export async function handleGitHubWebhook(
     }
     const digest = await sha256(rawBody);
     const ids = repositoryIds(payload);
-    let reservation: "accepted" | "duplicate";
+    let reservation: GitHubWebhookDeliveryReservation;
     try {
       reservation = await dependencies.deliveries.reserve({
         ...(action === undefined ? {} : { action }),
@@ -311,6 +328,15 @@ export async function handleGitHubWebhook(
       return Response.json({ accepted: true, duplicate: true }, { status: 202 });
     }
     if (!classification.accepted) {
+      try {
+        await dependencies.deliveries.markHandled({
+          deliveryId,
+          outcome: "ignored",
+          payloadDigest: digest
+        });
+      } catch {
+        throw new GitHubWebhookError("storage_unavailable", 503);
+      }
       return Response.json({ accepted: true, ignored: true }, { status: 202 });
     }
 
@@ -325,9 +351,14 @@ export async function handleGitHubWebhook(
         repositoryIds: ids,
         requestFreshCheckpoint: event !== "installation"
       });
+      await dependencies.deliveries.markHandled({
+        deliveryId,
+        outcome: "enqueued",
+        payloadDigest: digest
+      });
     } catch {
-      // The durable delivery remains reserved for a reconciliation job to
-      // enqueue later. GitHub should retry this delivery in the meantime.
+      // The delivery remains pending. A GitHub retry or reconciliation worker
+      // receives `retry_pending` and republishes the same idempotency identity.
       throw new GitHubWebhookError("storage_unavailable", 503);
     }
     return Response.json({ accepted: true, duplicate: false }, { status: 202 });

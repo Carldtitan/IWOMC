@@ -4,6 +4,7 @@ import {
   createGitHubWebhookSignature,
   handleGitHubWebhook,
   type GitHubWebhookDelivery,
+  type GitHubWebhookDeliveryReservation,
   type GitHubWebhookMessage
 } from "./webhook.js";
 
@@ -30,14 +31,44 @@ async function webhookRequest(
 function dependencies(reservation: "accepted" | "duplicate" = "accepted") {
   const deliveries: GitHubWebhookDelivery[] = [];
   const messages: GitHubWebhookMessage[] = [];
+  const states = new Map<
+    string,
+    { handled: boolean; payloadDigest: GitHubWebhookDelivery["payloadDigest"] }
+  >();
   return {
     deliveries,
     messages,
     value: {
       deliveries: {
-        reserve(delivery: GitHubWebhookDelivery) {
+        reserve(delivery: GitHubWebhookDelivery): Promise<GitHubWebhookDeliveryReservation> {
           deliveries.push(delivery);
-          return Promise.resolve(reservation);
+          if (reservation === "duplicate") {
+            return Promise.resolve("duplicate" as const);
+          }
+          const existing = states.get(delivery.deliveryId);
+          if (existing !== undefined) {
+            if (existing.payloadDigest !== delivery.payloadDigest) {
+              return Promise.reject(new Error("delivery digest mismatch"));
+            }
+            return Promise.resolve(existing.handled ? ("duplicate" as const) : "retry_pending");
+          }
+          states.set(delivery.deliveryId, {
+            handled: false,
+            payloadDigest: delivery.payloadDigest
+          });
+          return Promise.resolve("accepted" as const);
+        },
+        markHandled(input: {
+          readonly deliveryId: string;
+          readonly outcome: "enqueued" | "ignored";
+          readonly payloadDigest: GitHubWebhookDelivery["payloadDigest"];
+        }) {
+          const existing = states.get(input.deliveryId);
+          if (existing?.payloadDigest !== input.payloadDigest) {
+            return Promise.reject(new Error("delivery digest mismatch"));
+          }
+          existing.handled = true;
+          return Promise.resolve();
         }
       },
       queue: {
@@ -160,7 +191,7 @@ describe("GitHub webhook boundary", () => {
     expect(deps.messages).toEqual([]);
   });
 
-  it("fails closed on unsupported events, invalid deliveries, oversize bodies, and queue failure", async () => {
+  it("fails closed on unsupported events, invalid deliveries, and oversize bodies", async () => {
     const unsupported = dependencies();
     expect(
       (
@@ -191,14 +222,29 @@ describe("GitHub webhook boundary", () => {
         )
       ).status
     ).toBe(413);
+  });
 
-    const unavailable = dependencies();
-    unavailable.value.queue.publish = vi.fn().mockRejectedValue(new Error("queue unavailable"));
-    const response = await handleGitHubWebhook(
-      await webhookRequest({ installation: { id: 41 }, repository: { id: 73 } }),
-      unavailable.value
-    );
-    expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ error: "storage_unavailable" });
+  it("republishes a reserved-but-not-enqueued delivery and then deduplicates it", async () => {
+    const deps = dependencies();
+    deps.value.queue.publish = vi.fn().mockRejectedValueOnce(new Error("queue unavailable"));
+    const body = { installation: { id: 41 }, repository: { id: 73 } };
+
+    const failed = await handleGitHubWebhook(await webhookRequest(body), deps.value);
+
+    expect(failed.status).toBe(503);
+    expect(await failed.json()).toEqual({ error: "storage_unavailable" });
+
+    deps.value.queue.publish = (message: GitHubWebhookMessage) => {
+      deps.messages.push(message);
+      return Promise.resolve();
+    };
+    const retried = await handleGitHubWebhook(await webhookRequest(body), deps.value);
+    expect(retried.status).toBe(202);
+    expect(await retried.json()).toEqual({ accepted: true, duplicate: false });
+    expect(deps.messages).toHaveLength(1);
+
+    const duplicate = await handleGitHubWebhook(await webhookRequest(body), deps.value);
+    expect(await duplicate.json()).toEqual({ accepted: true, duplicate: true });
+    expect(deps.messages).toHaveLength(1);
   });
 });
