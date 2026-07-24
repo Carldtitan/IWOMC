@@ -64,10 +64,10 @@ export class ProjectService {
       repositoryId: input.repositoryId,
       REDACTEDId: input.REDACTEDId
     });
-    if (
-      authorized?.installationId !== input.installationId ||
-      authorized?.repositoryId !== input.repositoryId
-    ) {
+    if (authorized?.installationId !== input.installationId) {
+      throw new ProjectLinkError("repository_not_authorized");
+    }
+    if (authorized.repositoryId !== input.repositoryId) {
       throw new ProjectLinkError("repository_not_authorized");
     }
     const project: LinkedProject = {
