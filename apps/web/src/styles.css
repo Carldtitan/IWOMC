@@ -349,6 +349,42 @@ nav {
   margin: 0;
 }
 
+.system-status-demo .live-dot,
+.system-status-loading .live-dot {
+  background: var(--faint);
+  box-shadow: 0 0 0 3px rgb(100 112 105 / 9%);
+}
+
+.system-status-partial,
+.system-status-stale {
+  color: var(--amber);
+}
+
+.system-status-partial .live-dot,
+.system-status-stale .live-dot {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px rgb(228 189 117 / 9%);
+}
+
+.system-status-error {
+  color: var(--red);
+}
+
+.system-status-error .live-dot {
+  background: var(--red);
+  box-shadow: 0 0 0 3px rgb(232 142 142 / 9%);
+}
+
+.system-status-loading .live-dot {
+  animation: pulse-status 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-status {
+  50% {
+    opacity: 0.35;
+  }
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;
