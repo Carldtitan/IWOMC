@@ -1,0 +1,18 @@
+[package]
+name = "environment-reconciler-companion"
+description = "Trusted local observation companion for Environment Reconciler"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lib]
+name = "environment_reconciler_companion"
+path = "src/lib.rs"
+
+[[bin]]
+name = "environment-reconciler-companion"
+path = "src/main.rs"
+
+[lints]
+workspace = true
