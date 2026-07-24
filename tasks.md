@@ -155,7 +155,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - `GET /v1/devices/:id/status`
   - [x] 7.3 Verify request size, schema, workspace/project/device authorization, event chain, stream sequence, and replay protection before accepting a batch.
   - [x] 7.4 Add a server-side defense-in-depth secret guard before R2, Queue, Neon, Fireworks, Braintrust, or logs.
-  - [ ] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
+  - [x] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
   - [x] 7.6 Enqueue only a content-addressed pointer after durable object storage succeeds.
   - [x] 7.7 Implement `apps/worker/src/queues/event-consumer.ts` to normalize event headers, snapshots, capability reports, and capture gaps.
   - [x] 7.8 Implement DLQ handling and a reconciliation job for `stored_not_enqueued` or stalled batches.
