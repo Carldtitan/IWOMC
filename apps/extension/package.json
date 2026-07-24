@@ -7,6 +7,10 @@
   "type": "module",
   "publisher": "environment-REDACTED",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/REDACTED/IWOMC.git"
+  },
   "engines": {
     "vscode": "^1.100.0"
   },
