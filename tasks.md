@@ -132,7 +132,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - _Requirements: R6.2-R6.7, R20.1-R20.6, R20.10, R21.3-R21.4, R22.4_
 
 - [ ] 6. Implement GitHub sign-in, workspace setup, repository linking, and device enrollment
-  - [ ] 6.1 Create the Hono Worker entry/auth route group, then implement GitHub App OAuth start/callback routes in `apps/worker/src/auth/github/` with state, PKCE, exact callback validation, and expiring product sessions.
+  - [x] 6.1 Create the Hono Worker entry/auth route group, then implement GitHub App OAuth start/callback routes in `apps/worker/src/auth/github/` with state, PKCE, exact callback validation, and expiring product sessions.
   - [x] 6.2 Implement installation verification and repository listing through the authenticated user's user-token/repository intersection, not every repository visible to an installation.
   - [x] 6.3 Implement personal-workspace creation and project/repository linking in `apps/worker/src/api/workspaces/` and `apps/worker/src/api/projects/`.
   - [x] 6.4 Implement an MVP workspace invite link for an authenticated GitHub user with simple `owner` and `member` roles; reserve the expanded role matrix for private alpha.
