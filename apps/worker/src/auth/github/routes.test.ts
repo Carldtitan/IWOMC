@@ -7,6 +7,7 @@ import {
   type GitHubAuthEnvironment,
   type StoredGitHubIdentity
 } from "./routes.js";
+import type { BrowserSessionRecord } from "../browser-session.js";
 
 const environment: GitHubAuthEnvironment = {
   APP_SESSION_SECRET: "session-secret-with-at-least-thirty-two-characters",
@@ -33,6 +34,7 @@ describe("GitHub OAuth routes", () => {
     const location = new URL(start.headers.get("Location")!);
     const transaction = cookieValue(start.headers.get("Set-Cookie")!, GITHUB_OAUTH_COOKIE)!;
     const identities: StoredGitHubIdentity[] = [];
+    const sessions = new Map<string, BrowserSessionRecord>();
     const fetcher = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(
@@ -60,6 +62,16 @@ describe("GitHub OAuth routes", () => {
       callback,
       environment,
       {
+        create(record) {
+          sessions.set(record.sessionId, record);
+          return Promise.resolve();
+        },
+        find(sessionId) {
+          return Promise.resolve(sessions.get(sessionId));
+        },
+        revoke() {
+          return Promise.resolve(false);
+        },
         upsertIdentity(identity) {
           identities.push(identity);
           return Promise.resolve();
@@ -72,6 +84,7 @@ describe("GitHub OAuth routes", () => {
     expect(identities).toHaveLength(1);
     expect(identities[0]?.githubUser.id).toBe("123");
     expect(identities[0]?.encryptedCredentials).not.toContain("never-return-this");
+    expect(sessions.size).toBe(1);
     const responseText = await response.text();
     const serializedHeaders = [...response.headers].join("\n");
     expect(`${responseText}${serializedHeaders}`).not.toContain("never-return-this");
@@ -91,7 +104,12 @@ describe("GitHub OAuth routes", () => {
         { headers: { Cookie: `${GITHUB_OAUTH_COOKIE}=${transaction}` } }
       ),
       environment,
-      { upsertIdentity: () => Promise.resolve() },
+      {
+        create: () => Promise.resolve(),
+        find: () => Promise.resolve(undefined),
+        revoke: () => Promise.resolve(false),
+        upsertIdentity: () => Promise.resolve()
+      },
       { fetcher, nowEpochSeconds: 1_100 }
     );
 
