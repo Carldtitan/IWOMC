@@ -147,7 +147,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 
 - [ ] 7. Implement the thin ingestion control plane
   - [ ] 7.1 Extend the existing Hono Worker with device-ingestion, object-finalize, health, and queue route groups plus shared schema/error middleware.
-  - [ ] 7.2 Implement authenticated device endpoints:
+  - [x] 7.2 Implement authenticated device endpoints:
     - `POST /v1/projects/:id/events/batches`
     - `POST /v1/projects/:id/snapshots`
     - `POST /v1/projects/:id/capabilities`
@@ -157,23 +157,23 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 7.4 Add a server-side defense-in-depth secret guard before R2, Queue, Neon, Fireworks, Braintrust, or logs.
   - [x] 7.5 Store compressed/encrypted immutable payloads in private R2 and an idempotent ingest record in Neon.
   - [x] 7.6 Enqueue only a content-addressed pointer after durable object storage succeeds.
-  - [ ] 7.7 Implement `apps/worker/src/queues/event-consumer.ts` to normalize event headers, snapshots, capability reports, and capture gaps.
-  - [ ] 7.8 Implement DLQ handling and a reconciliation job for `stored_not_enqueued` or stalled batches.
+  - [x] 7.7 Implement `apps/worker/src/queues/event-consumer.ts` to normalize event headers, snapshots, capability reports, and capture gaps.
+  - [x] 7.8 Implement DLQ handling and a reconciliation job for `stored_not_enqueued` or stalled batches.
   - [x] 7.9 Return a signed chain-anchor receipt to the Companion.
   - [ ] 7.10 Test duplicate batches, out-of-order delivery, missing sequence, bad chain/signature, oversized input, R2 failure, Queue failure, Neon failure, Worker restart, and DLQ replay.
   - [ ] 7.11 Implement large-object envelope encryption, direct upload, and finalize verification: uploader ephemeral X25519 key, random per-object AES-256-GCM key/nonce, server-master wrapped key, authenticated metadata, expected size/digests, shortest-practical object authorization, one-time sealed-key exchange for trusted Daytona bootstrap, and a rule that URLs/tokens/keys never enter durable Workflow state, logs, model traces, command arguments, or cache keys.
-  - [ ] 7.12 Publish a versioned, idempotent internal `checkpoint.reconcile_requested` message only after the checkpoint's event/snapshot/source references are durable; support material-action-stabilized, session-end, PR-update, and manual-scan reasons and define its consumer contract for Task 12.
+  - [x] 7.12 Publish a versioned, idempotent internal `checkpoint.reconcile_requested` message only after the checkpoint's event/snapshot/source references are durable; support material-action-stabilized, session-end, PR-update, and manual-scan reasons and define its consumer contract for Task 12.
   - [ ] 7.13 Implement and test `POST /v1/objects/:id/download-authorizations` and `POST /v1/objects/:id/key-exchanges`. Require a one-time validation-job-bound bootstrap token plus sandbox ephemeral X25519 public key; verify job, workspace, object, target, expiry, and single use before returning shortest-practical download authorization and a sealed per-object key, never the server master key.
   - **Exit:** Companion batches reach R2/Queue/Neon exactly once at the logical level, and no invalid or secret-bearing batch is partially accepted.
   - _Requirements: R6.3-R6.7, R19.5, R20.1, R20.9, R21.3-R21.5_
 
 - [ ] 8. Build the extension shell and secure local IPC
-  - [ ] 8.1 Implement activation/deactivation in `apps/extension/src/extension.ts`.
-  - [ ] 8.2 Package and launch the matching Companion binary through `apps/extension/src/companion/`.
+  - [x] 8.1 Implement activation/deactivation in `apps/extension/src/extension.ts`.
+  - [x] 8.2 Package and launch the matching Companion binary through `apps/extension/src/companion/`.
   - [ ] 8.3 Implement named-pipe IPC on Windows and Unix-domain-socket IPC on Linux/macOS with a startup challenge and request validation.
-  - [ ] 8.4 Implement browser-based **Connect workspace**, device enrollment return, project binding, logout, and disconnect.
-  - [ ] 8.5 Add status states and the commands specified in `design.md`.
-  - [ ] 8.6 Implement consent screens for observation scope and provider-hook installation. Show raw observational content as unavailable and off in MVP; do not expose an opt-in until Task 31 implements its separate controls.
+  - [x] 8.4 Implement browser-based **Connect workspace**, device enrollment return, project binding, logout, and disconnect.
+  - [x] 8.5 Add status states and the commands specified in `design.md`.
+  - [x] 8.6 Implement consent screens for observation scope and provider-hook installation. Show raw observational content as unavailable and off in MVP; do not expose an opt-in until Task 31 implements its separate controls.
   - [ ] 8.7 Show provider, realm, permission, upload, and adapter coverage without a false global “all clear.”
   - [ ] 8.8 Test extension activation, companion binary hash mismatch, missing binary, IPC authentication failure, offline state, enrollment expiry, consent denial, pause/resume, and recovery after Companion restart.
   - **Exit:** A VSIX can pair one repository/device, launch the Companion, show honest status, and create a manual checkpoint without sponsor keys in the extension.
@@ -303,10 +303,10 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [ ] 15.9 Implement phase status/timing, trusted structured commands, structured derived diagnostics and bounded redacted excerpts with no full-stream capture, requested-versus-delivered resources, target/base identity, cache identity, artifact fingerprints, and the complete scoped VerificationAttestation.
   - [x] 15.10 Implement server-side verification as an invariant requiring the accepted behavior contract and a pass on every required target; if baseline already passes the claimed behavior, prohibit “reproduced and fixed” and use only the supported narrower hardening label.
   - [ ] 15.11 Delete sandboxes in `finally`, record confirmed deletion, and add a leased TTL janitor for orphan discovery, authoritative reconciliation, and retry.
-  - [ ] 15.12 Implement explicit unsupported, timed-out, security-blocked, infrastructure, resource-budget, inconclusive, and cleanup-failed outcomes.
+  - [x] 15.12 Implement explicit unsupported, timed-out, security-blocked, infrastructure, resource-budget, inconclusive, and cleanup-failed outcomes.
   - [ ] 15.13 Test the full lifecycle, baseline semantics, duplicate Workflow attempts, webhook/poll recovery, egress inability, trusted-runner envelopes, and post-materialization guards with fakes, then run one live Daytona create/execute/collect/delete smoke job.
   - [ ] 15.14 Prove materialization state cannot be reused as final validation state and that no bearer URL, secret, source bundle, or log is persisted in Workflow state.
-  - [ ] 15.15 Implement the first production `apps/worker/src/workflows/validate-candidate.ts`: persist baseline/candidate jobs, execute the one-target matrix, aggregate terminal results, create the scoped attestation/recommendation, update the Braintrust summary link, and leave advanced cache/lease/multi-target hardening to Task 21.
+  - [x] 15.15 Implement the first production `apps/worker/src/workflows/validate-candidate.ts`: persist baseline/candidate jobs, execute the one-target matrix, aggregate terminal results, create the scoped attestation/recommendation, update the Braintrust summary link, and leave advanced cache/lease/multi-target hardening to Task 21.
   - **Exit:** The unchanged fixture fails clean reconstruction or behavior, the exact native candidate passes, and every sandbox is confirmed deleted or visibly escalated.
   - _Requirements: R4.11, R12.2-R12.7, R14, R15, R16.5, R17.1-R17.2, R20.7-R20.8, R20.11, R21.10, R22.1_
 
@@ -318,7 +318,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 16.5 Implement finding detail with actual state, declared state, action evidence, actor confidence, gaps, and next proof needed.
   - [x] 16.6 Implement candidate diff/rationale, static guard results, behavior contract, and policy summary.
   - [x] 16.7 Implement candidate-by-target validation matrix, live phase state, terminal classification, structured diagnostics, cleanup, and scoped attestation.
-  - [ ] 16.8 Implement incremental cursor polling and ETags rather than adding a new real-time infrastructure service.
+  - [x] 16.8 Implement incremental cursor polling and ETags rather than adding a new real-time infrastructure service.
   - [x] 16.9 Never collapse partial capture, unknown actor, infrastructure failure, unsupported target, inconclusive, or stale proof into a generic green/red badge.
   - [ ] 16.10 Implement basic persisted finding comments and explicit candidate approval records with audit events for the MVP `owner` and `member` roles.
   - [ ] 16.11 Verify that an invited collaborator sees the same persisted sessions, findings, candidate states, validation results, comments, and approvals permitted by the MVP role.
@@ -337,7 +337,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 17.5 Prove deterministic reconciliation creates the expected finding with no LLM call in the truth decision.
   - [ ] 17.6 Generate an allowed Fireworks candidate and materialize the exact package/lock patch through npm in Daytona.
   - [ ] 17.7 Validate the baseline and candidate in separate clean Daytona sandboxes against the accepted behavior contract.
-  - [ ] 17.8 Display exact evidence, gaps, patch, target, phases, cleanup, and scoped verified result in the web workspace.
+  - [x] 17.8 Display exact evidence, gaps, patch, target, phases, cleanup, and scoped verified result in the web workspace.
   - [ ] 17.9 After explicit approval, use the GitHub integration to create a test branch and pull request containing the exact verified patch digest; do not write to the default branch.
   - [ ] 17.10 Run negative variants:
     - provider event exists but install fails;
