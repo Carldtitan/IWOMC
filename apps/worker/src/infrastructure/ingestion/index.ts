@@ -25,3 +25,4 @@ export {
 export { NeonIngestionAdapter, type NeonIngestionDriver } from "./neon-boundary.js";
 export { CloudflarePayloadProtection } from "./payload-protection.js";
 export { CloudflareChainReceiptSigner } from "./receipt-signer.js";
+export { createCloudflareIngestionApi, type CloudflareIngestionBindings } from "./runtime-api.js";

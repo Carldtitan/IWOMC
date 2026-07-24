@@ -1,5 +1,8 @@
-import { Hono } from "hono";
+import { Hono, type Handler } from "hono";
 import { secureHeaders } from "hono/secure-headers";
+
+import { createIngestionRoutes } from "./api/ingestion/index.js";
+import { createCloudflareIngestionApi } from "./infrastructure/ingestion/index.js";
 
 interface WorkerBindings {
   Bindings: Env;
@@ -87,6 +90,14 @@ app.get("/v1/capabilities", (context) =>
     }
   })
 );
+
+const ingestRequest: Handler<WorkerBindings> = (context) => {
+  const routes = createIngestionRoutes(createCloudflareIngestionApi(context.env));
+  return routes.fetch(context.req.raw, context.env, context.executionCtx);
+};
+
+app.post("/v1/projects/:id/events/batches", ingestRequest);
+app.get("/v1/devices/:id/status", ingestRequest);
 
 app.get("/v1/auth/github/start", (context) =>
   context.json(
