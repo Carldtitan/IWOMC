@@ -18,12 +18,14 @@ export default defineConfig({
         test: {
           name: "node-unit",
           environment: "node",
+          exclude: ["**/node_modules/**", "**/dist/**", "tests/e2e/**/*.pw.spec.ts"],
           include: [
             "packages/**/*.test.ts",
             "scripts/**/*.test.ts",
             "tests/contract/**/*.test.ts",
             "tests/integration/**/*.test.ts",
-            "tests/e2e/**/*.spec.ts"
+            "tests/e2e/**/*.spec.ts",
+            "apps/worker/src/api/configuration/service.test.ts"
           ]
         }
       },
@@ -37,13 +39,19 @@ export default defineConfig({
         ],
         test: {
           name: "worker",
-          include: ["apps/worker/**/*.test.ts"]
+          include: ["apps/worker/**/*.test.ts"],
+          exclude: [
+            "**/node_modules/**",
+            "**/dist/**",
+            "apps/worker/src/api/configuration/service.test.ts"
+          ]
         }
       },
       {
         test: {
           name: "web-unit",
           environment: "node",
+          exclude: ["**/node_modules/**", "**/dist/**"],
           include: ["apps/web/**/*.test.ts"]
         }
       }
