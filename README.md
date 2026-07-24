@@ -1,101 +1,44 @@
-# IWOMC — Environment Reconciler
+# It Works on My Computer
 
-AI coding agents can install packages and change a developer environment without
-updating the repository files that are supposed to reproduce it. IWOMC captures
-those actions, compares observed state with repository intent, proposes only
-grounded native changes, and proves the result on clean disposable computers.
+**It Works on My Computer gives development teams a shared record of every package their AI coding tools use. Developers connect the extension to the same project, and IWOMC tracks package changes made by Codex, Claude Code, and Cursor across their computers. It finds packages missing from the project’s dependency files and confirms the corrected setup on a fresh Daytona computer.**
 
-## The product loop
+## The problem
 
-1. The VS Code extension starts the local Companion with explicit consent.
-2. The Companion observes supported Codex actions and captures targeted
-   pre/post environment evidence without storing prompts, reasoning, or REDACTEDs.
-3. Signed, encrypted evidence batches are stored durably in R2 before a
-   content-addressed Queue message is published.
-4. Deterministic npm reconciliation builds seven evidence graphs and identifies
-   a used, installed, agent-attributable dependency missing from repository
-   intent. An LLM is never part of this truth decision.
-5. Fireworks receives a redacted, allowlisted reasoning packet and may propose a
-   schema-constrained semantic operation. Invented evidence, arbitrary files,
-   manager switches, and REDACTEDs are rejected. A guarded deterministic fix is
-   available when Fireworks is unavailable.
-6. Daytona runs the unchanged baseline and candidate in separate clean
-   sandboxes. Only an accepted behavior contract, failed baseline, REDACTEDed
-   candidate, matching attestation, fresh source, and confirmed cleanup can
-   produce a verified result.
-7. Braintrust receives metadata-only reasoning and validation traces through a
-   durable encrypted outbox. Braintrust availability never changes product
-   truth.
-8. The shared web workspace shows the causal timeline, proof coverage, exact
-   finding, guarded patch, validation phases, cleanup, and scoped attestation.
+AI coding agents frequently install packages while solving tasks. The application starts working, but the required package may remain installed only on that developer’s computer.
 
-## Repository layout
+This becomes harder during collaboration. One developer uses Codex, anREDACTED uses Cursor, and a third uses Claude Code. Everyone shares the same source code, while each computer accumulates a different set of packages.
 
-- `apps/extension` — VS Code control surface and authenticated local IPC client.
-- `crates/companion` — secure local capture, redaction, encryption, batching,
-  and Codex normalization.
-- `apps/worker` — Cloudflare Worker APIs, ingestion, reconciliation
-  orchestration, candidate generation, validation, and workspace polling.
-- `apps/web` — evidence-first React workspace.
-- `packages/adapters` — native npm repository adapter.
-- `packages/REDACTED` — immutable evidence graphs and deterministic rules.
-- `packages/integrations` — Daytona, Fireworks, Braintrust, GitHub, R2, and Queue
-  boundaries.
-- `packages/db` — PostgreSQL schema and migrations.
-- `fixtures/e2e/npm-undeclared-used` — the first complete deterministic fixture.
+The result is familiar: the project works for one teammate and fails for everyone else.
 
-## Run locally
+## How IWOMC works
 
-Prerequisites: Node.js 22+, pnpm 10.24, and Rust from `rust-toolchain.toml`.
+Each developer connects the IWOMC extension to a shared project workspace.
 
-```bash
-pnpm install
-cp .env.example .env
-pnpm env:check
-pnpm dev
-```
+IWOMC records package installations, removals, versions, and package-manager activity during AI coding sessions. It compares this information across the team and checks it against files such as `package.json`, `package-lock.json`, `requirements.txt`, and `pyproject.toml`.
 
-Open `http://localhost:8787`. The UI remains an explicit demo fixture when no
-workspace/project polling IDs are configured; it never labels fixture data as
-live.
+When a package exists on a developer’s computer but is missing from the project files, IWOMC creates a finding that shows:
 
-Build the VS Code extension:
+- Which package is missing
+- Where it was installed
+- Which agent session used it
+- Which project file needs to change
 
-```bash
-pnpm extension:package
-```
+The whole team can see the same package history and understand why their computers behave differently.
 
-The VSIX is written to `apps/extension/dist/environment-REDACTED.vsix`.
+## Sponsor tools
 
-## Verification
+**Fireworks** receives the package evidence and proposes a structured correction to the appropriate dependency file. Native package managers resolve the final version and update the lockfile.
 
-```bash
-pnpm check
-pnpm test:r2
-pnpm test:github-app
-pnpm test:braintrust
-pnpm test:fireworks
-pnpm test:daytona
-```
+**Daytona** creates a fresh computer with none of the team’s leftover project packages. IWOMC installs the project using only its saved dependency files and runs its expected checks. This proves that a new developer can clone and run the project without copying anREDACTED teammate’s environment.
 
-Live smoke commands print only non-REDACTED status. Daytona's smoke test provisions
-a sandbox, runs one structured command, bounds output, and deletes the sandbox
-in `finally`.
+**Braintrust** connects each Fireworks recommendation to its Daytona result. Failed recommendations become evaluation cases, helping us improve package suggestions as models and package adapters change.
 
-## Security posture
+## Package coverage
 
-- No raw prompt, private reasoning, environment value, or unrestricted log is
-  sent to Fireworks or Braintrust.
-- Device batches are chained, signed, replay-protected, gzip-compressed, and
-  AES-256-GCM encrypted.
-- R2 writes are immutable and content-addressed.
-- Native adapters—not model-written shell or lockfile text—materialize accepted
-  operations.
-- Validation is fail-closed for unsupported, partial, stale, timed-out,
-  security-blocked, infrastructure, budget, inconclusive, and cleanup-failed
-  outcomes.
-- GitHub publication uses an exact verified patch on a deterministic branch and
-  requires explicit approval; it never writes directly to the default branch.
+IWOMC provides native understanding for npm, pip, and uv, including their manifests and lockfiles.
 
-See `requirements.md`, `design.md`, `Contract.md`, and `tasks.md` for the full
-specification and verified implementation ledger.
+Its package registry also discovers Poetry, Conda, pnpm, Yarn, Bun, Cargo, vcpkg, and Conan projects. Each package manager receives a visible support level based on what IWOMC can safely understand and verify.
+
+## Impact
+
+**IWOMC makes package setup collaborative. Code can move between developers, AI tools, and computers without leaving required packages behind.**
