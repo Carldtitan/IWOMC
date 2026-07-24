@@ -1,0 +1,147 @@
+import { GitHubRepositoryError } from "./errors.js";
+import type {
+  GitHubRepositoryCredential,
+  GitHubRepositoryCredentialBroker,
+  GitHubRepositoryCredentialPurpose
+} from "./types.js";
+
+const GITHUB_API_ROOT = "https://api.github.com";
+const GITHUB_API_VERSION = "2022-11-28";
+const USER_AGENT = "environment-reconciler";
+const MAX_TOKEN_RESPONSE_BYTES = 64 * 1024;
+
+export interface GitHubAppJwtProvider {
+  getAppJwt(): Promise<string>;
+}
+
+interface TokenRequestPermissions {
+  readonly contents?: "read" | "write";
+  readonly pull_requests?: "write";
+}
+
+function permissionsForPurpose(
+  purpose: GitHubRepositoryCredentialPurpose
+): TokenRequestPermissions {
+  switch (purpose) {
+    case "contents_read":
+      return { contents: "read" };
+    case "contents_write":
+      return { contents: "write" };
+    case "pull_requests_write":
+      return { pull_requests: "write" };
+  }
+}
+
+function isPositiveIntegerString(value: string): boolean {
+  return /^(?:[1-9]\d*)$/u.test(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+async function readBoundedJson(response: Response): Promise<unknown> {
+  const declaredLength = response.headers.get("Content-Length");
+  if (
+    declaredLength !== null &&
+    (!/^\d+$/u.test(declaredLength) || Number(declaredLength) > MAX_TOKEN_RESPONSE_BYTES)
+  ) {
+    throw new GitHubRepositoryError("invalid_response");
+  }
+
+  const body = await response.text();
+  if (new TextEncoder().encode(body).byteLength > MAX_TOKEN_RESPONSE_BYTES) {
+    throw new GitHubRepositoryError("invalid_response");
+  }
+
+  try {
+    return JSON.parse(body) as unknown;
+  } catch {
+    throw new GitHubRepositoryError("invalid_response");
+  }
+}
+
+/**
+ * Issues one-repository installation credentials with a fixed permission map.
+ *
+ * Callers choose a semantic purpose, not arbitrary GitHub permissions. The
+ * request always contains exactly one repository ID.
+ */
+export class GitHubAppInstallationTokenBroker implements GitHubRepositoryCredentialBroker {
+  readonly #fetcher: typeof fetch;
+  readonly #jwtProvider: GitHubAppJwtProvider;
+
+  constructor(jwtProvider: GitHubAppJwtProvider, fetcher: typeof fetch = fetch) {
+    this.#jwtProvider = jwtProvider;
+    this.#fetcher = fetcher;
+  }
+
+  async issueRepositoryCredential(input: {
+    readonly installationId: string;
+    readonly repositoryId: string;
+    readonly purpose: GitHubRepositoryCredentialPurpose;
+  }): Promise<GitHubRepositoryCredential> {
+    if (
+      !isPositiveIntegerString(input.installationId) ||
+      !isPositiveIntegerString(input.repositoryId)
+    ) {
+      throw new GitHubRepositoryError("invalid_input");
+    }
+
+    const repositoryId = Number(input.repositoryId);
+    if (!Number.isSafeInteger(repositoryId)) {
+      throw new GitHubRepositoryError("invalid_input");
+    }
+
+    let appJwt: string;
+    try {
+      appJwt = await this.#jwtProvider.getAppJwt();
+    } catch {
+      throw new GitHubRepositoryError("token_issue_failed");
+    }
+    if (appJwt.length === 0) {
+      throw new GitHubRepositoryError("token_issue_failed");
+    }
+
+    let response: Response;
+    try {
+      response = await this.#fetcher(
+        `${GITHUB_API_ROOT}/app/installations/${input.installationId}/access_tokens`,
+        {
+          method: "POST",
+          redirect: "error",
+          headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${appJwt}`,
+            "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
+            "X-GitHub-Api-Version": GITHUB_API_VERSION
+          },
+          body: JSON.stringify({
+            repository_ids: [repositoryId],
+            permissions: permissionsForPurpose(input.purpose)
+          })
+        }
+      );
+    } catch {
+      throw new GitHubRepositoryError("token_issue_failed");
+    }
+
+    const body = await readBoundedJson(response);
+    if (
+      !response.ok ||
+      !isRecord(body) ||
+      typeof body.token !== "string" ||
+      body.token.length === 0 ||
+      typeof body.expires_at !== "string" ||
+      !Number.isFinite(Date.parse(body.expires_at))
+    ) {
+      throw new GitHubRepositoryError("token_issue_failed");
+    }
+
+    return {
+      token: body.token,
+      expiresAt: body.expires_at
+    };
+  }
+}
