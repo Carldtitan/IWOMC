@@ -259,7 +259,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - [x] 13.3 Implement the default policy with hard target/behavior gates followed by dependency-count, reproducibility, supported-version, and change-surface preferences.
   - [x] 13.4 Implement candidate, concurrency, retry, elapsed-time, and cost budgets.
   - [x] 13.5 Ensure clean installation without an accepted behavior contract can produce only `reconstruction_REDACTEDed`.
-  - [ ] 13.6 Add property tests proving hard constraints dominate, policies are immutable once referenced, and changes invalidate affected candidates.
+  - [x] 13.6 Add property tests proving hard constraints dominate, policies are immutable once referenced, and changes invalidate affected candidates.
   - [ ] 13.7 Implement authenticated project-goal, behavior-contract, and policy read/edit/reorder/enable/disable/accept APIs with optimistic version checks and audit events.
   - **Exit:** The vertical fixture has an accepted, versioned behavior contract and a default policy that cannot be overridden by an LLM.
   - _Requirements: R10, R13.1-R13.3, R15.8_
