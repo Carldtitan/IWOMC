@@ -26,10 +26,10 @@ class FakeSandbox implements DaytonaSandboxLike {
   readonly process = {
     codeRun: (
       code: string,
-      parameters: { argv?: string[] }
+      parameters: { env?: Record<string, string> }
     ): Promise<{ exitCode: number; result: string }> => {
       expect(code).toContain("spawnSync");
-      const envelope: unknown = JSON.parse(parameters.argv?.[0] ?? "null");
+      const envelope: unknown = JSON.parse(parameters.env?.ER_COMMAND_ENVELOPE ?? "null");
       expect(envelope).toMatchObject({
         arguments: ["test"],
         executable: "npm",

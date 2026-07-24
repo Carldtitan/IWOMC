@@ -21,7 +21,7 @@ import type {
 const REDACTION_POLICY_VERSION = "daytona-output-v1";
 const TRUSTED_RUNNER_SOURCE = `
 const { spawnSync } = require("node:child_process");
-const input = JSON.parse(process.argv.at(-1));
+const input = JSON.parse(process.env.ER_COMMAND_ENVELOPE);
 const result = spawnSync(input.executable, input.arguments, {
   cwd: input.workingDirectory,
   encoding: "utf8",
@@ -34,12 +34,13 @@ const truncate = (value) => {
   const bytes = Buffer.from(value || "", "utf8");
   return bytes.subarray(0, input.maxOutputBytes).toString("utf8");
 };
-process.stdout.write(JSON.stringify({
+const output = JSON.stringify({
   exitCode: Number.isInteger(result.status) ? result.status : null,
   stderr: truncate(result.stderr || result.error?.message || ""),
   stdout: truncate(result.stdout || ""),
   timedOut: result.error?.code === "ETIMEDOUT"
-}));
+});
+process.stdout.write("__ER_RESULT_V1__" + Buffer.from(output, "utf8").toString("base64url") + "__END__");
 `;
 
 interface CommandEnvelope {
@@ -154,7 +155,18 @@ async function excerpt(value: string, maximumBytes: number): Promise<RedactedExc
 function parseTrustedResult(value: string): TrustedCommandResult {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(value);
+    const framed = /__ER_RESULT_V1__([A-Za-z0-9_-]+)__END__/u.exec(value)?.[1];
+    if (framed === undefined) {
+      parsed = JSON.parse(value);
+    } else {
+      const padded = framed
+        .replaceAll("-", "+")
+        .replaceAll("_", "/")
+        .padEnd(Math.ceil(framed.length / 4) * 4, "=");
+      const binary = atob(padded);
+      const bytes = REDACTED.from(binary, (character) => character.charCodeAt(0));
+      parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    }
   } catch {
     throw new DaytonaIntegrationError("invalid_runner_response");
   }
@@ -211,19 +223,24 @@ export class DaytonaClient implements DaytonaPort {
     request: ProvisionDaytonaSandboxRequest
   ): Promise<ProvisionDaytonaSandboxResult> {
     const labels = labelsToRecord(request.labels);
+    const useDefaultSnapshot = request.target.imageReference === "daytona-default";
     const sandbox = await this.#sdk.create(
       {
         ephemeral: true,
-        image: request.target.imageReference,
         labels,
         language: "typescript",
-        networkBlockAll: true,
         public: false,
-        resources: {
-          cpu: request.target.cpuCores,
-          disk: request.target.diskMiB / 1_024,
-          memory: request.target.memoryMiB / 1_024
-        },
+        ...(useDefaultSnapshot
+          ? {}
+          : {
+              image: request.target.imageReference,
+              networkBlockAll: true,
+              resources: {
+                cpu: request.target.cpuCores,
+                disk: request.target.diskMiB / 1_024,
+                memory: request.target.memoryMiB / 1_024
+              }
+            }),
         ttlMinutes: Math.max(1, Math.ceil(request.autoDeleteAfterSeconds / 60))
       },
       { timeout: Math.max(1, Math.ceil(request.maxProvisioningTimeMs / 1_000)) }
@@ -324,21 +341,27 @@ export class DaytonaClient implements DaytonaPort {
       timeoutMs: request.timeoutMs,
       workingDirectory: request.workingDirectory
     };
-    await sandbox.updateNetworkSettings(
-      allowedHosts.length === 0
-        ? { networkBlockAll: true }
-        : { domainAllowList: allowedHosts.join(","), networkBlockAll: false }
-    );
+    // Sandboxes are provisioned with `networkBlockAll: true`. Some Daytona
+    // tiers enforce that restriction account-wide and reject redundant
+    // sandbox-level updates, so deny-all execution needs no mutation here.
+    if (allowedHosts.length > 0) {
+      await sandbox.updateNetworkSettings({
+        domainAllowList: allowedHosts.join(","),
+        networkBlockAll: false
+      });
+    }
     let result: TrustedCommandResult;
     try {
       const response = await sandbox.process.codeRun(
         TRUSTED_RUNNER_SOURCE,
-        { argv: [JSON.stringify(envelope)] },
+        { env: { ER_COMMAND_ENVELOPE: JSON.stringify(envelope) } },
         Math.max(1, Math.ceil(request.timeoutMs / 1_000) + 5)
       );
       result = parseTrustedResult(response.result);
     } finally {
-      await sandbox.updateNetworkSettings({ domainAllowList: "", networkBlockAll: true });
+      if (allowedHosts.length > 0) {
+        await sandbox.updateNetworkSettings({ domainAllowList: "", networkBlockAll: true });
+      }
     }
     const [stdout, stderr] = await Promise.all([
       excerpt(result.stdout, request.maxOutputBytes),
