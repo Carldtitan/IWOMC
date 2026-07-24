@@ -167,7 +167,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - **Exit:** Companion batches reach R2/Queue/Neon exactly once at the logical level, and no invalid or REDACTED-bearing batch is partially accepted.
   - _Requirements: R6.3-R6.7, R19.5, R20.1, R20.9, R21.3-R21.5_
 
-- [ ] 8. Build the extension shell and secure local IPC
+- [x] 8. Build the extension shell and secure local IPC
   - [x] 8.1 Implement activation/deactivation in `apps/extension/src/extension.ts`.
   - [x] 8.2 Package and launch the matching Companion binary through `apps/extension/src/companion/`.
   - [x] 8.3 Implement named-pipe IPC on Windows and Unix-domain-socket IPC on Linux/macOS with a startup challenge and request validation.
