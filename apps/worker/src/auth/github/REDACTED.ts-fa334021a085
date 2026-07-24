@@ -1,0 +1,141 @@
+import {
+  constantTimeEqual,
+  openJson,
+  randomToken,
+  sealJson,
+  sha256Base64Url
+} from "../../security/crypto.js";
+
+const OAUTH_PURPOSE = "environment-REDACTED/github-REDACTED/v1";
+const MAX_TRANSACTION_SECONDS = 10 * 60;
+
+export interface GitHubOAuthConfiguration {
+  readonly clientId: string;
+  readonly callbackUrl: string;
+  readonly sessionSecret: string;
+}
+
+export interface GitHubOAuthStart {
+  readonly authorizationUrl: string;
+  readonly sealedTransaction: string;
+  readonly state: string;
+}
+
+export interface GitHubOAuthCompletion {
+  readonly codeVerifier: string;
+}
+
+export class GitHubOAuthError extends Error {
+  readonly code:
+    "invalid_callback" | "invalid_state" | "expired_transaction" | "invalid_transaction";
+
+  constructor(code: GitHubOAuthError["code"]) {
+    super(code);
+    this.name = "GitHubOAuthError";
+    this.code = code;
+  }
+}
+
+interface OAuthTransaction {
+  readonly callbackUrl: string;
+  readonly codeVerifier: string;
+  readonly expiresAtEpochSeconds: number;
+  readonly stateDigest: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseTransaction(value: unknown): OAuthTransaction {
+  if (
+    !isRecord(value) ||
+    typeof value.callbackUrl !== "string" ||
+    typeof value.codeVerifier !== "string" ||
+    typeof value.expiresAtEpochSeconds !== "number" ||
+    typeof value.stateDigest !== "string"
+  ) {
+    throw new GitHubOAuthError("invalid_transaction");
+  }
+  return {
+    callbackUrl: value.callbackUrl,
+    codeVerifier: value.codeVerifier,
+    expiresAtEpochSeconds: value.expiresAtEpochSeconds,
+    stateDigest: value.stateDigest
+  };
+}
+
+function validateConfiguration(configuration: GitHubOAuthConfiguration): void {
+  if (configuration.clientId.length === 0) {
+    throw new Error("GitHub OAuth client ID is required");
+  }
+  const callback = new URL(configuration.callbackUrl);
+  if (callback.protocol !== "https:" && callback.hostname !== "localhost") {
+    throw new Error("GitHub OAuth callback must use HTTPS");
+  }
+}
+
+export async function beginGitHubOAuth(
+  configuration: GitHubOAuthConfiguration,
+  nowEpochSeconds: number
+): Promise<GitHubOAuthStart> {
+  validateConfiguration(configuration);
+  const state = REDACTED;
+  const codeVerifier = randomToken(48);
+  const transaction: OAuthTransaction = {
+    callbackUrl: configuration.callbackUrl,
+    codeVerifier,
+    expiresAtEpochSeconds: nowEpochSeconds + MAX_TRANSACTION_SECONDS,
+    stateDigest: await sha256Base64Url(state)
+  };
+  const sealedTransaction = await sealJson(
+    { ...transaction },
+    configuration.sessionSecret,
+    OAUTH_PURPOSE
+  );
+  const authorizationUrl = new URL("https://github.com/login/REDACTED/authorize");
+  authorizationUrl.searchParams.set("client_id", configuration.clientId);
+  authorizationUrl.searchParams.set("redirect_uri", configuration.callbackUrl);
+  authorizationUrl.searchParams.set("state", state);
+  authorizationUrl.searchParams.set("code_challenge", await sha256Base64Url(codeVerifier));
+  authorizationUrl.searchParams.set("code_challenge_method", "S256");
+
+  return { authorizationUrl: authorizationUrl.toString(), sealedTransaction, state };
+}
+
+export async function completeGitHubOAuth(
+  configuration: GitHubOAuthConfiguration,
+  input: {
+    readonly callbackUrl: string;
+    readonly state: string;
+    readonly sealedTransaction: string;
+  },
+  nowEpochSeconds: number
+): Promise<GitHubOAuthCompletion> {
+  validateConfiguration(configuration);
+  let transaction: OAuthTransaction;
+  try {
+    transaction = parseTransaction(
+      await openJson(input.sealedTransaction, configuration.sessionSecret, OAUTH_PURPOSE)
+    );
+  } catch (error) {
+    if (error instanceof GitHubOAuthError) {
+      throw error;
+    }
+    throw new GitHubOAuthError("invalid_transaction");
+  }
+
+  if (
+    input.callbackUrl !== configuration.callbackUrl ||
+    transaction.callbackUrl !== configuration.callbackUrl
+  ) {
+    throw new GitHubOAuthError("invalid_callback");
+  }
+  if (transaction.expiresAtEpochSeconds < nowEpochSeconds) {
+    throw new GitHubOAuthError("expired_transaction");
+  }
+  if (!(await constantTimeEqual(await sha256Base64Url(input.state), transaction.stateDigest))) {
+    throw new GitHubOAuthError("invalid_state");
+  }
+  return { codeVerifier: transaction.codeVerifier };
+}
