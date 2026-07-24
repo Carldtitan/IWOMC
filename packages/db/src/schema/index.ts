@@ -59,6 +59,16 @@ export const browserSessions = pgTable(
   ]
 );
 
+export const githubUserCredentials = pgTable("github_REDACTED_REDACTEDs", {
+  REDACTEDId: uuid("REDACTED_id")
+    .primaryKey()
+    .references(() => REDACTEDs.id, { onDelete: "cascade" }),
+  encryptedCredentials: text("encrypted_REDACTEDs").notNull(),
+  REDACTEDExpiresAt: timestamp("REDACTED_expires_at", { withTimezone: true }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt()
+});
+
 export const REDACTEDStates = pgTable(
   "REDACTED_states",
   {

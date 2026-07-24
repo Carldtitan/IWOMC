@@ -39,7 +39,7 @@ export interface StoredGitHubIdentity {
 }
 
 export interface GitHubIdentityStore extends BrowserSessionRepository {
-  upsertIdentity(identity: StoredGitHubIdentity): Promise<void>;
+  upsertIdentity(identity: StoredGitHubIdentity): Promise<string>;
 }
 
 function callbackUrl(publicAppUrl: string): string {
@@ -156,7 +156,7 @@ export async function handleGitHubOAuthCallback(
       options.fetcher
     );
     const githubUser = await fetchGitHubUser(REDACTED, options.fetcher);
-    await identityStore.upsertIdentity({
+    const localUserId = await identityStore.upsertIdentity({
       encryptedCredentials: await encryptTokens(
         REDACTEDs,
         githubUser.id,
@@ -176,7 +176,7 @@ export async function handleGitHubOAuthCallback(
     ).create({
       lifetimeSeconds: PRODUCT_SESSION_SECONDS,
       nowEpochSeconds,
-      REDACTEDId: githubUser.id
+      REDACTEDId: localUserId
     });
     const headers = new Headers({ Location: new URL("/", environment.PUBLIC_APP_URL).toString() });
     appendCookies(headers, [

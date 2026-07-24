@@ -80,7 +80,7 @@ describe("GitHub OAuth routes", () => {
         },
         upsertIdentity(identity) {
           identities.push(identity);
-          return Promise.resolve();
+          return Promise.resolve("00000000-0000-4000-8000-000000000123");
         }
       },
       { fetcher, nowEpochSeconds: 1_100 }
@@ -114,7 +114,7 @@ describe("GitHub OAuth routes", () => {
         create: () => Promise.resolve(),
         find: () => Promise.resolve(undefined),
         revoke: () => Promise.resolve(false),
-        upsertIdentity: () => Promise.resolve()
+        upsertIdentity: () => Promise.resolve("00000000-0000-4000-8000-000000000123")
       },
       { fetcher, nowEpochSeconds: 1_100 }
     );
@@ -145,7 +145,7 @@ describe("GitHub OAuth routes", () => {
         return Promise.resolve(true);
       },
       upsertIdentity() {
-        return Promise.resolve();
+        return Promise.resolve("00000000-0000-4000-8000-000000000123");
       }
     };
     const callback = await handleGitHubOAuthCallback(
