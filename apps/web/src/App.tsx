@@ -545,9 +545,7 @@ function Overview({
                 D
               </span>
             )}
-            {sponsorRun.phase === "running"
-              ? "Verifying in Daytona…"
-              : "Verify fix"}
+            {sponsorRun.phase === "running" ? "Running live proof…" : "Run live proof"}
           </button>
           <button
             className="run-button"
@@ -578,11 +576,17 @@ function Overview({
       <SponsorProof run={sponsorRun} />
 
       <div className="reconciliation-flow" aria-label="Environment reconciliation">
-        <span><b>1</b>Agent installed package</span>
+        <span>
+          <b>1</b>Agent installed package
+        </span>
         <i>→</i>
-        <span><b>2</b>Manifest is missing it</span>
+        <span>
+          <b>2</b>Manifest is missing it
+        </span>
         <i>→</i>
-        <span><b>3</b>Verify the fix</span>
+        <span>
+          <b>3</b>Verify the fix
+        </span>
       </div>
 
       <div className="metrics">
@@ -652,9 +656,11 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
     return (
       <section className="sponsor-proof">
         <div>
-          <p className="section-kicker">Live verification</p>
-          <strong>Ready to verify the fix</strong>
-          <span>Fireworks reasons · Daytona verifies · Braintrust records</span>
+          <p className="section-kicker">Live sponsor proof</p>
+          <strong>Ready to test the sponsor connections</strong>
+          <span>
+            Daytona runs and cleans up · Braintrust records · Fireworks reports availability
+          </span>
         </div>
         <StatusPill tone="info">Not run yet</StatusPill>
       </section>
@@ -664,9 +670,11 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
     return (
       <section className="sponsor-proof sponsor-proof-running" aria-live="polite">
         <div>
-          <p className="section-kicker">Live verification</p>
-          <strong>Checking the fix on a clean computer…</strong>
-          <span>Fireworks reasons · Daytona verifies · Braintrust records</span>
+          <p className="section-kicker">Live sponsor proof</p>
+          <strong>Running a bounded command on a disposable computer…</strong>
+          <span>
+            Daytona runs and cleans up · Braintrust records · Fireworks reports availability
+          </span>
         </div>
         <StatusPill tone="warning">Running</StatusPill>
       </section>
@@ -676,8 +684,8 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
     return (
       <section className="sponsor-proof sponsor-proof-failed" aria-live="polite">
         <div>
-          <p className="section-kicker">Live verification</p>
-          <strong>Verification needs anREDACTED try</strong>
+          <p className="section-kicker">Live sponsor proof</p>
+          <strong>Sponsor proof needs anREDACTED try</strong>
           <span>{run.message}</span>
         </div>
         <StatusPill tone="danger">Failed safely</StatusPill>
@@ -692,8 +700,8 @@ function SponsorProof({ run }: { readonly run: SponsorRunState }) {
   return (
     <section className="sponsor-proof sponsor-proof-complete" aria-live="polite">
       <div>
-        <p className="section-kicker">Live verification · {result.runId.slice(0, 8)}</p>
-        <strong>Fix verified successfully</strong>
+        <p className="section-kicker">Live sponsor proof · {result.runId.slice(0, 8)}</p>
+        <strong>Sponsor proof succeeded</strong>
         <div className="sponsor-result-grid">
           <span>
             <b>Daytona</b>
