@@ -14,6 +14,7 @@
     "contracts:check": "node --import tsx scripts/generate-contracts.ts --check",
     "contracts:generate": "node --import tsx scripts/generate-contracts.ts",
     "contracts:smoke": "node scripts/smoke-contracts-dist.mjs",
+    "db:migrate": "pnpm --filter @environment-REDACTED/worker run db:migrate",
     "deploy": "pnpm run web:build && wrangler deploy --env-file .dev.vars",
     "deploy:dry": "pnpm run web:build && wrangler deploy --dry-run --env-file .dev.vars.example",
     "dev": "pnpm run web:build && wrangler dev --env-file .dev.vars",
