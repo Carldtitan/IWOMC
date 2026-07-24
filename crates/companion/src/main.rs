@@ -251,11 +251,7 @@ impl RuntimeIpcHandler {
                 }),
             })
             .map(|capture| capture.local_sequence)
-            .map_err(|error| {
-                #[cfg(debug_assertions)]
-                eprintln!("Companion spool append failed: {:?}", error.code());
-                IpcHandlerError::new(IpcHandlerErrorCode::Internal)
-            })
+            .map_err(|_| IpcHandlerError::new(IpcHandlerErrorCode::Internal))
     }
 }
 
@@ -314,9 +310,14 @@ impl CompanionIpcHandler for RuntimeIpcHandler {
         project_id: &str,
         provider_surface: &str,
     ) -> Result<Value, IpcHandlerError> {
-        #[cfg(debug_assertions)]
-        eprintln!("Companion observation start handler entered");
-        if self.active.is_some() {
+        if let Some(active) = &self.active {
+            if active.project_id == project_id && active.provider_surface == provider_surface {
+                return Ok(json!({
+                    "coverage": self.coverage(provider_surface),
+                    "sessionId": active.session_id,
+                    "startedAtEpochSeconds": active.started_at_epoch_seconds,
+                }));
+            }
             return Err(IpcHandlerError::new(IpcHandlerErrorCode::InvalidState));
         }
         let session_id = random_id("session");
