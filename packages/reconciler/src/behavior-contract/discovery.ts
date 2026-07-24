@@ -1,0 +1,857 @@
+import type {
+  Assessment,
+  BehaviorAssertion,
+  BehaviorStep
+} from "@environment-reconciler/contracts/generated";
+
+import { canonicalJson } from "../graphs/canonical.js";
+
+const ENTITY_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/u;
+const SHA256_DIGEST = /^sha256:[a-f0-9]{64}$/u;
+const RELATIVE_PATH =
+  /^(?:[^./\\:][^/\\:]*|\.[^./\\:][^/\\:]*|\.\.[^/\\:]+)(?:\/(?:[^./\\:][^/\\:]*|\.[^./\\:][^/\\:]*|\.\.[^/\\:]+))*$/u;
+const MAX_SOURCE_BYTES = 2 * 1024 * 1024;
+const MAX_CI_SOURCES = 64;
+const MAX_STEPS = 1_024;
+
+export type DiscoveredBehaviorKind =
+  "install" | "build" | "lint" | "typecheck" | "test" | "smoke" | "benchmark";
+
+export interface DiscoverySource {
+  readonly sourceId: string;
+  readonly evidenceReferenceId: string;
+  readonly path: string;
+  readonly contentDigest: string;
+  readonly content: string;
+  readonly workingDirectory: string;
+}
+
+export interface NpmBehaviorDiscoveryInput {
+  readonly packageJson: DiscoverySource;
+  readonly packageLock?: Omit<DiscoverySource, "content"> & { readonly content?: string };
+  readonly ciSources?: readonly DiscoverySource[];
+  readonly targetSelector?: string;
+  readonly realmId?: string;
+}
+
+export interface NpmBehaviorDiscoveryResult {
+  readonly steps: readonly BehaviorStep[];
+  readonly invalidationSourceIds: readonly string[];
+}
+
+export interface BehaviorDiscoveryIssue {
+  readonly path: string;
+  readonly code: string;
+  readonly message: string;
+}
+
+export class BehaviorDiscoveryError extends Error {
+  readonly issues: readonly BehaviorDiscoveryIssue[];
+
+  constructor(issues: readonly BehaviorDiscoveryIssue[]) {
+    super("Behavior-command discovery input is invalid.");
+    this.name = "BehaviorDiscoveryError";
+    this.issues = issues;
+  }
+}
+
+interface SourceObservation {
+  readonly sourceId: string;
+  readonly evidenceReferenceId: string;
+  readonly path: string;
+  readonly contentDigest: string;
+  readonly line: number;
+  readonly selector: string;
+}
+
+interface CommandCandidate {
+  readonly kind: DiscoveredBehaviorKind;
+  readonly executable: "npm";
+  readonly arguments: readonly string[];
+  readonly workingDirectory: string;
+  readonly observations: readonly SourceObservation[];
+  readonly origin: "ci" | "package";
+}
+
+interface ExtractedRunCommand {
+  readonly line: number;
+  readonly command: string;
+}
+
+const KIND_ORDER: Readonly<Record<DiscoveredBehaviorKind, number>> = {
+  install: 0,
+  build: 1,
+  lint: 2,
+  typecheck: 3,
+  test: 4,
+  smoke: 5,
+  benchmark: 6
+};
+
+const TIMEOUT_SECONDS: Readonly<Record<DiscoveredBehaviorKind, number>> = {
+  install: 900,
+  build: 900,
+  lint: 300,
+  typecheck: 300,
+  test: 900,
+  smoke: 300,
+  benchmark: 1_800
+};
+
+export async function discoverNpmBehaviorSteps(
+  input: NpmBehaviorDiscoveryInput
+): Promise<NpmBehaviorDiscoveryResult> {
+  validateDiscoveryInput(input);
+  const packageDocument = parsePackageJson(input.packageJson);
+  const candidates: CommandCandidate[] = [];
+  const scripts = packageDocument.scripts;
+  for (const scriptName of Object.keys(scripts).sort(compareText)) {
+    const kind = classifyScript(scriptName);
+    if (kind === undefined) {
+      continue;
+    }
+    candidates.push({
+      kind,
+      executable: "npm",
+      arguments: ["run", scriptName],
+      workingDirectory: input.packageJson.workingDirectory,
+      observations: [
+        sourceObservation(
+          input.packageJson,
+          1,
+          `package.json#/scripts/${escapePointer(scriptName)}`
+        )
+      ],
+      origin: "package"
+    });
+  }
+
+  for (const source of [...(input.ciSources ?? [])].sort(compareSources)) {
+    for (const extracted of extractCiRunCommands(source.content)) {
+      candidates.push(...commandsFromShellRun(source, extracted));
+    }
+  }
+
+  const explicitInstallDirectories = new Set(
+    candidates
+      .filter((candidate) => candidate.kind === "install" && candidate.origin === "ci")
+      .map((candidate) => candidate.workingDirectory)
+  );
+  if (!explicitInstallDirectories.has(input.packageJson.workingDirectory)) {
+    const installSource = input.packageLock ?? input.packageJson;
+    candidates.push({
+      kind: "install",
+      executable: "npm",
+      arguments: [input.packageLock === undefined ? "install" : "ci"],
+      workingDirectory: input.packageJson.workingDirectory,
+      observations: [
+        sourceObservation(
+          installSource,
+          1,
+          input.packageLock === undefined ? "npm manifest install" : "npm lockfile clean install"
+        )
+      ],
+      origin: "package"
+    });
+  }
+
+  const merged = mergeCandidates(candidates);
+  if (merged.length > MAX_STEPS) {
+    throw new BehaviorDiscoveryError([
+      issue(
+        "/steps",
+        "too_many_discovered_steps",
+        `Discovery produced more than ${String(MAX_STEPS)} behavior steps.`
+      )
+    ]);
+  }
+  const targetSelector = input.targetSelector ?? "project-default";
+  const realmAssessment = assessmentForRealm(input.realmId);
+  const steps = await Promise.all(
+    merged
+      .sort(compareCandidates)
+      .map((candidate, order) =>
+        materializeStep(candidate, order, targetSelector, realmAssessment, input.realmId)
+      )
+  );
+
+  return {
+    steps,
+    invalidationSourceIds: uniqueSorted([
+      input.packageJson.sourceId,
+      ...(input.packageLock === undefined ? [] : [input.packageLock.sourceId]),
+      ...(input.ciSources ?? []).map((source) => source.sourceId)
+    ])
+  };
+}
+
+function validateDiscoveryInput(input: NpmBehaviorDiscoveryInput): void {
+  const issues: BehaviorDiscoveryIssue[] = [];
+  validateSource(input.packageJson, "/packageJson", true, issues);
+  if (input.packageLock !== undefined) {
+    validateSource(input.packageLock, "/packageLock", false, issues);
+  }
+  if ((input.ciSources?.length ?? 0) > MAX_CI_SOURCES) {
+    issues.push(
+      issue(
+        "/ciSources",
+        "too_many_ci_sources",
+        `At most ${String(MAX_CI_SOURCES)} CI sources are allowed.`
+      )
+    );
+  }
+  const sourceIds = new Set<string>();
+  for (const [index, source] of (input.ciSources ?? []).entries()) {
+    validateSource(source, `/ciSources/${String(index)}`, true, issues);
+  }
+  for (const source of [
+    input.packageJson,
+    ...(input.packageLock === undefined ? [] : [input.packageLock]),
+    ...(input.ciSources ?? [])
+  ]) {
+    if (sourceIds.has(source.sourceId)) {
+      issues.push(
+        issue("/sources", "duplicate_source_id", `Duplicate source ID ${source.sourceId}.`)
+      );
+    }
+    sourceIds.add(source.sourceId);
+  }
+  if (
+    input.targetSelector !== undefined &&
+    (input.targetSelector.trim() === "" || input.targetSelector.length > 256)
+  ) {
+    issues.push(
+      issue(
+        "/targetSelector",
+        "invalid_target_selector",
+        "targetSelector must be non-empty and at most 256 characters."
+      )
+    );
+  }
+  if (input.realmId !== undefined && !ENTITY_ID.test(input.realmId)) {
+    issues.push(issue("/realmId", "invalid_entity_id", "realmId must be a valid entity ID."));
+  }
+  if (issues.length > 0) {
+    throw new BehaviorDiscoveryError(issues);
+  }
+}
+
+function validateSource(
+  source: Omit<DiscoverySource, "content"> & { readonly content?: string },
+  path: string,
+  contentRequired: boolean,
+  issues: BehaviorDiscoveryIssue[]
+): void {
+  if (!ENTITY_ID.test(source.sourceId)) {
+    issues.push(issue(`${path}/sourceId`, "invalid_entity_id", "Invalid source ID."));
+  }
+  if (!ENTITY_ID.test(source.evidenceReferenceId)) {
+    issues.push(
+      issue(`${path}/evidenceReferenceId`, "invalid_entity_id", "Invalid evidence reference ID.")
+    );
+  }
+  if (!RELATIVE_PATH.test(source.path) || hasControlCharacters(source.path)) {
+    issues.push(issue(`${path}/path`, "invalid_relative_path", "Source path must be relative."));
+  }
+  if (
+    !RELATIVE_PATH.test(source.workingDirectory) ||
+    hasControlCharacters(source.workingDirectory)
+  ) {
+    issues.push(
+      issue(
+        `${path}/workingDirectory`,
+        "invalid_relative_path",
+        "workingDirectory must be a contract-safe relative path."
+      )
+    );
+  }
+  if (!SHA256_DIGEST.test(source.contentDigest)) {
+    issues.push(issue(`${path}/contentDigest`, "invalid_digest", "Expected a SHA-256 digest."));
+  }
+  if (
+    (contentRequired && typeof source.content !== "string") ||
+    (typeof source.content === "string" &&
+      new TextEncoder().encode(source.content).byteLength > MAX_SOURCE_BYTES)
+  ) {
+    issues.push(
+      issue(
+        `${path}/content`,
+        "invalid_source_content",
+        `Source content is required and must not exceed ${String(MAX_SOURCE_BYTES)} bytes.`
+      )
+    );
+  }
+}
+
+function parsePackageJson(source: DiscoverySource): {
+  readonly scripts: Readonly<Record<string, string>>;
+} {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(source.content) as unknown;
+  } catch {
+    throw new BehaviorDiscoveryError([
+      issue("/packageJson/content", "invalid_json", "package.json is not valid JSON.")
+    ]);
+  }
+  if (!isRecord(parsed)) {
+    throw new BehaviorDiscoveryError([
+      issue("/packageJson/content", "object_required", "package.json must contain an object.")
+    ]);
+  }
+  if (
+    typeof parsed.packageManager === "string" &&
+    !parsed.packageManager.toLowerCase().startsWith("npm@")
+  ) {
+    throw new BehaviorDiscoveryError([
+      issue(
+        "/packageJson/content/packageManager",
+        "non_npm_manager",
+        "Explicit non-npm packageManager metadata cannot be discovered as npm behavior."
+      )
+    ]);
+  }
+  if (parsed.scripts === undefined) {
+    return { scripts: {} };
+  }
+  if (!isRecord(parsed.scripts)) {
+    throw new BehaviorDiscoveryError([
+      issue("/packageJson/content/scripts", "object_required", "scripts must be an object.")
+    ]);
+  }
+  const scripts: Record<string, string> = {};
+  const issues: BehaviorDiscoveryIssue[] = [];
+  for (const [name, value] of Object.entries(parsed.scripts)) {
+    if (
+      name.trim() === "" ||
+      name.length > 256 ||
+      typeof value !== "string" ||
+      value.length > 16_384
+    ) {
+      issues.push(
+        issue(
+          `/packageJson/content/scripts/${escapePointer(name)}`,
+          "invalid_package_script",
+          "Script names and values must be bounded strings."
+        )
+      );
+      continue;
+    }
+    scripts[name] = value;
+  }
+  if (issues.length > 0) {
+    throw new BehaviorDiscoveryError(issues);
+  }
+  return { scripts };
+}
+
+function extractCiRunCommands(content: string): readonly ExtractedRunCommand[] {
+  const lines = content.replaceAll("\r\n", "\n").split("\n");
+  const commands: ExtractedRunCommand[] = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    const keyed = /^(\s*)(?:-\s*)?(?:run|script|command)\s*:\s*(.*)$/u.exec(line);
+    if (keyed !== null) {
+      const indentation = keyed[1]?.length ?? 0;
+      const scalar = keyed[2]?.trim() ?? "";
+      if (scalar === "|" || scalar === ">" || scalar.startsWith("|-") || scalar.startsWith(">-")) {
+        const block: string[] = [];
+        let cursor = index + 1;
+        while (cursor < lines.length) {
+          const blockLine = lines[cursor] ?? "";
+          if (blockLine.trim() !== "" && leadingSpaces(blockLine) <= indentation) {
+            break;
+          }
+          block.push(blockLine.trim());
+          cursor += 1;
+        }
+        commands.push({ line: index + 1, command: block.join("\n") });
+        index = cursor - 1;
+      } else if (scalar !== "") {
+        commands.push({ line: index + 1, command: unwrapYamlScalar(scalar) });
+      }
+      continue;
+    }
+
+    const listItem = /^\s*-\s+(.+)$/u.exec(line)?.[1]?.trim();
+    if (listItem !== undefined) {
+      const command = unwrapYamlScalar(listItem);
+      if (looksLikeShellCommand(command)) {
+        commands.push({ line: index + 1, command });
+      }
+    }
+  }
+  return commands;
+}
+
+function commandsFromShellRun(
+  source: DiscoverySource,
+  extracted: ExtractedRunCommand
+): readonly CommandCandidate[] {
+  if (hasUnsupportedControlOperator(extracted.command)) {
+    return [];
+  }
+  let workingDirectory = source.workingDirectory;
+  const candidates: CommandCandidate[] = [];
+  for (const segment of splitShellSegments(extracted.command)) {
+    const tokens = tokenizeShell(segment);
+    if (tokens.length === 0 || hasUnsupportedToken(tokens)) {
+      continue;
+    }
+    if (tokens[0] === "cd" && tokens.length === 2) {
+      const resolved = resolveWorkingDirectory(workingDirectory, tokens[1] ?? "");
+      if (resolved !== undefined) {
+        workingDirectory = resolved;
+      }
+      continue;
+    }
+    const npmTokens = dropEnvironmentAssignments(tokens);
+    const command = parseNpmCommand(npmTokens);
+    if (command === undefined) {
+      continue;
+    }
+    candidates.push({
+      ...command,
+      workingDirectory,
+      observations: [
+        sourceObservation(
+          source,
+          extracted.line,
+          `ci:${source.path}:${String(extracted.line)}:${segment.trim()}`
+        )
+      ],
+      origin: "ci"
+    });
+  }
+  return candidates;
+}
+
+function parseNpmCommand(
+  tokens: readonly string[]
+): Pick<CommandCandidate, "arguments" | "executable" | "kind"> | undefined {
+  if (tokens[0]?.toLowerCase() !== "npm" || tokens.length < 2) {
+    return undefined;
+  }
+  const command = tokens[1]?.toLowerCase();
+  if (command === "ci" || command === "install") {
+    return {
+      kind: "install",
+      executable: "npm",
+      arguments: tokens.slice(1)
+    };
+  }
+  if (command === "test") {
+    return {
+      kind: "test",
+      executable: "npm",
+      arguments: tokens.slice(1)
+    };
+  }
+  if ((command === "run" || command === "run-script") && tokens[2] !== undefined) {
+    const kind = classifyScript(tokens[2]);
+    if (kind !== undefined) {
+      return {
+        kind,
+        executable: "npm",
+        arguments: tokens.slice(1)
+      };
+    }
+  }
+  return undefined;
+}
+
+function classifyScript(scriptName: string): DiscoveredBehaviorKind | undefined {
+  const normalized = scriptName.trim().toLowerCase();
+  if (
+    normalized === "smoke" ||
+    normalized.startsWith("smoke:") ||
+    normalized === "test:smoke" ||
+    normalized.startsWith("test:smoke:")
+  ) {
+    return "smoke";
+  }
+  if (
+    normalized === "benchmark" ||
+    normalized.startsWith("benchmark:") ||
+    normalized === "bench" ||
+    normalized.startsWith("bench:")
+  ) {
+    return "benchmark";
+  }
+  if (normalized === "typecheck" || normalized.startsWith("typecheck:")) {
+    return "typecheck";
+  }
+  if (
+    normalized === "type-check" ||
+    normalized.startsWith("type-check:") ||
+    normalized === "check:types" ||
+    normalized === "types:check"
+  ) {
+    return "typecheck";
+  }
+  if (normalized === "build" || normalized.startsWith("build:")) {
+    return "build";
+  }
+  if (normalized === "lint" || normalized.startsWith("lint:")) {
+    return "lint";
+  }
+  if (normalized === "test" || normalized.startsWith("test:")) {
+    return "test";
+  }
+  return undefined;
+}
+
+function mergeCandidates(candidates: readonly CommandCandidate[]): CommandCandidate[] {
+  const merged = new Map<string, CommandCandidate>();
+  for (const candidate of candidates) {
+    if (
+      candidate.arguments.length > 256 ||
+      candidate.arguments.some((argument) => argument.length > 4_096)
+    ) {
+      throw new BehaviorDiscoveryError([
+        issue(
+          "/commands",
+          "command_bounds_exceeded",
+          "A discovered command exceeds behavior-contract argument limits."
+        )
+      ]);
+    }
+    const key = canonicalJson({
+      arguments: candidate.arguments,
+      executable: candidate.executable,
+      kind: candidate.kind,
+      workingDirectory: candidate.workingDirectory
+    });
+    const previous = merged.get(key);
+    merged.set(
+      key,
+      previous === undefined
+        ? candidate
+        : {
+            ...previous,
+            observations: mergeObservations(previous.observations, candidate.observations),
+            origin: previous.origin === "ci" || candidate.origin === "ci" ? "ci" : "package"
+          }
+    );
+  }
+  return [...merged.values()];
+}
+
+async function materializeStep(
+  candidate: CommandCandidate,
+  order: number,
+  targetSelector: string,
+  realmAssessment: Assessment,
+  realmId: string | undefined
+): Promise<BehaviorStep> {
+  const observations = [...candidate.observations].sort(compareObservations);
+  const fingerprint = await sha256(
+    canonicalJson({
+      arguments: candidate.arguments,
+      evidence: observations.map((observation) => ({
+        contentDigest: observation.contentDigest,
+        line: observation.line,
+        path: observation.path,
+        selector: observation.selector,
+        sourceId: observation.sourceId
+      })),
+      executable: candidate.executable,
+      kind: candidate.kind,
+      realmId: realmId ?? null,
+      targetSelector,
+      workingDirectory: candidate.workingDirectory
+    })
+  );
+  const expectedExitStatuses: [number, ...number[]] = [0];
+  const assertions: BehaviorAssertion[] = [
+    {
+      assertionId: `assertion:${fingerprint.slice("sha256:".length, 39)}`,
+      kind: "exit_status",
+      subject: "process.exitCode",
+      operator: "equals",
+      expected: "0",
+      required: true
+    }
+  ];
+  return {
+    stepId: `behavior-step:${fingerprint.slice("sha256:".length, 39)}`,
+    order,
+    enabled: true,
+    kind: candidate.kind,
+    executable: candidate.executable,
+    arguments: [...candidate.arguments],
+    workingDirectory: candidate.workingDirectory,
+    realmAssessment,
+    ...(realmId === undefined ? {} : { realmId }),
+    targetSelector,
+    timeoutSeconds: TIMEOUT_SECONDS[candidate.kind],
+    secretReferenceIds: [],
+    expectedExitStatuses,
+    assertions,
+    required: candidate.kind !== "benchmark",
+    discoveryEvidenceReferenceIds: uniqueSorted(
+      observations.map((observation) => observation.evidenceReferenceId)
+    ),
+    discoveryFingerprint: fingerprint
+  };
+}
+
+function assessmentForRealm(realmId: string | undefined): Assessment {
+  return realmId === undefined
+    ? {
+        state: "unknown",
+        reasonCodes: ["realm_not_confirmed"],
+        evidenceReferenceIds: []
+      }
+    : {
+        state: "known",
+        reasonCodes: ["realm_confirmed"],
+        evidenceReferenceIds: []
+      };
+}
+
+function sourceObservation(
+  source: Omit<DiscoverySource, "content">,
+  line: number,
+  selector: string
+): SourceObservation {
+  return {
+    sourceId: source.sourceId,
+    evidenceReferenceId: source.evidenceReferenceId,
+    path: source.path,
+    contentDigest: source.contentDigest,
+    line,
+    selector
+  };
+}
+
+function mergeObservations(
+  left: readonly SourceObservation[],
+  right: readonly SourceObservation[]
+): readonly SourceObservation[] {
+  const observations = new Map<string, SourceObservation>();
+  for (const observation of [...left, ...right]) {
+    observations.set(
+      canonicalJson({
+        contentDigest: observation.contentDigest,
+        evidenceReferenceId: observation.evidenceReferenceId,
+        line: observation.line,
+        path: observation.path,
+        selector: observation.selector,
+        sourceId: observation.sourceId
+      }),
+      observation
+    );
+  }
+  return [...observations.values()].sort(compareObservations);
+}
+
+function compareCandidates(left: CommandCandidate, right: CommandCandidate): number {
+  return (
+    KIND_ORDER[left.kind] - KIND_ORDER[right.kind] ||
+    compareText(left.workingDirectory, right.workingDirectory) ||
+    compareText(canonicalJson(left.arguments), canonicalJson(right.arguments))
+  );
+}
+
+function compareSources(left: DiscoverySource, right: DiscoverySource): number {
+  return compareText(left.path, right.path) || compareText(left.sourceId, right.sourceId);
+}
+
+function compareObservations(left: SourceObservation, right: SourceObservation): number {
+  return (
+    compareText(left.path, right.path) ||
+    left.line - right.line ||
+    compareText(left.sourceId, right.sourceId) ||
+    compareText(left.selector, right.selector)
+  );
+}
+
+function compareText(left: string, right: string): number {
+  return left.localeCompare(right, "en");
+}
+
+function uniqueSorted(values: readonly string[]): string[] {
+  return [...new Set(values)].sort(compareText);
+}
+
+function escapePointer(value: string): string {
+  return value.replaceAll("~", "~0").replaceAll("/", "~1");
+}
+
+function leadingSpaces(value: string): number {
+  return /^\s*/u.exec(value)?.[0].length ?? 0;
+}
+
+function unwrapYamlScalar(value: string): string {
+  if (
+    value.length >= 2 &&
+    ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")))
+  ) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
+function looksLikeShellCommand(value: string): boolean {
+  return /^(?:[A-Za-z_][A-Za-z0-9_]*=[^\s]+\s+)*(?:cd\s+|npm\s+)/u.test(value);
+}
+
+function hasUnsupportedControlOperator(value: string): boolean {
+  let quote: "'" | '"' | undefined;
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+    if (quote !== undefined) {
+      if (character === quote && value[index - 1] !== "\\") {
+        quote = undefined;
+      }
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (
+      (character === "|" && value[index + 1] === "|") ||
+      (character === "|" && value[index + 1] !== "|")
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function splitShellSegments(value: string): readonly string[] {
+  const segments: string[] = [];
+  let quote: "'" | '"' | undefined;
+  let current = "";
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index] ?? "";
+    if (quote !== undefined) {
+      current += character;
+      if (character === quote && value[index - 1] !== "\\") {
+        quote = undefined;
+      }
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      current += character;
+      continue;
+    }
+    const isAnd = character === "&" && value[index + 1] === "&";
+    if (character === ";" || character === "\n" || isAnd) {
+      if (current.trim() !== "") {
+        segments.push(current.trim());
+      }
+      current = "";
+      if (isAnd) {
+        index += 1;
+      }
+      continue;
+    }
+    current += character;
+  }
+  if (current.trim() !== "") {
+    segments.push(current.trim());
+  }
+  return segments;
+}
+
+function tokenizeShell(value: string): readonly string[] {
+  const tokens: string[] = [];
+  let quote: "'" | '"' | undefined;
+  let current = "";
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index] ?? "";
+    if (quote !== undefined) {
+      if (character === quote && value[index - 1] !== "\\") {
+        quote = undefined;
+      } else {
+        current += character;
+      }
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (/\s/u.test(character)) {
+      if (current !== "") {
+        tokens.push(current);
+        current = "";
+      }
+      continue;
+    }
+    if (character === "#" && current === "") {
+      break;
+    }
+    if (character === "\\" && value[index + 1] !== undefined) {
+      current += value[index + 1];
+      index += 1;
+      continue;
+    }
+    current += character;
+  }
+  if (current !== "") {
+    tokens.push(current);
+  }
+  return tokens;
+}
+
+function hasUnsupportedToken(tokens: readonly string[]): boolean {
+  return tokens.some(
+    (token) =>
+      token === ">" || token === ">>" || token === "<" || token === "|" || /^\d?>/u.test(token)
+  );
+}
+
+function dropEnvironmentAssignments(tokens: readonly string[]): readonly string[] {
+  const index = tokens.findIndex((token) => !/^[A-Za-z_][A-Za-z0-9_]*=.*$/u.test(token));
+  return index < 0 ? [] : tokens.slice(index);
+}
+
+function resolveWorkingDirectory(base: string, target: string): string | undefined {
+  if (
+    target === "" ||
+    target.startsWith("/") ||
+    target.includes("\\") ||
+    target.includes(":") ||
+    target.split("/").some((segment) => segment === "..")
+  ) {
+    return undefined;
+  }
+  const segments = [...base.split("/")];
+  for (const segment of target.split("/")) {
+    if (segment === "" || segment === ".") {
+      continue;
+    }
+    segments.push(segment);
+  }
+  const resolved = segments.join("/");
+  return RELATIVE_PATH.test(resolved) ? resolved : undefined;
+}
+
+async function sha256(value: string): Promise<`sha256:${string}`> {
+  const digest = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))
+  );
+  const hexadecimal = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `sha256:${hexadecimal}`;
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasControlCharacters(value: string): boolean {
+  return [...value].some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint < 32 || codePoint === 127;
+  });
+}
+
+function issue(path: string, code: string, message: string): BehaviorDiscoveryIssue {
+  return { path, code, message };
+}

@@ -1,0 +1,133 @@
+import { describe, expect, it } from "vitest";
+
+import { discoverNpmBehaviorSteps } from "./discovery.js";
+import {
+  BehaviorContractValidationError,
+  acceptBehaviorContract,
+  createBehaviorContract,
+  invalidateBehaviorContract,
+  reorderBehaviorSteps,
+  reviseBehaviorContract,
+  setBehaviorStepEnabled,
+  validateBehaviorContract
+} from "./model.js";
+
+const sourceInputDigest = `sha256:${"1".repeat(64)}`;
+
+async function steps() {
+  return (
+    await discoverNpmBehaviorSteps({
+      packageJson: {
+        sourceId: "source:package-json",
+        evidenceReferenceId: "evidence:package-json",
+        path: "repository/package.json",
+        contentDigest: `sha256:${"a".repeat(64)}`,
+        content: JSON.stringify({ scripts: { build: "tsc", test: "vitest" } }),
+        workingDirectory: "repository"
+      },
+      packageLock: {
+        sourceId: "source:package-lock",
+        evidenceReferenceId: "evidence:package-lock",
+        path: "repository/package-lock.json",
+        contentDigest: `sha256:${"b".repeat(64)}`,
+        workingDirectory: "repository"
+      },
+      targetSelector: "linux-node-22"
+    })
+  ).steps;
+}
+
+describe("behavior-contract lifecycle and validation", () => {
+  it("creates, edits, reorders, accepts, and invalidates a complete digest-bound contract", async () => {
+    const discoveredSteps = await steps();
+    const created = await createBehaviorContract({
+      contractId: "contract:project-1",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      sourceInputDigest,
+      steps: discoveredSteps,
+      createdAt: "2026-07-24T12:00:00Z"
+    });
+
+    expect(created.reviewState).toBe("discovered");
+    expect(await validateBehaviorContract(created)).toEqual([]);
+    expect(created.steps).toHaveLength(3);
+    expect(created.steps.every((step) => step.discoveryEvidenceReferenceIds.length > 0)).toBe(true);
+    expect(created.steps.every((step) => step.timeoutSeconds > 0)).toBe(true);
+    expect(created.steps.every((step) => step.secretReferenceIds.length === 0)).toBe(true);
+
+    const reversedIds = [...created.steps].reverse().map(({ stepId }) => stepId);
+    const reordered = reorderBehaviorSteps(created.steps, reversedIds);
+    const disabled = setBehaviorStepEnabled(reordered, reordered[1]?.stepId ?? "", false);
+    const revised = await reviseBehaviorContract(created, {
+      steps: disabled,
+      updatedAt: "2026-07-24T12:05:00Z"
+    });
+    expect(revised.version).toBe(2);
+    expect(revised.reviewState).toBe("needs_review");
+    expect(revised.steps.map(({ order }) => order)).toEqual([0, 1, 2]);
+
+    const accepted = await acceptBehaviorContract(revised, {
+      actorId: "user-1",
+      acceptedAt: "2026-07-24T12:10:00Z"
+    });
+    expect(accepted.version).toBe(3);
+    expect(accepted.reviewState).toBe("accepted");
+    expect(accepted.acceptedBy).toBe("user-1");
+    expect(await validateBehaviorContract(accepted)).toEqual([]);
+
+    const invalidated = await invalidateBehaviorContract(accepted, {
+      sourceIds: ["source:package-json", "source:package-json"],
+      invalidatedAt: "2026-07-24T12:15:00Z"
+    });
+    expect(invalidated.version).toBe(4);
+    expect(invalidated.reviewState).toBe("invalidated");
+    expect(invalidated.acceptedBy).toBeUndefined();
+    expect(invalidated.invalidatedBySourceIds).toEqual(["source:package-json"]);
+    expect(await validateBehaviorContract(invalidated)).toEqual([]);
+  });
+
+  it("rejects digest tampering, invalid ordering, duplicate secrets, and incomplete acceptance", async () => {
+    const contract = await createBehaviorContract({
+      contractId: "contract:project-1",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      sourceInputDigest,
+      steps: await steps(),
+      createdAt: "2026-07-24T12:00:00Z"
+    });
+    const first = contract.steps[0];
+    const invalid = {
+      ...contract,
+      reviewState: "accepted" as const,
+      acceptedBy: "user-1",
+      steps: [
+        {
+          ...first,
+          order: 2,
+          secretReferenceIds: ["secret-1", "secret-1"]
+        },
+        ...contract.steps.slice(1)
+      ] as typeof contract.steps
+    };
+    const issues = await validateBehaviorContract(invalid);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "duplicate_secret_reference" }),
+        expect.objectContaining({ code: "acceptance_metadata_required" }),
+        expect.objectContaining({ code: "non_contiguous_order" }),
+        expect.objectContaining({ code: "digest_mismatch" })
+      ])
+    );
+
+    await expect(
+      invalidateBehaviorContract(contract, {
+        sourceIds: [],
+        invalidatedAt: "2026-07-24T12:15:00Z"
+      })
+    ).rejects.toBeInstanceOf(BehaviorContractValidationError);
+    expect(() => reorderBehaviorSteps(contract.steps, [contract.steps[0].stepId])).toThrow(
+      BehaviorContractValidationError
+    );
+  });
+});
