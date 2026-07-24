@@ -9,6 +9,7 @@ import type {
 import {
   createDemoSponsorRunRoutes,
   type DemoSponsorRunExecutor,
+  type DemoSponsorRunEnvironment,
   type DemoSponsorRunResponse
 } from "./routes.js";
 import { RuntimeDemoSponsorRunExecutor } from "./executor.js";
@@ -140,6 +141,43 @@ describe("demo sponsor run route", () => {
     expect((await first).status).toBe(200);
     expect((await request()).status).toBe(200);
     expect(calls).toBe(2);
+  });
+
+  it("honors the production rate-limit binding before sponsor execution", async () => {
+    let calls = 0;
+    const routes = createDemoSponsorRunRoutes(() => ({
+      run: () => {
+        calls += 1;
+        return Promise.resolve(successfulResponse());
+      }
+    }));
+    const environment = {
+      BRAINTRUST_API_KEY: "",
+      BRAINTRUST_API_URL: "",
+      BRAINTRUST_ENABLED: "false",
+      BRAINTRUST_PROJECT_NAME: "",
+      DAYTONA_API_KEY: "",
+      DAYTONA_API_URL: "",
+      DAYTONA_TARGET: "",
+      FIREWORKS_API_KEY: "",
+      SPONSOR_PROOF_RATE_LIMITER: {
+        limit: () => Promise.resolve({ success: false })
+      } as unknown as RateLimit
+    } satisfies DemoSponsorRunEnvironment;
+
+    const response = await routes.fetch(
+      new Request("http://worker.test/v1/demo/sponsor-run", {
+        body: "{}",
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
+      }),
+      environment
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("60");
+    expect(await response.json()).toEqual({ error: "sponsor_run_rate_limited" });
+    expect(calls).toBe(0);
   });
 });
 
