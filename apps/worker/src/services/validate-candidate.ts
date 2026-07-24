@@ -19,7 +19,8 @@ export interface ValidationCommand {
     | "lint"
     | "typecheck"
     | "test"
-    | "smoke";
+    | "smoke"
+    | "benchmark";
   readonly timeoutMs: number;
   readonly workingDirectory: string;
 }
@@ -54,8 +55,9 @@ export interface ValidationMaterializer {
 
 export interface ValidationPhaseResult {
   readonly commandId?: string;
+  readonly durationMs: number;
   readonly exitCode?: number | null;
-  readonly phase: ValidationCommand["phase"] | "source" | "candidate" | "cleanup";
+  readonly phase: ValidationCommand["phase"] | "provision" | "source" | "candidate" | "cleanup";
   readonly status: "passed" | "failed" | "timed_out" | "infrastructure_error";
   readonly stderrDigest?: Sha256Digest;
   readonly stdoutDigest?: Sha256Digest;
@@ -118,6 +120,7 @@ function commandPhase(
   const status = result.timedOut ? "timed_out" : result.exitCode === 0 ? "passed" : "failed";
   return {
     commandId: result.commandId,
+    durationMs: result.resourceUsage.wallTimeMs,
     exitCode: result.exitCode,
     phase: command.phase,
     status,
@@ -145,10 +148,16 @@ function terminalOutcome(
 export class CandidateValidationService {
   readonly #daytona: DaytonaPort;
   readonly #materializer: ValidationMaterializer;
+  readonly #now: () => number;
 
-  constructor(daytona: DaytonaPort, materializer: ValidationMaterializer) {
+  constructor(
+    daytona: DaytonaPort,
+    materializer: ValidationMaterializer,
+    now: () => number = Date.now
+  ) {
     this.#daytona = daytona;
     this.#materializer = materializer;
+    this.#now = now;
   }
 
   async validate(plan: CandidateValidationPlan): Promise<CandidateValidationResult> {
@@ -198,26 +207,61 @@ export class CandidateValidationService {
     let sandbox: DaytonaSandboxReference | undefined;
     let cleanupConfirmed = false;
     try {
-      const provisioned = await this.#daytona.provisionSandbox({
-        autoDeleteAfterSeconds: 15 * 60,
-        context: operationContext(provisionKey, plan.sourceInputDigest, 90_000),
-        labels: labels(plan, provisionKey),
-        maxProvisioningTimeMs: 90_000,
-        target: plan.target
+      const provisionStartedAt = this.#now();
+      const existing = await this.#daytona.findSandboxByOperationKey({
+        context: operationContext(`${provisionKey}:reconcile`, plan.sourceInputDigest, 30_000),
+        provisionOperationKey: provisionKey
       });
-      sandbox = provisioned.sandbox;
+      if (existing.sandbox !== null) {
+        sandbox = existing.sandbox;
+      } else {
+        const provisioned = await this.#daytona.provisionSandbox({
+          autoDeleteAfterSeconds: 15 * 60,
+          context: operationContext(provisionKey, plan.sourceInputDigest, 90_000),
+          labels: labels(plan, provisionKey),
+          maxProvisioningTimeMs: 90_000,
+          target: plan.target
+        });
+        sandbox = provisioned.sandbox;
+      }
+      const inspected = await this.#daytona.inspectSandbox({
+        context: operationContext(`${provisionKey}:authoritative-read`, plan.targetDigest, 30_000),
+        sandbox
+      });
+      if (
+        inspected.status.phase !== "ready" ||
+        !inspected.status.providerHealthy ||
+        !inspected.status.guestReachable
+      ) {
+        throw new Error("sandbox_not_ready");
+      }
+      phases.push({
+        durationMs: elapsed(this.#now, provisionStartedAt),
+        phase: "provision",
+        status: "passed"
+      });
+      const sourceStartedAt = this.#now();
       await this.#materializer.materializeSource({
         sandbox,
         sourceInputDigest: plan.sourceInputDigest
       });
-      phases.push({ phase: "source", status: "passed" });
+      phases.push({
+        durationMs: elapsed(this.#now, sourceStartedAt),
+        phase: "source",
+        status: "passed"
+      });
       if (kind === "candidate") {
+        const candidateStartedAt = this.#now();
         await this.#materializer.materializeCandidate({
           candidatePatchDigest: plan.candidatePatchDigest,
           sandbox,
           sourceInputDigest: plan.sourceInputDigest
         });
-        phases.push({ phase: "candidate", status: "passed" });
+        phases.push({
+          durationMs: elapsed(this.#now, candidateStartedAt),
+          phase: "candidate",
+          status: "passed"
+        });
       }
       for (const [index, command] of commands.entries()) {
         const result = await this.#daytona.executeCommand({
@@ -246,11 +290,13 @@ export class CandidateValidationService {
       }
     } catch {
       phases.push({
-        phase: phases.length === 0 ? "source" : "candidate",
+        durationMs: 0,
+        phase: phases.length === 0 ? "provision" : "source",
         status: "infrastructure_error"
       });
     } finally {
       if (sandbox !== undefined) {
+        const cleanupStartedAt = this.#now();
         try {
           const cleanup = await this.#daytona.deleteSandbox({
             context: operationContext(
@@ -265,11 +311,16 @@ export class CandidateValidationService {
           });
           cleanupConfirmed = cleanup.deleted;
           phases.push({
+            durationMs: elapsed(this.#now, cleanupStartedAt),
             phase: "cleanup",
             status: cleanup.deleted ? "passed" : "infrastructure_error"
           });
         } catch {
-          phases.push({ phase: "cleanup", status: "infrastructure_error" });
+          phases.push({
+            durationMs: elapsed(this.#now, cleanupStartedAt),
+            phase: "cleanup",
+            status: "infrastructure_error"
+          });
         }
       }
     }
@@ -281,4 +332,8 @@ export class CandidateValidationService {
       ...(sandbox === undefined ? {} : { sandboxId: sandbox.sandboxId })
     };
   }
+}
+
+function elapsed(now: () => number, startedAt: number): number {
+  return Math.max(0, now() - startedAt);
 }

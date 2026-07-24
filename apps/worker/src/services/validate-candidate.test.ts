@@ -116,6 +116,14 @@ describe("CandidateValidationService", () => {
     expect(result.baseline?.sandboxId).not.toBe(result.candidate?.sandboxId);
     expect(calls.filter((call) => call.startsWith("source:"))).toHaveLength(2);
     expect(calls.filter((call) => call.startsWith("candidate:"))).toHaveLength(1);
+    expect(result.candidate?.phases.map(({ phase }) => phase)).toEqual([
+      "provision",
+      "source",
+      "candidate",
+      "test",
+      "cleanup"
+    ]);
+    expect(result.candidate?.phases.every(({ durationMs }) => durationMs >= 0)).toBe(true);
   });
 
   it("does not provision or verify without an accepted behavior contract", async () => {
@@ -143,5 +151,20 @@ describe("CandidateValidationService", () => {
 
     expect(result.status).toBe("baseline_already_passed");
     expect(result.attestation).toBeUndefined();
+  });
+
+  it("fails as infrastructure and still confirms cleanup when the sandbox is not ready", async () => {
+    const daytona = new FakeDaytona({ provisionedPhase: "provisioning" });
+
+    const result = await new CandidateValidationService(daytona, materializer([])).validate(plan());
+
+    expect(result.status).toBe("infrastructure_error");
+    expect(result.baseline?.cleanupConfirmed).toBe(true);
+    expect(result.candidate?.cleanupConfirmed).toBe(true);
+    expect(result.baseline?.phases.map(({ phase, status }) => ({ phase, status }))).toEqual([
+      { phase: "provision", status: "infrastructure_error" },
+      { phase: "cleanup", status: "passed" }
+    ]);
+    expect(result.baseline?.phases.every(({ durationMs }) => durationMs >= 0)).toBe(true);
   });
 });
