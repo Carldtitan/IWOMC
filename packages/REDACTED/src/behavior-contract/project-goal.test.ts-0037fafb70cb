@@ -1,0 +1,61 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  ProjectGoalValidationError,
+  createProjectGoal,
+  editProjectGoal,
+  validateProjectGoal
+} from "./project-goal.js";
+
+describe("editable project goals", () => {
+  it("creates versioned human-authored context and preserves hard-gate isolation", () => {
+    const goal = createProjectGoal({
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      statement: "  Keep clean installs reproducible and onboarding predictable.  ",
+      nonFunctionalPriorities: [
+        { kind: "install_time", statement: " Keep clean install below two minutes. " },
+        { kind: "dependency_count", statement: "Prefer fewer direct dependencies." }
+      ],
+      actorId: "REDACTED-1",
+      createdAt: "2026-07-24T12:00:00Z"
+    });
+
+    expect(goal.statement).toBe("Keep clean installs reproducible and onboarding predictable.");
+    expect(goal.contextOnly).toBe(true);
+    expect(goal.version).toBe(1);
+    expect(goal.nonFunctionalPriorities.map(({ order }) => order)).toEqual([0, 1]);
+    expect(validateProjectGoal(goal)).toEqual([]);
+  });
+
+  it("edits with optimistic versioning and rejects stale or gate-overriding data", () => {
+    const goal = createProjectGoal({
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      statement: "Ship a reliable CLI.",
+      actorId: "REDACTED-1",
+      createdAt: "2026-07-24T12:00:00Z"
+    });
+    const edited = editProjectGoal(goal, {
+      expectedVersion: 1,
+      statement: "Ship a reliable and fast CLI.",
+      actorId: "REDACTED-2",
+      updatedAt: "2026-07-24T12:10:00Z"
+    });
+
+    expect(edited.version).toBe(2);
+    expect(edited.authoredBy).toBe("REDACTED-1");
+    expect(edited.updatedBy).toBe("REDACTED-2");
+    expect(goal.statement).toBe("Ship a reliable CLI.");
+    expect(() =>
+      editProjectGoal(edited, {
+        expectedVersion: 1,
+        actorId: "REDACTED-2",
+        updatedAt: "2026-07-24T12:11:00Z"
+      })
+    ).toThrowError(ProjectGoalValidationError);
+    expect(validateProjectGoal({ ...edited, contextOnly: false })).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "goal_cannot_override_gates" })])
+    );
+  });
+});

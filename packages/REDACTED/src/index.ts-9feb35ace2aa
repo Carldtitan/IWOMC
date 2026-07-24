@@ -32,6 +32,7 @@ export {
   reconcileNpmUndeclaredDependencies
 } from "./rules/npm-undeclared.js";
 export { buildNpmEvidenceGraphSet } from "./npm-checkpoint.js";
+export * from "./behavior-contract/index.js";
 export type {
   NpmCheckpointInput,
   NpmInstalledPackageInput,
