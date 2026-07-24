@@ -128,6 +128,7 @@ function pointer(): IngestQueuePointer {
   return {
     batchId: "batch-1",
     chainHead: digest,
+    deviceId: "device-1",
     logicalDigest: digest,
     objectKey: "ingest/object",
     objectVersionId: "version-1",

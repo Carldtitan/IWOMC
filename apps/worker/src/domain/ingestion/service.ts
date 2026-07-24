@@ -220,6 +220,7 @@ export class IngestionService {
       const pointer: IngestQueuePointer = Object.freeze({
         batchId: record.batchId,
         chainHead: record.chainHead,
+        deviceId: record.deviceId,
         logicalDigest: record.logicalDigest,
         objectKey: record.objectKey,
         objectVersionId: record.objectVersionId,

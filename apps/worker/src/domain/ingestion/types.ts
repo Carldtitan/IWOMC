@@ -77,6 +77,7 @@ export interface StreamChainState {
 export interface IngestQueuePointer {
   readonly batchId: string;
   readonly chainHead: Sha256Digest;
+  readonly deviceId: string;
   readonly logicalDigest: Sha256Digest;
   readonly objectKey: string;
   readonly objectVersionId: string;
