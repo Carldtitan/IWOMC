@@ -1,0 +1,38 @@
+{
+  "documents": [
+    {
+      "schemaVersion": 1,
+      "provider": "cursor",
+      "surface": "cursor-extension-bridge-v1",
+      "providerVersion": "0.50.0-fixture",
+      "event": {
+        "eventId": "cursor-command",
+        "sequence": 1,
+        "kind": "command_completed",
+        "sessionId": "cursor-1",
+        "toolCallId": "tool-1",
+        "monotonicNanos": 100,
+        "realmId": "host-1",
+        "actor": "agent",
+        "executorActor": "human",
+        "humanModified": true,
+        "approval": {
+          "decision": "approved",
+          "actor": "human",
+          "modifiedBeforeExecution": true
+        },
+        "executable": "pip",
+        "arguments": ["install", "httpx"],
+        "exitCode": 0,
+        "inventoryBefore": { "snapshotId": "before", "packages": [] },
+        "inventoryAfter": {
+          "snapshotId": "after",
+          "packages": [
+            { "ecosystem": "pypi", "name": "httpx", "version": "0.28.1", "layerId": "user" }
+          ]
+        },
+        "prompt": "private prompt"
+      }
+    }
+  ]
+}

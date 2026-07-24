@@ -11,6 +11,7 @@ pub mod logging;
 pub mod observation;
 pub mod observation_lease;
 pub mod providers;
+pub mod python_inventory;
 pub mod redaction;
 pub mod shutdown;
 pub mod spool;

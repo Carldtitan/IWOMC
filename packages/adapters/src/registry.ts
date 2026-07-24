@@ -1,15 +1,17 @@
 import type {
   AdapterManifest,
-  NpmRepositorySnapshot,
   ObservedOnlyProfile,
-  RepositoryAdapter
+  RepositoryAdapter,
+  RepositorySnapshot
 } from "./types.js";
 
 export class AdapterRegistry {
-  readonly #repositoryAdapters = new Map<string, RepositoryAdapter<NpmRepositorySnapshot>>();
+  readonly #repositoryAdapters = new Map<string, RepositoryAdapter<RepositorySnapshot>>();
   readonly #observedOnly = new Map<string, ObservedOnlyProfile>();
 
-  registerRepositoryAdapter(adapter: RepositoryAdapter<NpmRepositorySnapshot>): void {
+  registerRepositoryAdapter<TSnapshot extends RepositorySnapshot>(
+    adapter: RepositoryAdapter<TSnapshot>
+  ): void {
     const manager = adapter.manifest.manager;
     if (this.#repositoryAdapters.has(manager)) {
       throw new Error(`Repository adapter already registered: ${manager}`);
@@ -28,7 +30,7 @@ export class AdapterRegistry {
     return this.#repositoryAdapters.get(manager)?.manifest;
   }
 
-  repositoryAdapter(manager: string): RepositoryAdapter<NpmRepositorySnapshot> | undefined {
+  repositoryAdapter(manager: string): RepositoryAdapter<RepositorySnapshot> | undefined {
     return this.#repositoryAdapters.get(manager);
   }
 

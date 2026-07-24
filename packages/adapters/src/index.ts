@@ -5,6 +5,16 @@ export {
   npmRepositoryAdapter,
   parseNpmRepository
 } from "./node/npm.js";
+export {
+  parsePythonInstalledGraph,
+  parsePythonRepository,
+  pipAdapterManifest,
+  pipRepositoryAdapter,
+  pythonOperations,
+  pythonTargetMatrix,
+  uvAdapterManifest,
+  uvRepositoryAdapter
+} from "./python/python.js";
 export type {
   AdapterCapability,
   AdapterGap,
@@ -19,9 +29,20 @@ export type {
   NpmUsageEvidence,
   NpmUseKind,
   ObservedOnlyProfile,
+  PythonDeclaredDependency,
+  PythonEnvironmentScope,
+  PythonInstalledPackage,
+  PythonLockedDependency,
+  PythonManager,
+  PythonOperation,
+  PythonProject,
+  PythonRepositorySnapshot,
+  PythonTarget,
+  PythonUsageEvidence,
   RepositoryAdapter,
   RepositoryFile,
+  RepositorySnapshot,
   SourceLocation
 } from "./types.js";
 
-export const adaptersPackageStatus = "npm-native-validation" as const;
+export const adaptersPackageStatus = "npm-pip-uv-native-validation" as const;
