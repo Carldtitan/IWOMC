@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "corpusSetVersion": "1.0.0",
+  "hashAlgorithm": "sha256",
+  "entries": [
+    {
+      "corpusId": "graph-rules",
+      "category": "graph-rules",
+      "corpusVersion": "1.0.0",
+      "path": "graph-rules.json",
+      "contentHash": "sha256:dfbbdf8b1e292f6b52cfa01bb6f0a22a5bb2305ce9b81f34788adba740d886a8",
+      "fixtureCount": 7
+    },
+    {
+      "corpusId": "provider-lifecycles",
+      "category": "provider-lifecycles",
+      "corpusVersion": "1.0.0",
+      "path": "provider-lifecycles.json",
+      "contentHash": "sha256:5f6416fcd66e6c6d2e9c139e24f4dd83e01639e7f3b40872d0f66e2ed7ec20da",
+      "fixtureCount": 6
+    },
+    {
+      "corpusId": "security-REDACTEDs",
+      "category": "security-REDACTEDs",
+      "corpusVersion": "1.0.0",
+      "path": "security-REDACTEDs.json",
+      "contentHash": "sha256:b20a365bef460d75a5a3206beaf4baa722b0e2bd1dd5503b2bbd130d409975b1",
+      "fixtureCount": 8
+    },
+    {
+      "corpusId": "validation-failures",
+      "category": "validation-failures",
+      "corpusVersion": "1.0.0",
+      "path": "validation-failures.json",
+      "contentHash": "sha256:924b664b24c2c2ff1f567ae310881b08a49cecb727f1505066b2e8af95f4ad99",
+      "fixtureCount": 11
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "corpusVersion": 1,
+  "candidateKind": "dependency_add",
+  "manager": "npm",
+  "package": "@fixture/hidden-runtime",
+  "constraint": "file:./vendor/hidden-runtime",
+  "requiredBehavior": "npm test",
+  "expectedOutcome": "REDACTEDed",
+  "supportLevel": "full_native"
+}

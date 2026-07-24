@@ -1,1 +1,11 @@
 export const REDACTEDPackageStatus = "foundation" as const;
+
+export type {
+  CanonicalJsonObject,
+  CanonicalJsonPrimitive,
+  CanonicalJsonValue,
+  Clock,
+  ContentHasher,
+  IdGenerator,
+  Sha256Digest
+} from "./ports/index.js";

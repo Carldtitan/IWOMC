@@ -1,0 +1,17 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.vsix binary
+*.zip binary
+*.gz binary
+*.zst binary
+*.wasm binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary

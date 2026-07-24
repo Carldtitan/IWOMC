@@ -1,0 +1,12 @@
+{
+  "name": "npm-undeclared-used-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "@fixture/hidden-runtime": "file:./vendor/hidden-runtime"
+  }
+}

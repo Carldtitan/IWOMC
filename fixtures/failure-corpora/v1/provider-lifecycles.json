@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "provider-lifecycles",
+  "category": "provider-lifecycles",
+  "corpusVersion": "1.0.0",
+  "fixtures": [
+    {
+      "fixtureId": "provider-failed-session",
+      "title": "Provider reports a terminal tool failure",
+      "description": "A Claude Code package installation exits unsuccessfully and the provider emits a terminal failed session event. Intent is observable, but no installed-state effect may be inferred.",
+      "input": {
+        "provider": "claude-code",
+        "sessionId": "synthetic-session-provider-002",
+        "beforeSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000002",
+        "afterSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000002",
+        "events": [
+          {
+            "sequence": 1,
+            "offsetMs": 0,
+            "type": "session.started",
+            "actor": "agent"
+          },
+          {
+            "sequence": 2,
+            "offsetMs": 100,
+            "type": "tool.started",
+            "actor": "agent",
+            "commandDigest": "sha256:2000000000000000000000000000000000000000000000000000000000000002"
+          },
+          {
+            "sequence": 3,
+            "offsetMs": 500,
+            "type": "tool.failed",
+            "actor": "agent",
+            "exitCode": 1
+          },
+          {
+            "sequence": 4,
+            "offsetMs": 550,
+            "type": "session.failed",
+            "actor": "agent"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "failed",
+        "lifecycleState": "failed",
+        "attribution": "agent",
+        "terminalEvent": "present",
+        "installedStateEffect": "none",
+        "conclusive": true
+      }
+    },
+    {
+      "fixtureId": "provider-human-modified-command",
+      "title": "Human changes files during an agent command",
+      "description": "The provider command succeeds while an overlapping human edit changes the same dependency declaration. The resulting action is mixed and must not be attributed solely to the agent.",
+      "input": {
+        "provider": "cursor",
+        "sessionId": "synthetic-session-provider-006",
+        "beforeSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000006",
+        "afterSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000066",
+        "events": [
+          {
+            "sequence": 1,
+            "offsetMs": 0,
+            "type": "session.started",
+            "actor": "agent"
+          },
+          {
+            "sequence": 2,
+            "offsetMs": 100,
+            "type": "tool.started",
+            "actor": "agent",
+            "commandDigest": "sha256:2000000000000000000000000000000000000000000000000000000000000006"
+          },
+          {
+            "sequence": 3,
+            "offsetMs": 180,
+            "type": "file.modified",
+            "actor": "human",
+            "pathDigest": "sha256:3000000000000000000000000000000000000000000000000000000000000006"
+          },
+          {
+            "sequence": 4,
+            "offsetMs": 500,
+            "type": "tool.completed",
+            "actor": "agent",
+            "exitCode": 0
+          },
+          {
+            "sequence": 5,
+            "offsetMs": 550,
+            "type": "session.completed",
+            "actor": "agent"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "complete-with-mixed-attribution",
+        "lifecycleState": "complete",
+        "attribution": "mixed",
+        "terminalEvent": "present",
+        "installedStateEffect": "observed",
+        "agentOnlyClaimAllowed": false,
+        "conclusive": true
+      }
+    },
+    {
+      "fixtureId": "provider-interrupted-session",
+      "title": "Provider emits an explicit interruption",
+      "description": "A Codex command begins and the session is cancelled before a tool completion event. The lifecycle is interrupted and requires snapshot evidence before any effect claim.",
+      "input": {
+        "provider": "codex",
+        "sessionId": "synthetic-session-provider-003",
+        "beforeSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000003",
+        "afterSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000033",
+        "events": [
+          {
+            "sequence": 1,
+            "offsetMs": 0,
+            "type": "session.started",
+            "actor": "agent"
+          },
+          {
+            "sequence": 2,
+            "offsetMs": 100,
+            "type": "tool.started",
+            "actor": "agent",
+            "commandDigest": "sha256:2000000000000000000000000000000000000000000000000000000000000003"
+          },
+          {
+            "sequence": 3,
+            "offsetMs": 250,
+            "type": "session.interrupted",
+            "actor": "human"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "interrupted",
+        "lifecycleState": "interrupted",
+        "attribution": "mixed",
+        "terminalEvent": "present",
+        "installedStateEffect": "requires-snapshot-reconciliation",
+        "conclusive": false
+      }
+    },
+    {
+      "fixtureId": "provider-missing-terminal-event",
+      "title": "Provider stream ends without a terminal event",
+      "description": "The command start is captured but the provider feed disconnects before tool or session completion. The event history remains an explicit capture gap.",
+      "input": {
+        "provider": "claude-code",
+        "sessionId": "synthetic-session-provider-004",
+        "beforeSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000004",
+        "afterSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000044",
+        "events": [
+          {
+            "sequence": 1,
+            "offsetMs": 0,
+            "type": "session.started",
+            "actor": "agent"
+          },
+          {
+            "sequence": 2,
+            "offsetMs": 100,
+            "type": "tool.started",
+            "actor": "agent",
+            "commandDigest": "sha256:2000000000000000000000000000000000000000000000000000000000000004"
+          },
+          {
+            "sequence": 3,
+            "offsetMs": 1000,
+            "type": "stream.disconnected",
+            "actor": "provider"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "inconclusive",
+        "lifecycleState": "terminal-event-missing",
+        "attribution": "agent-intent-only",
+        "terminalEvent": "missing",
+        "installedStateEffect": "requires-snapshot-reconciliation",
+        "conclusive": false
+      }
+    },
+    {
+      "fixtureId": "provider-normal-session",
+      "title": "Provider emits a complete successful lifecycle",
+      "description": "A Codex package operation has ordered start and completion events plus a changed post-session snapshot. Both intent and effect are available for reconciliation.",
+      "input": {
+        "provider": "codex",
+        "sessionId": "synthetic-session-provider-001",
+        "beforeSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000001",
+        "afterSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000011",
+        "events": [
+          {
+            "sequence": 1,
+            "offsetMs": 0,
+            "type": "session.started",
+            "actor": "agent"
+          },
+          {
+            "sequence": 2,
+            "offsetMs": 100,
+            "type": "tool.started",
+            "actor": "agent",
+            "commandDigest": "sha256:2000000000000000000000000000000000000000000000000000000000000001"
+          },
+          {
+            "sequence": 3,
+            "offsetMs": 500,
+            "type": "tool.completed",
+            "actor": "agent",
+            "exitCode": 0
+          },
+          {
+            "sequence": 4,
+            "offsetMs": 550,
+            "type": "session.completed",
+            "actor": "agent"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "complete",
+        "lifecycleState": "complete",
+        "attribution": "agent",
+        "terminalEvent": "present",
+        "installedStateEffect": "observed",
+        "conclusive": true
+      }
+    },
+    {
+      "fixtureId": "provider-subagent-session",
+      "title": "Subagent tool action retains parent lineage",
+      "description": "A parent Codex session delegates a package command to a subagent. The action remains agent-attributed while preserving both actor identities in the lineage.",
+      "input": {
+        "provider": "codex",
+        "sessionId": "synthetic-session-provider-005",
+        "beforeSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000005",
+        "afterSnapshotDigest": "sha256:1000000000000000000000000000000000000000000000000000000000000055",
+        "events": [
+          {
+            "sequence": 1,
+            "offsetMs": 0,
+            "type": "session.started",
+            "actor": "agent-parent",
+            "actorId": "synthetic-parent-agent"
+          },
+          {
+            "sequence": 2,
+            "offsetMs": 50,
+            "type": "subagent.started",
+            "actor": "agent-subagent",
+            "actorId": "synthetic-child-agent",
+            "parentActorId": "synthetic-parent-agent"
+          },
+          {
+            "sequence": 3,
+            "offsetMs": 100,
+            "type": "tool.started",
+            "actor": "agent-subagent",
+            "actorId": "synthetic-child-agent",
+            "commandDigest": "sha256:2000000000000000000000000000000000000000000000000000000000000005"
+          },
+          {
+            "sequence": 4,
+            "offsetMs": 500,
+            "type": "tool.completed",
+            "actor": "agent-subagent",
+            "actorId": "synthetic-child-agent",
+            "exitCode": 0
+          },
+          {
+            "sequence": 5,
+            "offsetMs": 550,
+            "type": "session.completed",
+            "actor": "agent-parent",
+            "actorId": "synthetic-parent-agent"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "complete",
+        "lifecycleState": "complete",
+        "attribution": "agent",
+        "agentLineage": "parent-and-subagent",
+        "terminalEvent": "present",
+        "installedStateEffect": "observed",
+        "conclusive": true
+      }
+    }
+  ]
+}

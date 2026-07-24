@@ -1,0 +1,11 @@
+{
+  "corpusVersion": 1,
+  "fixtureId": "npm-undeclared-used",
+  "ecosystem": "npm",
+  "initialSource": "repository",
+  "mutableSetup": "node mutable-local-setup.mjs",
+  "cleanCommands": ["npm ci", "npm test"],
+  "expectedFindingCodes": ["dependency.used_but_undeclared"],
+  "expectedCandidate": "expected",
+  "recommendationAllowedOnlyAfterValidation": true
+}

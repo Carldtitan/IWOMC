@@ -1,0 +1,1625 @@
+{
+  "documentCount": 67,
+  "documents": [
+    {
+      "canonicalDigest": "sha256:8f8a6bc46ec59aac93af26528cb2f3d5ba4411759faa0786627c34373c48f9ba",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "workspace",
+        "name": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "workspaceId": "example"
+      },
+      "rootType": "Workspace",
+      "wireKind": "workspace"
+    },
+    {
+      "canonicalDigest": "sha256:e43f75ae133bd6ca33a8143482f0e55c15bb05455eb82018e7d59a1ca70c1b45",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05Z",
+        "defaultBranch": "example",
+        "kind": "project",
+        "projectGoal": "example",
+        "projectId": "example",
+        "repositoryFullName": "example",
+        "repositoryId": "example",
+        "schemaVersion": 1,
+        "workspaceId": "example"
+      },
+      "rootType": "Project",
+      "wireKind": "project"
+    },
+    {
+      "canonicalDigest": "sha256:c5b8f5980b93f0e2cb39598e2d709fa9064d3866779950f0ef418468f3da0fe7",
+      "document": {
+        "architecture": "example",
+        "REDACTEDVersion": 1,
+        "deviceId": "example",
+        "displayName": "example",
+        "enrolledAt": "2026-01-02T03:04:05Z",
+        "kind": "device",
+        "platform": "windows",
+        "schemaVersion": 1,
+        "signingPublicKey": "AA==",
+        "status": "paired",
+        "workspaceId": "example"
+      },
+      "rootType": "Device",
+      "wireKind": "device"
+    },
+    {
+      "canonicalDigest": "sha256:6084486c56fead8b38f47d40c246eff012d4a18c9b3210a8cd561bdf792890ea",
+      "document": {
+        "architecture": "example",
+        "coverage": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "deviceId": "example",
+        "displayLabel": "example",
+        "kind": "realm",
+        "platform": "example",
+        "realmId": "example",
+        "realmType": "host",
+        "schemaVersion": 1
+      },
+      "rootType": "Realm",
+      "wireKind": "realm"
+    },
+    {
+      "canonicalDigest": "sha256:da943980036061c0791d3ede1429cdd749c007a92b317488cf38368a88da1c6f",
+      "document": {
+        "coverage": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "kind": "layer",
+        "layerId": "example",
+        "layerType": "system",
+        "realmId": "example",
+        "schemaVersion": 1,
+        "selectors": {}
+      },
+      "rootType": "Layer",
+      "wireKind": "layer"
+    },
+    {
+      "canonicalDigest": "sha256:50847cd776dc25881bfb7c716becd88881fb525ef4de48cb122453d233514db4",
+      "document": {
+        "adapterVersion": "example",
+        "capabilities": {
+          "commandResults": "supported",
+          "fileOperations": "supported",
+          "permissionDecisions": "supported",
+          "sessionLifecycle": "supported",
+          "shellCommands": "supported",
+          "sourceSequence": "supported",
+          "subagents": "supported",
+          "toolLifecycle": "supported"
+        },
+        "capabilityReportId": "example",
+        "deviceId": "example",
+        "kind": "provider_capability_profile",
+        "knownGaps": [],
+        "observedAt": "2026-01-02T03:04:05Z",
+        "projectId": "example",
+        "provider": "codex",
+        "providerVersion": "example",
+        "realmId": "example",
+        "schemaVersion": 1,
+        "supportedEventTypes": [],
+        "surface": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ProviderCapabilityProfile",
+      "wireKind": "provider_capability_profile"
+    },
+    {
+      "canonicalDigest": "sha256:f01a338e807ac9fc574c90f788fe3b1731e129f01b323d4a35cc22b190a1d8f7",
+      "document": {
+        "boundarySource": "provider",
+        "capabilityReportId": "example",
+        "capture": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "deviceId": "example",
+        "kind": "session",
+        "projectId": "example",
+        "provider": "codex",
+        "realmId": "example",
+        "schemaVersion": 1,
+        "sessionId": "example",
+        "startedAt": "2026-01-02T03:04:05Z",
+        "status": "registered",
+        "surface": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "Session",
+      "wireKind": "session"
+    },
+    {
+      "canonicalDigest": "sha256:a1fa7218b42974eb84d65e347defaba7b094ed0b2ec9a4b0565364debd60c385",
+      "document": {
+        "actionType": "example",
+        "actor": {
+          "approval": {
+            "actor": { "actorClass": "human", "identityState": "pseudonymous" },
+            "decision": "approved",
+            "modifiedBeforeExecution": false
+          },
+          "classification": "human",
+          "confidence": 0,
+          "executorActor": { "actorClass": "human", "identityState": "pseudonymous" },
+          "factors": [],
+          "initiatorActor": { "actorClass": "human", "identityState": "pseudonymous" }
+        },
+        "bootId": "example",
+        "capture": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "causalParentEventIds": [],
+        "clockUncertaintyMs": 0,
+        "deviceId": "example",
+        "eventHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "eventId": "example",
+        "kind": "observation_event",
+        "localSequence": "0",
+        "monotonicNanos": "0",
+        "outcome": "attempted",
+        "payload": {
+          "argumentShape": [],
+          "diagnosticCodes": [],
+          "environmentVariables": [],
+          "executableFamily": "example",
+          "fileEffects": [],
+          "operationKind": "package",
+          "packageOperations": [],
+          "summary": "example"
+        },
+        "previousEventHashState": {
+          "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "state": "known"
+        },
+        "projectId": "example",
+        "realmId": "example",
+        "redactionPolicyVersion": "example",
+        "schemaVersion": 1,
+        "sessionState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "source": { "providerState": "identified", "sourceKind": "provider" },
+        "sourceSequenceState": { "state": "known", "value": "0" },
+        "sourceStreamId": "example",
+        "timestampUtc": "2026-01-02T03:04:05Z",
+        "toolCallState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "turnState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "workspaceId": "example"
+      },
+      "rootType": "ObservationEvent",
+      "wireKind": "observation_event"
+    },
+    {
+      "canonicalDigest": "sha256:fe3bfa0ec95e04cf6306789a596917a1167f7d89e8f8e87632e7779b380a97b4",
+      "document": {
+        "actionId": "example",
+        "attribution": {
+          "approval": {
+            "actor": { "actorClass": "human", "identityState": "pseudonymous" },
+            "decision": "approved",
+            "modifiedBeforeExecution": false
+          },
+          "classification": "human",
+          "confidence": 0,
+          "executorActor": { "actorClass": "human", "identityState": "pseudonymous" },
+          "factors": [],
+          "initiatorActor": { "actorClass": "human", "identityState": "pseudonymous" }
+        },
+        "effectAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "eventIds": ["example"],
+        "gapIds": [],
+        "kind": "action_envelope",
+        "overlappingActionIds": [],
+        "postSnapshotState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "preSnapshotState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "projectId": "example",
+        "providerEventState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "realmId": "example",
+        "schemaVersion": 1,
+        "stabilization": "stable",
+        "workspaceId": "example"
+      },
+      "rootType": "ActionEnvelope",
+      "wireKind": "action_envelope"
+    },
+    {
+      "canonicalDigest": "sha256:1ca3ba3b7a6fdf89b725db2020545a5fb4a5fd86df3381ca7ee590479e8bcb1e",
+      "document": {
+        "deviceId": "example",
+        "gapId": "example",
+        "gapType": "provider_event_loss",
+        "impact": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "kind": "capture_gap",
+        "projectId": "example",
+        "realmId": "example",
+        "reasonCode": "example",
+        "resolutionState": "open",
+        "schemaVersion": 1,
+        "scope": "example",
+        "startedAt": "2026-01-02T03:04:05Z",
+        "workspaceId": "example"
+      },
+      "rootType": "CaptureGap",
+      "wireKind": "capture_gap"
+    },
+    {
+      "canonicalDigest": "sha256:4fd8aac42105e43d207f90c93384352c5475be5d7df2571e77b1c5a717f4ad1d",
+      "document": {
+        "adapterResults": [],
+        "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "deviceId": "example",
+        "gapIds": [],
+        "intervalEnd": "2026-01-02T03:04:05Z",
+        "intervalStart": "2026-01-02T03:04:05Z",
+        "kind": "snapshot",
+        "parentSnapshotState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "projectId": "example",
+        "realmId": "example",
+        "schemaVersion": 1,
+        "scope": { "layerIds": [], "managerIds": [], "pathPseudonyms": [], "realmId": "example" },
+        "snapshotId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "Snapshot",
+      "wireKind": "snapshot"
+    },
+    {
+      "canonicalDigest": "sha256:f9cd94e4ab50ecd6f8d709f34e6ebe3de2a466f09bc1de0ce72b29463f005dce",
+      "document": {
+        "archiveDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "archiveObjectId": "example",
+        "commitSha": "0000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "source_input_git_commit",
+        "lfsIdentities": [],
+        "projectId": "example",
+        "repositoryId": "example",
+        "schemaVersion": 1,
+        "sourceInputId": "example",
+        "submoduleIdentities": [],
+        "supportGapIds": [],
+        "treeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "workspaceId": "example"
+      },
+      "rootType": "SourceInput",
+      "wireKind": "source_input_git_commit"
+    },
+    {
+      "canonicalDigest": "sha256:5c3bd6090e2727e279e0cca7c6d01db5b5b2a9ec72ed8cc4b4d0c50d1c60e8f9",
+      "document": {
+        "baseCommitSha": "0000000000000000000000000000000000000000",
+        "bundleDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "bundleObjectId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "ignorePolicyVersion": "example",
+        "includedPathManifestDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "source_input_working_tree",
+        "lfsIdentities": [],
+        "projectId": "example",
+        "repositoryId": "example",
+        "resultingTreeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "schemaVersion": 1,
+        "REDACTEDScanPolicyVersion": "example",
+        "sourceInputId": "example",
+        "submoduleIdentities": [],
+        "supportGapIds": [],
+        "untrackedBundleState": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "workspaceId": "example",
+        "worktreePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "rootType": "SourceInput",
+      "wireKind": "source_input_working_tree"
+    },
+    {
+      "canonicalDigest": "sha256:f6774017b5aad4b714e982f5df5e1cbbc3e23573fb84a6eed3712141aba280e5",
+      "document": {
+        "baseCommitSha": "0000000000000000000000000000000000000000",
+        "bundleId": "example",
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "excludedPathReasonCodes": {},
+        "includedPathDigests": {},
+        "kind": "working_tree_bundle",
+        "patchObjectId": "example",
+        "resultingTreeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "schemaVersion": 1,
+        "REDACTEDScanAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "sourceInputId": "example"
+      },
+      "rootType": "WorkingTreeBundle",
+      "wireKind": "working_tree_bundle"
+    },
+    {
+      "canonicalDigest": "sha256:cacdfbf5ecbef9de83c1056db4cf8dfaa8884f2e33ed11b00d0b69ceb0119ace",
+      "document": {
+        "commitId": "0000000000000000000000000000000000000000",
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "submodule_identity",
+        "path": "fixture.txt",
+        "repositoryIdentity": "example",
+        "schemaVersion": 1
+      },
+      "rootType": "SubmoduleIdentity",
+      "wireKind": "submodule_identity"
+    },
+    {
+      "canonicalDigest": "sha256:a9e2fac0bb479b6dc0bae0d3e304ddd2bea931449af84c596f17c048e36ddb5b",
+      "document": {
+        "contentState": "included",
+        "kind": "lfs_identity",
+        "oidSha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "path": "fixture.txt",
+        "schemaVersion": 1,
+        "size": 0
+      },
+      "rootType": "LfsIdentity",
+      "wireKind": "lfs_identity"
+    },
+    {
+      "canonicalDigest": "sha256:c0094a0749c021d98954af6473cedd04dd611443d8f3a92984590dcc26a34c58",
+      "document": {
+        "authenticatedMetadataDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "authenticatedMetadataVersion": 1,
+        "authorizationClass": "workspace_private",
+        "ciphertextDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "ciphertextLength": 0,
+        "compression": "none",
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contentLength": 0,
+        "createdAt": "2026-01-02T03:04:05Z",
+        "deletedAtAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "deletionState": "active",
+        "encryptionKeyVersion": 1,
+        "encryptionVersion": 1,
+        "integrityState": "verified",
+        "kind": "object_metadata",
+        "mediaType": "example",
+        "nonce": "AAxx",
+        "objectClass": "event_batch",
+        "objectId": "example",
+        "projectId": "example",
+        "retentionClass": "example",
+        "schemaVersion": 1,
+        "storageKey": "fixture.txt",
+        "tombstoneReasonCodes": [],
+        "workspaceId": "example"
+      },
+      "rootType": "ObjectMetadata",
+      "wireKind": "object_metadata"
+    },
+    {
+      "canonicalDigest": "sha256:0aa65387ef9067764d962bf3f3c17578b965df2d8dc96be63debeba800550280",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "declared_graph",
+        "schemaVersion": 1
+      },
+      "rootType": "DeclaredGraph",
+      "wireKind": "declared_graph"
+    },
+    {
+      "canonicalDigest": "sha256:05247e94b44cf4a555b38865dd901c77ef9d6e013250c63843a0bd364f7c2c2f",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "locked_graph",
+        "schemaVersion": 1
+      },
+      "rootType": "LockedGraph",
+      "wireKind": "locked_graph"
+    },
+    {
+      "canonicalDigest": "sha256:603fc5a5619ada9e7a5636156f7d4e265128eREDACTEDe56da5735f2de9",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "resolved_graph",
+        "schemaVersion": 1
+      },
+      "rootType": "ResolvedGraph",
+      "wireKind": "resolved_graph"
+    },
+    {
+      "canonicalDigest": "sha256:988623fa8f20e4862542295fda3bf14595146fb37ea8faad4afae178f6eb7d4a",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "installed_graph",
+        "schemaVersion": 1
+      },
+      "rootType": "InstalledGraph",
+      "wireKind": "installed_graph"
+    },
+    {
+      "canonicalDigest": "sha256:b93934205ee585d65fbe119dbea48fc4fb149195acc7e10a80341a4bc04774cb",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "used_graph",
+        "schemaVersion": 1
+      },
+      "rootType": "UsedGraph",
+      "wireKind": "used_graph"
+    },
+    {
+      "canonicalDigest": "sha256:f5b30433957f6ed019b50ca8b4c3cf92a0d922d383097b213c5c9f8b4552c0c0",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "observed_action_graph",
+        "schemaVersion": 1
+      },
+      "rootType": "ObservedActionGraph",
+      "wireKind": "observed_action_graph"
+    },
+    {
+      "canonicalDigest": "sha256:57eb877e1c94c697ffbf3b52a2de1c14634071472efee09fdc62fa42b1a7e9f5",
+      "document": {
+        "graph": {
+          "adapterVersions": {},
+          "completeness": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "createdAt": "2026-01-02T03:04:05Z",
+          "edges": [],
+          "evidenceReferenceIds": [],
+          "graphId": "example",
+          "nodes": [],
+          "projectId": "example",
+          "realmIds": [],
+          "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "kind": "validated_graph",
+        "outcome": "REDACTEDed",
+        "schemaVersion": 1,
+        "targetId": "example",
+        "validationJobId": "example"
+      },
+      "rootType": "ValidatedGraph",
+      "wireKind": "validated_graph"
+    },
+    {
+      "canonicalDigest": "sha256:65105d8933483d8f8b0a04fb112c72391779e7d412938b616411cb71f2518f36",
+      "document": {
+        "affectedFiles": [],
+        "affectedRealmIds": [],
+        "checkpointId": "example",
+        "coverage": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "createdAt": "2026-01-02T03:04:05Z",
+        "findingCode": "example",
+        "findingId": "example",
+        "graphReferenceIds": [],
+        "kind": "finding",
+        "missingEvidence": [],
+        "projectId": "example",
+        "ruleVersions": {},
+        "schemaVersion": 1,
+        "severity": "info",
+        "state": "open",
+        "statements": [
+          {
+            "confidence": 0,
+            "evidenceReferenceIds": ["example"],
+            "statementId": "example",
+            "statementType": "evidence",
+            "text": "example"
+          }
+        ],
+        "summary": "example",
+        "title": "example",
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "workspaceId": "example"
+      },
+      "rootType": "Finding",
+      "wireKind": "finding"
+    },
+    {
+      "canonicalDigest": "sha256:0adceab32a5c464fb003b605d5670d5e3b48913db048f84b056af8f3d2c3e5d0",
+      "document": {
+        "capturedAt": "2026-01-02T03:04:05Z",
+        "evidenceReferenceId": "example",
+        "evidenceType": "direct_observation",
+        "kind": "evidence_reference",
+        "location": {
+          "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "lineAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "pathAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "sourceId": "example",
+          "sourceKind": "observation_event"
+        },
+        "projectId": "example",
+        "redactionState": "not_required",
+        "schemaVersion": 1,
+        "statement": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "EvidenceReference",
+      "wireKind": "evidence_reference"
+    },
+    {
+      "canonicalDigest": "sha256:8efc52b856fcd8fb62445116134ac212b597c67f05dc565b4ea0280c429b79d5",
+      "document": {
+        "contractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contractId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "invalidatedBySourceIds": [],
+        "kind": "behavior_contract",
+        "projectId": "example",
+        "reviewAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "reviewState": "discovered",
+        "schemaVersion": 1,
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "steps": [
+          {
+            "arguments": [],
+            "assertions": [],
+            "discoveryEvidenceReferenceIds": [],
+            "discoveryFingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "enabled": false,
+            "executable": "example",
+            "expectedExitStatuses": [-2147483648],
+            "kind": "resolve",
+            "order": 0,
+            "realmAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "required": false,
+            "REDACTEDReferenceIds": [],
+            "stepId": "example",
+            "targetSelector": "example",
+            "timeoutSeconds": 1,
+            "workingDirectory": "fixture.txt"
+          }
+        ],
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "version": 1,
+        "workspaceId": "example"
+      },
+      "rootType": "BehaviorContract",
+      "wireKind": "behavior_contract"
+    },
+    {
+      "canonicalDigest": "sha256:493eb0c1f47767f19e9100f3a1846e450da7daa0e88f45e46a50e24b2762fe39",
+      "document": {
+        "budgets": {
+          "maxAttempts": 1,
+          "maxCandidates": 1,
+          "maxConcurrentJobs": 1,
+          "maxElapsedSeconds": 1,
+          "maxEstimatedCostMicrousd": "0"
+        },
+        "createdAt": "2026-01-02T03:04:05Z",
+        "createdBy": "example",
+        "hardConstraints": [],
+        "kind": "optimality_policy",
+        "mode": "default",
+        "objectives": [],
+        "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "policyId": "example",
+        "projectId": "example",
+        "requiredTargetIds": ["example"],
+        "schemaVersion": 1,
+        "version": 1,
+        "workspaceId": "example"
+      },
+      "rootType": "OptimalityPolicy",
+      "wireKind": "optimality_policy"
+    },
+    {
+      "canonicalDigest": "sha256:f9c1e7df953f0d19a96d3c693be99b834c4ab131dbd1ed4d8c514daf91570c8d",
+      "document": {
+        "affectedFiles": ["fixture.txt"],
+        "assumptions": [],
+        "behaviorContractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "candidatePlanId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "evidenceReferenceIds": ["example"],
+        "expectedGraphChanges": [],
+        "expectedValidationImpact": [],
+        "findingIds": ["example"],
+        "generationSource": "fireworks",
+        "kind": "candidate_plan",
+        "operations": [
+          {
+            "ecosystem": "example",
+            "evidenceReferenceIds": ["example"],
+            "findingIds": ["example"],
+            "manager": "example",
+            "operationId": "example",
+            "operationKind": "package_add",
+            "packageName": "example",
+            "realmId": "example",
+            "requestedVersion": "example",
+            "scope": "example"
+          }
+        ],
+        "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "projectId": "example",
+        "proposedValidationProbes": [],
+        "rationale": "example",
+        "risks": [],
+        "schemaVersion": 1,
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "workspaceId": "example"
+      },
+      "rootType": "CandidatePlan",
+      "wireKind": "candidate_plan"
+    },
+    {
+      "canonicalDigest": "sha256:db52b99e5bc62b4c11f2f67152f5ddeac4263b1e1b66287e7c68d8208cb8a9ca",
+      "document": {
+        "candidatePatchId": "example",
+        "candidatePlanId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "files": [
+          {
+            "afterDigestAssessment": {
+              "evidenceReferenceIds": [],
+              "reasonCodes": [],
+              "state": "known"
+            },
+            "beforeDigestAssessment": {
+              "evidenceReferenceIds": [],
+              "reasonCodes": [],
+              "state": "known"
+            },
+            "changeKind": "added",
+            "generatedFile": false,
+            "operationIds": ["example"],
+            "path": "fixture.txt"
+          }
+        ],
+        "guardResults": [
+          { "evidenceReferenceIds": [], "guard": "schema", "reasonCodes": [], "state": "REDACTEDed" }
+        ],
+        "kind": "candidate_patch",
+        "materializerVersions": {},
+        "operations": [
+          {
+            "ecosystem": "example",
+            "evidenceReferenceIds": ["example"],
+            "findingIds": ["example"],
+            "manager": "example",
+            "operationId": "example",
+            "operationKind": "package_add",
+            "packageName": "example",
+            "realmId": "example",
+            "requestedVersion": "example",
+            "scope": "example"
+          }
+        ],
+        "patchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "patchObjectId": "example",
+        "projectId": "example",
+        "resultingTreeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "schemaVersion": 1,
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "workspaceId": "example"
+      },
+      "rootType": "CandidatePatch",
+      "wireKind": "candidate_patch"
+    },
+    {
+      "canonicalDigest": "sha256:9317d6ce14a0998446b3050e8e1a1d35b4f1d730b4d0e8e4b56a06f2ae795a0d",
+      "document": {
+        "candidateId": "example",
+        "candidatePatchAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "candidatePlanId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "currentState": { "attestationId": "example", "state": "verified" },
+        "invalidationInputDigests": [],
+        "kind": "candidate_lifecycle",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "transitions": [],
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "workspaceId": "example"
+      },
+      "rootType": "CandidateLifecycle",
+      "wireKind": "candidate_lifecycle"
+    },
+    {
+      "canonicalDigest": "sha256:b60430fd11bc6c6fe090c3f94a5abca01416649edc6ec30d8a4572298b619541",
+      "document": {
+        "architecture": "example",
+        "capabilityAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "createdAt": "2026-01-02T03:04:05Z",
+        "immutableBase": {
+          "imageDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "imageReference": "example",
+          "provider": "example",
+          "snapshotAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "toolchainDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "kind": "validation_target",
+        "managerSelections": {},
+        "name": "example",
+        "networkPolicy": {
+          "allowedHosts": [],
+          "deniedHosts": [],
+          "mode": "deny_all",
+          "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "registryHosts": []
+        },
+        "os": "example",
+        "projectId": "example",
+        "resourcePolicy": {
+          "cpuCount": 1,
+          "diskBytes": 0,
+          "maxElapsedSeconds": 1,
+          "maxEstimatedCostMicrousd": "0",
+          "memoryBytes": 0
+        },
+        "runtimeSelections": {},
+        "schemaVersion": 1,
+        "targetDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "targetId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ValidationTarget",
+      "wireKind": "validation_target"
+    },
+    {
+      "canonicalDigest": "sha256:a859448d07c05a76f30485e8559862c18ddf74f763236b858242ff11b2055e51",
+      "document": {
+        "budgetReservationId": "example",
+        "candidateId": "example",
+        "candidatePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "jobIds": ["example"],
+        "kind": "validation_batch",
+        "projectId": "example",
+        "requiredTargetIds": ["example"],
+        "schemaVersion": 1,
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "state": "reserved",
+        "supersededByAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "validationBatchId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ValidationBatch",
+      "wireKind": "validation_batch"
+    },
+    {
+      "canonicalDigest": "sha256:416e298392812a44e09c012bc75fc84e551382a5fd16ad39cea99d1bcee68e3c",
+      "document": {
+        "attempt": 1,
+        "cacheAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "candidateId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "currentPhaseAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "daytonaSandboxAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "jobKeyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "validation_job",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "state": "queued",
+        "targetId": "example",
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "validationBatchId": "example",
+        "validationJobId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ValidationJob",
+      "wireKind": "validation_job"
+    },
+    {
+      "canonicalDigest": "sha256:bad4ff4a480d3562c881994986f1957d8747b3c81fa96f71292a65451f95d73d",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05Z",
+        "diagnostics": [],
+        "durationAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "finishedAtAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "kind": "validation_phase",
+        "phase": "provisioning",
+        "providerHealth": "healthy",
+        "schemaVersion": 1,
+        "startedAtAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "state": "queued",
+        "validationJobId": "example",
+        "validationPhaseId": "example"
+      },
+      "rootType": "ValidationPhase",
+      "wireKind": "validation_phase"
+    },
+    {
+      "canonicalDigest": "sha256:487df27f96996e886499a28d9fb568eed142ac6ba406a6489d6560067d7dbb1d",
+      "document": {
+        "candidateId": "example",
+        "kind": "validation_outcome",
+        "originConfidence": 0,
+        "phaseIds": ["example"],
+        "result": {
+          "attestationDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "cleanupStatus": "deleted",
+          "outcome": "REDACTEDed"
+        },
+        "schemaVersion": 1,
+        "suspectedOrigin": "project",
+        "targetId": "example",
+        "terminalAt": "2026-01-02T03:04:05Z",
+        "validationJobId": "example",
+        "validationOutcomeId": "example"
+      },
+      "rootType": "ValidationOutcome",
+      "wireKind": "validation_outcome"
+    },
+    {
+      "canonicalDigest": "sha256:138e8400ce568a7372e1e9c9fd3d4aed8144a9358c1815a449c6e852e5e044c7",
+      "document": {
+        "adapterVersions": {},
+        "attestationDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "attestationId": "example",
+        "attestedTargets": [
+          {
+            "cacheAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "immutableBase": {
+              "imageDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+              "imageReference": "example",
+              "provider": "example",
+              "snapshotAssessment": {
+                "evidenceReferenceIds": [],
+                "reasonCodes": [],
+                "state": "known"
+              },
+              "toolchainDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "targetDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "targetId": "example",
+            "validationJobDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        ],
+        "behaviorContract": { "id": "example", "version": 1 },
+        "behaviorContractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "candidateId": "example",
+        "candidatePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "validation_attestation",
+        "limitations": [],
+        "nativeToolVersions": {},
+        "policy": { "id": "example", "version": 1 },
+        "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "projectId": "example",
+        "requiredTargetIds": ["example"],
+        "result": "reconstruction_REDACTEDed",
+        "ruleVersions": {},
+        "schemaVersion": 1,
+        "sourceInput": {
+          "archiveDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "archiveObjectId": "example",
+          "commitSha": "0000000000000000000000000000000000000000",
+          "createdAt": "2026-01-02T03:04:05Z",
+          "kind": "source_input_git_commit",
+          "lfsIdentities": [],
+          "projectId": "example",
+          "repositoryId": "example",
+          "schemaVersion": 1,
+          "sourceInputId": "example",
+          "submoduleIdentities": [],
+          "supportGapIds": [],
+          "treeDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "workspaceId": "example"
+        },
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "validatorVersion": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ValidationAttestation",
+      "wireKind": "validation_attestation"
+    },
+    {
+      "canonicalDigest": "sha256:ea18c573ed35c813ba60926d567252403f259cf1af2e73f426281ead559d67d2",
+      "document": {
+        "adapterVersionsDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "behaviorContractDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "candidatePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "immutableBaseDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "validation_job_key",
+        "nativeToolVersionsDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "networkPolicyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "policyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "ruleVersionsDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "schemaVersion": 1,
+        "REDACTEDBindingSchemaAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "targetDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "validatorVersion": "example"
+      },
+      "rootType": "ValidationJobKey",
+      "wireKind": "validation_job_key"
+    },
+    {
+      "canonicalDigest": "sha256:ef94333ff16406f594819ee859f8bac28ea5849ec418efc8278df07a00243440",
+      "document": {
+        "artifacts": [
+          {
+            "artifactClass": "integrity_checked_download",
+            "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+            "integrityState": "verified",
+            "objectId": "example"
+          }
+        ],
+        "attestationAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "cacheEntryId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "expiresAt": "2026-01-02T03:04:05Z",
+        "jobKeyDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "validation_cache_entry",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "state": "ready",
+        "workspaceId": "example"
+      },
+      "rootType": "ValidationCacheEntry",
+      "wireKind": "validation_cache_entry"
+    },
+    {
+      "canonicalDigest": "sha256:fad523aab313e2bd5607011e3d05154e834ea48d087dca78ca2b4f213cfb4cd5",
+      "document": {
+        "acquiredAt": "2026-01-02T03:04:05Z",
+        "expiresAt": "2026-01-02T03:04:05Z",
+        "heartbeatAt": "2026-01-02T03:04:05Z",
+        "holderOperationId": "example",
+        "kind": "concurrency_lease",
+        "leaseId": "example",
+        "resourceIdentity": "example",
+        "schemaVersion": 1,
+        "scope": "workspace",
+        "state": "active",
+        "workspaceId": "example"
+      },
+      "rootType": "ConcurrencyLease",
+      "wireKind": "concurrency_lease"
+    },
+    {
+      "canonicalDigest": "sha256:fcd453e1dd6ebeef005ac2dca72b0aab874afd6eb2e6affa29fc7297d4ef5760",
+      "document": {
+        "acceptedResultAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "accumulatedCostMicrousd": "0",
+        "attemptCount": 0,
+        "createdAt": "2026-01-02T03:04:05Z",
+        "externalOperationId": "example",
+        "kind": "external_operation",
+        "operationKey": "example",
+        "operationKind": "example",
+        "provider": "fireworks",
+        "providerResourceAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "reconciliationState": "example",
+        "requestFingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "schemaVersion": 1,
+        "state": "reserved",
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "workspaceId": "example"
+      },
+      "rootType": "ExternalOperation",
+      "wireKind": "external_operation"
+    },
+    {
+      "canonicalDigest": "sha256:628d29c2cfcdde44c257ec7f7b4036cebef233cb5080a9fdfb2a5df12edd7fd0",
+      "document": {
+        "allowedHosts": ["example"],
+        "createdAt": "2026-01-02T03:04:05Z",
+        "expiryAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "kind": "REDACTED_reference",
+        "opaqueProviderReference": "examplexxxxxxxxx",
+        "permittedTargetIds": ["example"],
+        "provider": "daytona_host_restricted",
+        "schemaVersion": 1,
+        "REDACTEDReferenceId": "example",
+        "versionIdentity": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "SecretReference",
+      "wireKind": "REDACTED_reference"
+    },
+    {
+      "canonicalDigest": "sha256:e3f3a4a6e9e3832db24c16a0dcdc640a5536e60852f0cdfd72258100dbd68b94",
+      "document": {
+        "allowedHosts": ["example"],
+        "createdAt": "2026-01-02T03:04:05Z",
+        "kind": "REDACTED_binding",
+        "mountedAtAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "removedAtAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "schemaVersion": 1,
+        "REDACTEDBindingId": "example",
+        "REDACTEDReferenceId": "example",
+        "state": "reserved",
+        "targetId": "example",
+        "validationJobId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "SecretBinding",
+      "wireKind": "REDACTED_binding"
+    },
+    {
+      "canonicalDigest": "sha256:249b39bb2a649bd7830b6e8fea4605aec7dcfaa13cb1741f0f187be95db2e93e",
+      "document": {
+        "attemptCount": 0,
+        "createdAt": "2026-01-02T03:04:05Z",
+        "encryptedPayloadDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "encryptedPayloadObjectId": "example",
+        "kind": "braintrust_outbox_record",
+        "lastErrorCodeAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "nextAttemptAtAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "outboxRecordId": "example",
+        "schemaVersion": 1,
+        "state": "pending",
+        "traceId": "example",
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "workspaceId": "example"
+      },
+      "rootType": "BraintrustOutboxRecord",
+      "wireKind": "braintrust_outbox_record"
+    },
+    {
+      "canonicalDigest": "sha256:334e6781225f53261bfd15ef86f0a1972f2ec57698f83b273469cb544a09d3f7",
+      "document": {
+        "behaviorContract": { "id": "example", "version": 1 },
+        "candidateId": "example",
+        "candidatePatchId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "diffDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "diffObjectId": "example",
+        "findingEvidenceReferenceIds": ["example"],
+        "findingIds": ["example"],
+        "invalidationInputDigests": [
+          "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        ],
+        "kind": "recommendation",
+        "limitations": [],
+        "policy": { "id": "example", "version": 1 },
+        "projectId": "example",
+        "proof": {
+          "attestationDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "attestationId": "example",
+          "result": "verified"
+        },
+        "rationale": "example",
+        "recommendationId": "example",
+        "schemaVersion": 1,
+        "state": "draft",
+        "targetIds": ["example"],
+        "updatedAt": "2026-01-02T03:04:05Z",
+        "validationMatrix": [],
+        "workspaceId": "example"
+      },
+      "rootType": "Recommendation",
+      "wireKind": "recommendation"
+    },
+    {
+      "canonicalDigest": "sha256:38feee8048a2cd7f3c0f21250d69050797dfecdb0fc0c79f5abb605a055398e0",
+      "document": {
+        "actorId": "example",
+        "actorRole": "owner",
+        "approvalId": "example",
+        "attestationId": "example",
+        "candidateId": "example",
+        "candidatePatchDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "commentAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "decidedAt": "2026-01-02T03:04:05Z",
+        "decision": "approved",
+        "idempotencyKey": "example",
+        "kind": "approval",
+        "projectId": "example",
+        "recommendationId": "example",
+        "schemaVersion": 1,
+        "sourceInputDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "workspaceId": "example"
+      },
+      "rootType": "Approval",
+      "wireKind": "approval"
+    },
+    {
+      "canonicalDigest": "sha256:a83f777f85b4f20e682ed90e42ee0292c40f251946e12aa5c8fbd4469664f8a1",
+      "document": {
+        "action": "example",
+        "actorId": "example",
+        "actorType": "REDACTED",
+        "auditEventId": "example",
+        "idempotencyKeyAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "kind": "audit_event",
+        "metadata": {},
+        "newStateDigestAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "occurredAt": "2026-01-02T03:04:05Z",
+        "priorStateDigestAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "projectAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "schemaVersion": 1,
+        "targetId": "example",
+        "targetType": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "AuditEvent",
+      "wireKind": "audit_event"
+    },
+    {
+      "canonicalDigest": "sha256:7a8aa821bf6a1cb5dbc1cd5a91feb73889aff531629bd773bff7043f30bd94ff",
+      "document": {
+        "activeProject": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "activeSession": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "companionVersion": "example",
+        "coverage": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "deviceEnrollment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+        "kind": "companion_status",
+        "pendingUploadBatches": 0,
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "state": "disconnected",
+        "updatedAt": "2026-01-02T03:04:05Z"
+      },
+      "rootType": "CompanionStatus",
+      "wireKind": "companion_status"
+    },
+    {
+      "canonicalDigest": "sha256:23b308cf2120d7d11d518fb17815fc2b75321a70ba66084551ac383d42a51f83",
+      "document": {
+        "challengeSignature": "AAxx",
+        "command": { "type": "status.get" },
+        "deviceId": "example",
+        "kind": "companion_request",
+        "requestId": "example",
+        "schemaVersion": 1,
+        "sentAt": "2026-01-02T03:04:05Z",
+        "startupChallengeId": "examplexxxxxxxxx"
+      },
+      "rootType": "CompanionRequest",
+      "wireKind": "companion_request"
+    },
+    {
+      "canonicalDigest": "sha256:b3fa61c491c092d20f64f0c64dd59fa2a773193e20d7bdce542261943aabda72",
+      "document": {
+        "kind": "companion_response",
+        "outcome": {
+          "resourceAssessment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+          "result": "success",
+          "status": {
+            "activeProject": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "activeSession": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "companionVersion": "example",
+            "coverage": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "deviceEnrollment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "kind": "companion_status",
+            "pendingUploadBatches": 0,
+            "protocolVersion": 1,
+            "schemaVersion": 1,
+            "state": "disconnected",
+            "updatedAt": "2026-01-02T03:04:05Z"
+          }
+        },
+        "requestId": "example",
+        "schemaVersion": 1,
+        "sentAt": "2026-01-02T03:04:05Z"
+      },
+      "rootType": "CompanionResponse",
+      "wireKind": "companion_response"
+    },
+    {
+      "canonicalDigest": "sha256:be1962303a98807a5852b79db46b6bbd0fd35726f0b147a983c78e87e21839ca",
+      "document": {
+        "kind": "companion_notification",
+        "notificationId": "example",
+        "payload": {
+          "status": {
+            "activeProject": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "activeSession": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "companionVersion": "example",
+            "coverage": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "deviceEnrollment": { "evidenceReferenceIds": [], "reasonCodes": [], "state": "known" },
+            "kind": "companion_status",
+            "pendingUploadBatches": 0,
+            "protocolVersion": 1,
+            "schemaVersion": 1,
+            "state": "disconnected",
+            "updatedAt": "2026-01-02T03:04:05Z"
+          },
+          "type": "status.changed"
+        },
+        "schemaVersion": 1,
+        "sentAt": "2026-01-02T03:04:05Z"
+      },
+      "rootType": "CompanionNotification",
+      "wireKind": "companion_notification"
+    },
+    {
+      "canonicalDigest": "sha256:e65b85c639880c6c8146dc56707b1c9d8a88306102c085ab3c77a57c487d5020",
+      "document": {
+        "companionVersion": "example",
+        "deviceName": "example",
+        "devicePublicKey": "AAxx",
+        "enrollmentToken": "examplexxxxxxxxx",
+        "kind": "device_enrollment_request",
+        "platform": "windows",
+        "schemaVersion": 1
+      },
+      "rootType": "DeviceEnrollmentRequest",
+      "wireKind": "device_enrollment_request"
+    },
+    {
+      "canonicalDigest": "sha256:10fca3f7b2da9bae452a3c0564cc06bf59253805c66e9b7d9990d8a0e0ce418d",
+      "document": {
+        "REDACTEDExpiresAt": "2026-01-02T03:04:05Z",
+        "deviceCredential": "examplexxxxxxxxx",
+        "deviceId": "example",
+        "issuedAt": "2026-01-02T03:04:05Z",
+        "kind": "device_enrollment_response",
+        "schemaVersion": 1,
+        "serverPublicKey": "AAxx",
+        "workspaceId": "example"
+      },
+      "rootType": "DeviceEnrollmentResponse",
+      "wireKind": "device_enrollment_response"
+    },
+    {
+      "canonicalDigest": "sha256:f7113a7991c14266e7e3f5a99bbedc20f4d7f75c5fdcfca65c07f88253e057a9",
+      "document": {
+        "batchId": "example",
+        "chainEndHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "deviceId": "example",
+        "eventCount": 1,
+        "firstSequence": "0",
+        "kind": "observation_event_batch_request",
+        "lastSequence": "0",
+        "objectId": "example",
+        "previousChainHashAssessment": {
+          "evidenceReferenceIds": [],
+          "reasonCodes": [],
+          "state": "known"
+        },
+        "projectId": "example",
+        "schemaVersion": 1,
+        "signature": "AAxx",
+        "streamId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ObservationEventBatchRequest",
+      "wireKind": "observation_event_batch_request"
+    },
+    {
+      "canonicalDigest": "sha256:5bcd0006e787ce2fe4c140940ed91f07df91cc5147dfe84d570df8b71387b485",
+      "document": {
+        "acceptedAt": "2026-01-02T03:04:05Z",
+        "acceptedResourceId": "example",
+        "deduplicated": false,
+        "kind": "ingest_accepted_response",
+        "requestId": "example",
+        "schemaVersion": 1
+      },
+      "rootType": "IngestAcceptedResponse",
+      "wireKind": "ingest_accepted_response"
+    },
+    {
+      "canonicalDigest": "sha256:7e655194427f6babebcdcbfc74c5f948fb775cf735cb4f9f4823a54cc794e6b3",
+      "document": {
+        "createdAt": "2026-01-02T03:04:05Z",
+        "deviceId": "example",
+        "kind": "snapshot_ingest_request",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "signature": "AAxx",
+        "snapshotDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "snapshotId": "example",
+        "snapshotObjectId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "SnapshotIngestRequest",
+      "wireKind": "snapshot_ingest_request"
+    },
+    {
+      "canonicalDigest": "sha256:6164031b6ffe0d9688c13ab2d4b70506d039adce811f02b1fe706aa372d6eb5a",
+      "document": {
+        "deviceId": "example",
+        "kind": "capability_profile_publish_request",
+        "profile": {
+          "adapterVersion": "example",
+          "capabilities": {
+            "commandResults": "supported",
+            "fileOperations": "supported",
+            "permissionDecisions": "supported",
+            "sessionLifecycle": "supported",
+            "shellCommands": "supported",
+            "sourceSequence": "supported",
+            "subagents": "supported",
+            "toolLifecycle": "supported"
+          },
+          "capabilityReportId": "example",
+          "deviceId": "example",
+          "kind": "provider_capability_profile",
+          "knownGaps": [],
+          "observedAt": "2026-01-02T03:04:05Z",
+          "projectId": "example",
+          "provider": "codex",
+          "providerVersion": "example",
+          "realmId": "example",
+          "schemaVersion": 1,
+          "supportedEventTypes": [],
+          "surface": "example",
+          "workspaceId": "example"
+        },
+        "projectId": "example",
+        "publishedAt": "2026-01-02T03:04:05Z",
+        "schemaVersion": 1,
+        "signature": "AAxx",
+        "workspaceId": "example"
+      },
+      "rootType": "CapabilityProfilePublishRequest",
+      "wireKind": "capability_profile_publish_request"
+    },
+    {
+      "canonicalDigest": "sha256:8a03f790f110cdb4e3f083c1708241fc78482dce25dd1af813617b449c0149a9",
+      "document": {
+        "chainAnchorId": "example",
+        "chainHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "deviceId": "example",
+        "kind": "chain_anchor_publish_request",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "sequence": "0",
+        "signature": "AAxx",
+        "streamId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ChainAnchorPublishRequest",
+      "wireKind": "chain_anchor_publish_request"
+    },
+    {
+      "canonicalDigest": "sha256:837be2419767861ea1673032aec5328c8bd8d726090a41bb3fbb0fb380bb10a2",
+      "document": {
+        "idempotencyKey": "example",
+        "kind": "checkpoint_create_request",
+        "projectId": "example",
+        "reason": "manual",
+        "schemaVersion": 1,
+        "sessionIds": [],
+        "snapshotIds": [],
+        "sourceInputId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "CheckpointCreateRequest",
+      "wireKind": "checkpoint_create_request"
+    },
+    {
+      "canonicalDigest": "sha256:90d982bb9075c6b430a183648bb3b66df59e6cedd885e2a08287ec7f0b9f0df8",
+      "document": {
+        "checkpointId": "example",
+        "createdAt": "2026-01-02T03:04:05Z",
+        "deduplicated": false,
+        "kind": "checkpoint_create_response",
+        "schemaVersion": 1,
+        "state": "queued"
+      },
+      "rootType": "CheckpointCreateResponse",
+      "wireKind": "checkpoint_create_response"
+    },
+    {
+      "canonicalDigest": "sha256:59539a33ad8793924ca4c67fc09dc451ea3bbb06cb688c43759393fbe12de656",
+      "document": {
+        "ciphertextDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contentLength": 0,
+        "idempotencyKey": "example",
+        "kind": "object_upload_authorization_request",
+        "mediaType": "example",
+        "objectClass": "example",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "uploaderEphemeralPublicKey": "AAxx",
+        "workspaceId": "example"
+      },
+      "rootType": "ObjectUploadAuthorizationRequest",
+      "wireKind": "object_upload_authorization_request"
+    },
+    {
+      "canonicalDigest": "sha256:7de094f93800d9eea5fceb060e7e001e717690909473a5061cfae392c6f3c8af",
+      "document": {
+        "authorizationId": "example",
+        "expiresAt": "2026-01-02T03:04:05Z",
+        "headers": {},
+        "kind": "ephemeral_object_authorization",
+        "method": "GET",
+        "objectId": "example",
+        "retention": "ephemeral",
+        "schemaVersion": 1,
+        "sealedObjectKey": "AA==",
+        "url": "https://example.invalid/resource"
+      },
+      "rootType": "EphemeralObjectAuthorization",
+      "wireKind": "ephemeral_object_authorization"
+    },
+    {
+      "canonicalDigest": "sha256:1cae746c4b1bcc94340d9f46c0ba410480e5320163c0e1ac143c0c328ddc08f1",
+      "document": {
+        "authenticatedMetadataDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "authorizationId": "example",
+        "ciphertextDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contentDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "contentLength": 0,
+        "encryptionKeyVersion": 1,
+        "idempotencyKey": "example",
+        "kind": "object_finalize_request",
+        "nonce": "AAxx",
+        "objectId": "example",
+        "schemaVersion": 1,
+        "workspaceId": "example"
+      },
+      "rootType": "ObjectFinalizeRequest",
+      "wireKind": "object_finalize_request"
+    },
+    {
+      "canonicalDigest": "sha256:0725cd6f498b1e07a4be81e1a85b8cef21ee507c784a94d45542dc8491630f19",
+      "document": {
+        "kind": "object_key_exchange_request",
+        "objectId": "example",
+        "oneTimeAccessToken": "examplexxxxxxxxx",
+        "sandboxEphemeralPublicKey": "AAxx",
+        "sandboxId": "example",
+        "schemaVersion": 1,
+        "validationJobId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ObjectKeyExchangeRequest",
+      "wireKind": "object_key_exchange_request"
+    },
+    {
+      "canonicalDigest": "sha256:40a44b5757cf8b64941b60e7813105bc12fe833c28939b3a06c30997993cd3f2",
+      "document": {
+        "authenticatedMetadataDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "expiresAt": "2026-01-02T03:04:05Z",
+        "kind": "object_key_exchange_response",
+        "objectId": "example",
+        "retention": "ephemeral",
+        "schemaVersion": 1,
+        "sealedObjectKey": "AA=="
+      },
+      "rootType": "ObjectKeyExchangeResponse",
+      "wireKind": "object_key_exchange_response"
+    },
+    {
+      "canonicalDigest": "sha256:770e2469971d599f54a3eb9951cb81b8eb108201d321680ed98a6778bb04e923",
+      "document": {
+        "attempt": 1,
+        "checkpointId": "example",
+        "enqueuedAt": "2026-01-02T03:04:05Z",
+        "idempotencyKey": "example",
+        "kind": "reconcile_queue_message",
+        "messageId": "example",
+        "projectId": "example",
+        "schemaVersion": 1,
+        "sourceInputId": "example",
+        "workspaceId": "example"
+      },
+      "rootType": "ReconcileQueueMessage",
+      "wireKind": "reconcile_queue_message"
+    },
+    {
+      "canonicalDigest": "sha256:47e0bc93dfebc85c7660104b1eb6fbc0e4db91649940742ed51b6e1c7ea6ccb6",
+      "document": {
+        "error": { "code": "example", "issues": [], "message": "example", "retryable": false },
+        "kind": "api_error_response",
+        "occurredAt": "2026-01-02T03:04:05Z",
+        "requestId": "example",
+        "schemaVersion": 1
+      },
+      "rootType": "ApiErrorResponse",
+      "wireKind": "api_error_response"
+    }
+  ],
+  "fixtureVersion": 1,
+  "protocolSchemaVersion": 1
+}

@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-REDACTED.dev/v1/provider.schema.json",
+  "title": "Environment Reconciler Provider Contracts v1",
+  "$defs": {
+    "ProviderName": {
+      "type": "string",
+      "enum": ["codex", "claude_code", "cursor"]
+    },
+    "ProviderCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sessionLifecycle",
+        "toolLifecycle",
+        "shellCommands",
+        "commandResults",
+        "fileOperations",
+        "permissionDecisions",
+        "subagents",
+        "sourceSequence"
+      ],
+      "properties": {
+        "sessionLifecycle": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "toolLifecycle": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "shellCommands": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "commandResults": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "fileOperations": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "permissionDecisions": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "subagents": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        },
+        "sourceSequence": {
+          "$ref": "common.schema.json#/$defs/CapabilityState"
+        }
+      }
+    },
+    "ProviderCapabilityProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "capabilityReportId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "provider",
+        "surface",
+        "providerVersion",
+        "adapterVersion",
+        "supportedEventTypes",
+        "capabilities",
+        "knownGaps",
+        "observedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "provider_capability_profile"
+        },
+        "capabilityReportId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderName"
+        },
+        "surface": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "providerVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "adapterVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "supportedEventTypes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "capabilities": {
+          "$ref": "#/$defs/ProviderCapabilities"
+        },
+        "knownGaps": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/BoundedString"
+          }
+        },
+        "observedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sessionId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "provider",
+        "surface",
+        "capabilityReportId",
+        "status",
+        "boundarySource",
+        "capture",
+        "startedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "session"
+        },
+        "sessionId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "deviceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "provider": {
+          "$ref": "#/$defs/ProviderName"
+        },
+        "surface": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "capabilityReportId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "registered",
+            "observing",
+            "draining",
+            "checkpointing",
+            "ended",
+            "partial_capture"
+          ]
+        },
+        "boundarySource": {
+          "type": "string",
+          "enum": ["provider", "extension_manual", "companion_inferred"]
+        },
+        "capture": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "startedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "endedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

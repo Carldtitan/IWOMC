@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+pub mod contracts;
+
 /// Build-time information that is safe to expose over the future local IPC
 /// health endpoint.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

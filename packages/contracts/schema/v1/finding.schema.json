@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-REDACTED.dev/v1/finding.schema.json",
+  "title": "Environment Reconciler Finding and Evidence Contracts v1",
+  "$defs": {
+    "EvidenceLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceKind", "sourceId", "pathAssessment", "lineAssessment", "contentDigest"],
+      "properties": {
+        "sourceKind": {
+          "type": "string",
+          "enum": [
+            "observation_event",
+            "action_envelope",
+            "snapshot",
+            "source_input",
+            "repository_file",
+            "dependency_graph",
+            "validation_phase",
+            "validation_job",
+            "REDACTED_statement",
+            "system_capability"
+          ]
+        },
+        "sourceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "pathAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "lineAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "startLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "EvidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "evidenceReferenceId",
+        "workspaceId",
+        "projectId",
+        "evidenceType",
+        "location",
+        "statement",
+        "redactionState",
+        "capturedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "evidence_reference"
+        },
+        "evidenceReferenceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "evidenceType": {
+          "type": "string",
+          "enum": [
+            "direct_observation",
+            "declared_configuration",
+            "locked_resolution",
+            "installed_inventory",
+            "runtime_use",
+            "validation_result",
+            "human_confirmation",
+            "capability_limit",
+            "capture_gap"
+          ]
+        },
+        "location": {
+          "$ref": "#/$defs/EvidenceLocation"
+        },
+        "statement": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "redactionState": {
+          "type": "string",
+          "enum": ["not_required", "redacted", "metadata_only"]
+        },
+        "capturedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "FindingStatement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statementId", "statementType", "text", "evidenceReferenceIds", "confidence"],
+      "properties": {
+        "statementId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "statementType": {
+          "type": "string",
+          "enum": ["evidence", "inference"]
+        },
+        "text": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "confidence": {
+          "$ref": "common.schema.json#/$defs/Confidence"
+        }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "findingId",
+        "workspaceId",
+        "projectId",
+        "checkpointId",
+        "findingCode",
+        "state",
+        "severity",
+        "title",
+        "summary",
+        "affectedRealmIds",
+        "affectedFiles",
+        "graphReferenceIds",
+        "statements",
+        "missingEvidence",
+        "coverage",
+        "ruleVersions",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "finding"
+        },
+        "findingId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "checkpointId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "findingCode": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["open", "needs_evidence", "accepted", "rejected", "superseded"]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "low", "medium", "high", "critical"]
+        },
+        "title": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "summary": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "affectedRealmIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "affectedFiles": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "common.schema.json#/$defs/RelativePath"
+          }
+        },
+        "graphReferenceIds": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "statements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/FindingStatement"
+          }
+        },
+        "missingEvidence": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "coverage": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "ruleVersions": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

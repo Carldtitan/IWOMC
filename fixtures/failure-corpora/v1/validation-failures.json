@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "validation-failures",
+  "category": "validation-failures",
+  "corpusVersion": "1.0.0",
+  "fixtures": [
+    {
+      "fixtureId": "validation-build",
+      "title": "Candidate build fails with healthy infrastructure",
+      "description": "Provisioning and infrastructure canaries REDACTED, but the candidate build exits non-zero. The candidate fails validation and cannot be verified.",
+      "input": {
+        "phase": "build",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "REDACTEDed",
+        "commandResult": "failed",
+        "diagnosticCode": "compiler-error"
+      },
+      "expected": {
+        "outcome": "failed",
+        "failureCode": "build-failed",
+        "faultDomain": "candidate",
+        "retryability": "not-retryable-without-change",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-cleanup",
+      "title": "Sandbox cleanup fails after validation",
+      "description": "The behavior command REDACTEDes, but authoritative deletion cannot be confirmed. Cleanup failure remains visible and prevents a verified recommendation.",
+      "input": {
+        "phase": "cleanup",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "validationResult": "REDACTEDed",
+        "deleteRequest": "accepted",
+        "authoritativeStatus": "delete-failed",
+        "diagnosticCode": "sandbox-delete-unconfirmed"
+      },
+      "expected": {
+        "outcome": "cleanup-failed",
+        "failureCode": "cleanup-failed",
+        "faultDomain": "cleanup",
+        "retryability": "retryable",
+        "recommendationState": "blocked",
+        "cleanupState": "failed",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-dns",
+      "title": "DNS canary and project command both fail",
+      "description": "A failed DNS canary proves the project error is not sufficient evidence of a candidate defect. The result is infrastructure-inconclusive.",
+      "input": {
+        "phase": "install",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "failed",
+        "registryCanary": "not-run",
+        "commandResult": "failed",
+        "diagnosticCode": "name-resolution-failed"
+      },
+      "expected": {
+        "outcome": "inconclusive",
+        "failureCode": "dns-unavailable",
+        "faultDomain": "infrastructure",
+        "retryability": "retryable",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-missing-package",
+      "title": "Clean install cannot resolve a declared package",
+      "description": "Healthy infrastructure plus a repeatable native missing-package diagnostic is a project or candidate failure, never a Daytona success.",
+      "input": {
+        "phase": "install",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "REDACTEDed",
+        "commandResult": "failed",
+        "diagnosticCode": "package-not-found"
+      },
+      "expected": {
+        "outcome": "failed",
+        "failureCode": "missing-package",
+        "faultDomain": "candidate",
+        "retryability": "not-retryable-without-change",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-parse",
+      "title": "Candidate manifest cannot be parsed",
+      "description": "The candidate changes produce a deterministic native parser failure while provider and network canaries remain healthy.",
+      "input": {
+        "phase": "parse",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "REDACTEDed",
+        "commandResult": "failed",
+        "diagnosticCode": "manifest-syntax-error"
+      },
+      "expected": {
+        "outcome": "failed",
+        "failureCode": "parse-failed",
+        "faultDomain": "candidate",
+        "retryability": "not-retryable-without-change",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-provisioning",
+      "title": "Daytona sandbox provisioning fails",
+      "description": "No project command runs because the sandbox never becomes ready. The result is infrastructure-inconclusive and may be retried under the bounded policy.",
+      "input": {
+        "phase": "provision",
+        "sandboxRole": "candidate",
+        "providerCanary": "failed",
+        "dnsCanary": "not-run",
+        "registryCanary": "not-run",
+        "commandResult": "not-run",
+        "diagnosticCode": "sandbox-provision-failed"
+      },
+      "expected": {
+        "outcome": "inconclusive",
+        "failureCode": "provisioning-failed",
+        "faultDomain": "infrastructure",
+        "retryability": "retryable",
+        "recommendationState": "blocked",
+        "cleanupState": "required-if-resource-exists",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-registry",
+      "title": "Registry canary fails",
+      "description": "DNS succeeds but the registry canary fails before the project install. The candidate remains unjudged and the result is infrastructure-inconclusive.",
+      "input": {
+        "phase": "install",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "failed",
+        "commandResult": "not-run",
+        "diagnosticCode": "registry-unavailable"
+      },
+      "expected": {
+        "outcome": "inconclusive",
+        "failureCode": "registry-unavailable",
+        "faultDomain": "infrastructure",
+        "retryability": "retryable",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-resource",
+      "title": "Sandbox resource exhaustion",
+      "description": "The validator is killed after exceeding the declared memory limit. Without a successful comparable run this is an infrastructure/resource constraint, not proof of correctness.",
+      "input": {
+        "phase": "behavior",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "REDACTEDed",
+        "commandResult": "killed",
+        "diagnosticCode": "memory-limit-exceeded"
+      },
+      "expected": {
+        "outcome": "inconclusive",
+        "failureCode": "resource-exhausted",
+        "faultDomain": "infrastructure",
+        "retryability": "retryable-with-larger-target",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-test",
+      "title": "Candidate tests fail with healthy infrastructure",
+      "description": "Install and build complete, then the requested behavior contract fails. The candidate is rejected and no verification attestation is emitted.",
+      "input": {
+        "phase": "behavior",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "REDACTEDed",
+        "commandResult": "failed",
+        "diagnosticCode": "test-assertion-failed"
+      },
+      "expected": {
+        "outcome": "failed",
+        "failureCode": "test-failed",
+        "faultDomain": "candidate",
+        "retryability": "not-retryable-without-change",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-timeout",
+      "title": "Behavior command reaches its bounded timeout",
+      "description": "Canaries REDACTED but the behavior command reaches the target timeout. A single timeout remains inconclusive until fault-classification policy has repeatable evidence.",
+      "input": {
+        "phase": "behavior",
+        "sandboxRole": "candidate",
+        "providerCanary": "REDACTEDed",
+        "dnsCanary": "REDACTEDed",
+        "registryCanary": "REDACTEDed",
+        "commandResult": "timed-out",
+        "diagnosticCode": "command-timeout"
+      },
+      "expected": {
+        "outcome": "inconclusive",
+        "failureCode": "timeout",
+        "faultDomain": "unknown",
+        "retryability": "bounded-retry",
+        "recommendationState": "blocked",
+        "cleanupState": "required",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "validation-unsupported-target",
+      "title": "Requested target capability is unsupported",
+      "description": "The requested operating system or network isolation mode is not available. The target is explicitly unsupported rather than failed or REDACTEDed.",
+      "input": {
+        "phase": "capability-check",
+        "sandboxRole": "candidate",
+        "providerCanary": "not-run",
+        "dnsCanary": "not-run",
+        "registryCanary": "not-run",
+        "commandResult": "not-run",
+        "diagnosticCode": "target-capability-unavailable"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "failureCode": "unsupported-target-or-capability",
+        "faultDomain": "capability",
+        "retryability": "not-retryable-with-same-target",
+        "recommendationState": "blocked",
+        "cleanupState": "not-required",
+        "verified": false
+      }
+    }
+  ]
+}

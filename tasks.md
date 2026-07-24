@@ -57,8 +57,8 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - **Exit:** A clean checkout can install, type-check, compile, test empty packages, and package an empty VSIX without using a real sponsor REDACTED.
   - _Requirements: R20.9, R21.7, R22.6_
 
-- [ ] 2. Define canonical versioned contracts
-  - [ ] 2.1 Create canonical JSON Schemas in `packages/contracts/schema/` for:
+- [x] 2. Define canonical versioned contracts
+  - [x] 2.1 Create canonical JSON Schemas in `packages/contracts/schema/` for:
     - workspace, project, device, realm, and layer;
     - provider capability profile and session;
     - observation event, action envelope, capture gap, and snapshot;
@@ -71,24 +71,24 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
     - validation job key, cache entry, concurrency lease, external operation, REDACTED reference/binding, and Braintrust outbox record;
     - recommendation, approval, and audit event;
     - extension/companion IPC and public API payloads.
-  - [ ] 2.2 Generate TypeScript types into `packages/contracts/src/generated/`.
-  - [ ] 2.3 Generate or validate matching Rust types in `crates/companion/src/contracts/generated/`.
-  - [ ] 2.4 Represent `unknown`, `partial`, `not_applicable`, `unsupported`, and `inconclusive` explicitly; never use a missing Boolean to mean one of them.
-  - [ ] 2.5 Represent verification as a scoped attestation bound to source, patch, targets, behavior contract, policy, rules, adapters, and validator versions; do not create a standalone `isVerified` field.
-  - [ ] 2.6 Add golden JSON fixtures in `tests/contract/fixtures/`.
-  - [ ] 2.7 Test TypeScript-to-Rust round trips, unsupported schema versions, additive compatibility, and explicit migration for breaking versions.
-  - [ ] 2.8 Add a CI check that fails when generated contracts differ from the checked-in schema.
+  - [x] 2.2 Generate TypeScript types into `packages/contracts/src/generated/`.
+  - [x] 2.3 Generate or validate matching Rust types in `crates/companion/src/contracts/generated/`.
+  - [x] 2.4 Represent `unknown`, `partial`, `not_applicable`, `unsupported`, and `inconclusive` explicitly; never use a missing Boolean to mean one of them.
+  - [x] 2.5 Represent verification as a scoped attestation bound to source, patch, targets, behavior contract, policy, rules, adapters, and validator versions; do not create a standalone `isVerified` field.
+  - [x] 2.6 Add golden JSON fixtures in `tests/contract/fixtures/`.
+  - [x] 2.7 Test TypeScript-to-Rust round trips, unsupported schema versions, additive compatibility, and explicit migration for breaking versions.
+  - [x] 2.8 Add a CI check that fails when generated contracts differ from the checked-in schema.
   - **Exit:** The extension, companion, Worker, tests, and future integrations share one versioned protocol and can round-trip every MVP payload.
   - _Requirements: R3.2, R5, R6.1, R6.7, R8, R12.6-R12.7, R14.8, R15.2, R21.7_
 
-- [ ] 3. Create the deterministic testkit and initial corpora
-  - [ ] 3.1 Implement clocks, ID generators, content hashing, fake queues, fake object storage, fake GitHub, fake Fireworks, fake Braintrust, and fake Daytona clients in `packages/testkit/`.
-  - [ ] 3.2 Create `fixtures/e2e/npm-undeclared-used/`: source imports a package absent from `package.json`, while a mutable local fixture can succeed because that package is installed.
-  - [ ] 3.3 Create provider fixtures for normal, failed, interrupted, missing-terminal-event, subagent, and human-modified command lifecycles.
-  - [ ] 3.4 Create `fixtures/security/REDACTEDs/` with synthetic API keys, REDACTEDs, URL REDACTEDs, connection strings, private keys, registry REDACTEDs, `.env` values, and benign high-entropy controls.
-  - [ ] 3.5 Create `fixtures/validation-failures/` for provisioning, DNS, registry, resource, timeout, unsupported-target, cleanup, missing-package, parse, build, and test failures.
-  - [ ] 3.6 Create graph/rule fixtures for install-then-remove, hidden global state, stale lock, transient experiment, unknown actor, concurrent human/agent actions, and unsupported format.
-  - [ ] 3.7 Version each corpus and give every fixture a documented expected result.
+- [x] 3. Create the deterministic testkit and initial corpora
+  - [x] 3.1 Implement clocks, ID generators, content hashing, fake queues, fake object storage, fake GitHub, fake Fireworks, fake Braintrust, and fake Daytona clients in `packages/testkit/`.
+  - [x] 3.2 Create `fixtures/e2e/npm-undeclared-used/`: source imports a package absent from `package.json`, while a mutable local fixture can succeed because that package is installed.
+  - [x] 3.3 Create provider fixtures for normal, failed, interrupted, missing-terminal-event, subagent, and human-modified command lifecycles.
+  - [x] 3.4 Create `fixtures/security/REDACTEDs/` with synthetic API keys, REDACTEDs, URL REDACTEDs, connection strings, private keys, registry REDACTEDs, `.env` values, and benign high-entropy controls.
+  - [x] 3.5 Create `fixtures/validation-failures/` for provisioning, DNS, registry, resource, timeout, unsupported-target, cleanup, missing-package, parse, build, and test failures.
+  - [x] 3.6 Create graph/rule fixtures for install-then-remove, hidden global state, stale lock, transient experiment, unknown actor, concurrent human/agent actions, and unsupported format.
+  - [x] 3.7 Version each corpus and give every fixture a documented expected result.
   - **Exit:** Core development can proceed without depending on live external services, and every dangerous negative state has a reusable fixture.
   - _Requirements: R22.1-R22.5_
 

@@ -1,0 +1,789 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-REDACTED.dev/v1/validation.schema.json",
+  "title": "Environment Reconciler Validation Contracts v1",
+  "$defs": {
+    "ImmutableBaseIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "imageReference",
+        "imageDigest",
+        "snapshotAssessment",
+        "toolchainDigest"
+      ],
+      "properties": {
+        "provider": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "imageReference": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "imageDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "snapshotAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "snapshotId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "toolchainDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "ResourcePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpuCount",
+        "memoryBytes",
+        "diskBytes",
+        "maxElapsedSeconds",
+        "maxEstimatedCostMicrousd"
+      ],
+      "properties": {
+        "cpuCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "memoryBytes": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "diskBytes": {
+          "$ref": "common.schema.json#/$defs/ByteCount"
+        },
+        "maxElapsedSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 604800
+        },
+        "maxEstimatedCostMicrousd": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        }
+      }
+    },
+    "NetworkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "allowedHosts", "deniedHosts", "registryHosts", "policyDigest"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["deny_all", "allow_list", "unrestricted"]
+        },
+        "allowedHosts": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "deniedHosts": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "registryHosts": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "policyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "ValidationTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "targetId",
+        "workspaceId",
+        "projectId",
+        "name",
+        "os",
+        "architecture",
+        "runtimeSelections",
+        "managerSelections",
+        "immutableBase",
+        "resourcePolicy",
+        "networkPolicy",
+        "capabilityAssessment",
+        "targetDigest",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_target"
+        },
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "os": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "architecture": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "runtimeSelections": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "managerSelections": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "immutableBase": {
+          "$ref": "#/$defs/ImmutableBaseIdentity"
+        },
+        "resourcePolicy": {
+          "$ref": "#/$defs/ResourcePolicy"
+        },
+        "networkPolicy": {
+          "$ref": "#/$defs/NetworkPolicy"
+        },
+        "capabilityAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "targetDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ValidationBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationBatchId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "requiredTargetIds",
+        "jobIds",
+        "state",
+        "budgetReservationId",
+        "supersededByAssessment",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_batch"
+        },
+        "validationBatchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "candidatePatchDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "requiredTargetIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "jobIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "reserved",
+            "queued",
+            "running",
+            "cancelling",
+            "aggregating",
+            "REDACTEDed",
+            "failed",
+            "inconclusive",
+            "superseded"
+          ]
+        },
+        "budgetReservationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "supersededByAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "supersededByBatchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ValidationJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationJobId",
+        "validationBatchId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "targetId",
+        "jobKeyDigest",
+        "state",
+        "daytonaSandboxAssessment",
+        "currentPhaseAssessment",
+        "cacheAssessment",
+        "attempt",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_job"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "validationBatchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "jobKeyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "provisioning",
+            "preflight",
+            "source_prepare",
+            "resolve",
+            "install",
+            "build",
+            "test",
+            "smoke",
+            "benchmark",
+            "evidence_persist",
+            "cleanup",
+            "terminal"
+          ]
+        },
+        "daytonaSandboxAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "daytonaSandboxId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "currentPhaseAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "currentPhaseId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "cacheAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "cacheEntryId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ValidationDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "diagnosticId",
+        "commandId",
+        "errorSignatureAssessment",
+        "exitStatusAssessment",
+        "redactedExcerpt",
+        "truncated",
+        "evidenceObjectAssessment"
+      ],
+      "properties": {
+        "diagnosticId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "commandId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "errorSignatureAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "errorSignature": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "exitStatusAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "exitStatus": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "redactedExcerpt": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "evidenceObjectAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "evidenceObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        }
+      }
+    },
+    "ValidationPhase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationPhaseId",
+        "validationJobId",
+        "phase",
+        "state",
+        "startedAtAssessment",
+        "finishedAtAssessment",
+        "durationAssessment",
+        "diagnostics",
+        "providerHealth",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_phase"
+        },
+        "validationPhaseId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "provisioning",
+            "preflight",
+            "source_prepare",
+            "resolve",
+            "install",
+            "build",
+            "test",
+            "smoke",
+            "benchmark",
+            "evidence_persist",
+            "cleanup"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "running",
+            "REDACTEDed",
+            "failed",
+            "timed_out",
+            "skipped",
+            "cancelled",
+            "inconclusive"
+          ]
+        },
+        "startedAtAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "startedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "finishedAtAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "finishedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "durationAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "durationMs": {
+          "$ref": "common.schema.json#/$defs/DurationMs"
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/ValidationDiagnostic"
+          }
+        },
+        "providerHealth": {
+          "$ref": "common.schema.json#/$defs/HealthState"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "PassedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "cleanupStatus", "attestationDigest"],
+      "properties": {
+        "outcome": {
+          "const": "REDACTEDed"
+        },
+        "cleanupStatus": {
+          "const": "deleted"
+        },
+        "attestationDigest": {
+          "description": "RFC 8785 SHA-256 digest of this object with attestationDigest omitted.",
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "NonCleanupFailureOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "cleanupStatus"],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "project_or_candidate_failed",
+            "infrastructure_failed",
+            "resource_budget_failed",
+            "timed_out",
+            "security_blocked",
+            "unsupported_target_or_capability",
+            "inconclusive"
+          ]
+        },
+        "cleanupStatus": {
+          "const": "deleted"
+        }
+      }
+    },
+    "CleanupFailedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "cleanupStatus", "precedingOutcome"],
+      "properties": {
+        "outcome": {
+          "const": "cleanup_failed"
+        },
+        "cleanupStatus": {
+          "const": "cleanup_failed"
+        },
+        "precedingOutcome": {
+          "type": "string",
+          "enum": [
+            "REDACTEDed",
+            "project_or_candidate_failed",
+            "infrastructure_failed",
+            "resource_budget_failed",
+            "timed_out",
+            "security_blocked",
+            "unsupported_target_or_capability",
+            "inconclusive"
+          ]
+        }
+      }
+    },
+    "ValidationOutcomeResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PassedOutcome"
+        },
+        {
+          "$ref": "#/$defs/NonCleanupFailureOutcome"
+        },
+        {
+          "$ref": "#/$defs/CleanupFailedOutcome"
+        }
+      ]
+    },
+    "ValidationOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationOutcomeId",
+        "validationJobId",
+        "candidateId",
+        "targetId",
+        "suspectedOrigin",
+        "originConfidence",
+        "phaseIds",
+        "result",
+        "terminalAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_outcome"
+        },
+        "validationOutcomeId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "suspectedOrigin": {
+          "type": "string",
+          "enum": ["project", "candidate", "daytona", "registry", "network", "resource", "unknown"]
+        },
+        "originConfidence": {
+          "$ref": "common.schema.json#/$defs/Confidence"
+        },
+        "phaseIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "result": {
+          "$ref": "#/$defs/ValidationOutcomeResult"
+        },
+        "terminalAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "AttestedTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetId",
+        "targetDigest",
+        "immutableBase",
+        "validationJobDigest",
+        "cacheAssessment"
+      ],
+      "properties": {
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "targetDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "immutableBase": {
+          "$ref": "#/$defs/ImmutableBaseIdentity"
+        },
+        "validationJobDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "cacheAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "cacheIdentity": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "ValidationAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "attestationId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "sourceInput",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "behaviorContract",
+        "behaviorContractDigest",
+        "policy",
+        "policyDigest",
+        "requiredTargetIds",
+        "attestedTargets",
+        "adapterVersions",
+        "ruleVersions",
+        "validatorVersion",
+        "nativeToolVersions",
+        "limitations",
+        "result",
+        "attestationDigest",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_attestation"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInput": {
+          "$ref": "source.schema.json#/$defs/SourceInput"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "candidatePatchDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "behaviorContract": {
+          "$ref": "common.schema.json#/$defs/VersionedReference"
+        },
+        "behaviorContractDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "policy": {
+          "$ref": "common.schema.json#/$defs/VersionedReference"
+        },
+        "policyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "requiredTargetIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "attestedTargets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/AttestedTarget"
+          }
+        },
+        "adapterVersions": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "ruleVersions": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "validatorVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "nativeToolVersions": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/BoundedString"
+          }
+        },
+        "result": {
+          "type": "string",
+          "enum": ["reconstruction_REDACTEDed", "verified"]
+        },
+        "attestationDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

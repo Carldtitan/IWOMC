@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 1,
+  "kind": "schema_manifest",
+  "draft": "https://json-schema.org/draft/2020-12/schema",
+  "baseId": "https://schemas.environment-REDACTED.dev/v1/",
+  "protocol": "protocol.schema.json",
+  "generatorSafeFeatures": ["object", "array", "enum", "const", "$ref", "$defs", "oneOf"],
+  "roots": [
+    {
+      "name": "Workspace",
+      "ref": "identity.schema.json#/$defs/Workspace"
+    },
+    {
+      "name": "Project",
+      "ref": "identity.schema.json#/$defs/Project"
+    },
+    {
+      "name": "Device",
+      "ref": "identity.schema.json#/$defs/Device"
+    },
+    {
+      "name": "Realm",
+      "ref": "identity.schema.json#/$defs/Realm"
+    },
+    {
+      "name": "Layer",
+      "ref": "identity.schema.json#/$defs/Layer"
+    },
+    {
+      "name": "ProviderCapabilityProfile",
+      "ref": "provider.schema.json#/$defs/ProviderCapabilityProfile"
+    },
+    {
+      "name": "Session",
+      "ref": "provider.schema.json#/$defs/Session"
+    },
+    {
+      "name": "ObservationEvent",
+      "ref": "observation.schema.json#/$defs/ObservationEvent"
+    },
+    {
+      "name": "ActionEnvelope",
+      "ref": "observation.schema.json#/$defs/ActionEnvelope"
+    },
+    {
+      "name": "CaptureGap",
+      "ref": "observation.schema.json#/$defs/CaptureGap"
+    },
+    {
+      "name": "Snapshot",
+      "ref": "observation.schema.json#/$defs/Snapshot"
+    },
+    {
+      "name": "SourceInput",
+      "ref": "source.schema.json#/$defs/SourceInput"
+    },
+    {
+      "name": "WorkingTreeBundle",
+      "ref": "source.schema.json#/$defs/WorkingTreeBundle"
+    },
+    {
+      "name": "SubmoduleIdentity",
+      "ref": "source.schema.json#/$defs/SubmoduleIdentity"
+    },
+    {
+      "name": "LfsIdentity",
+      "ref": "source.schema.json#/$defs/LfsIdentity"
+    },
+    {
+      "name": "ObjectMetadata",
+      "ref": "source.schema.json#/$defs/ObjectMetadata"
+    },
+    {
+      "name": "DeclaredGraph",
+      "ref": "graphs.schema.json#/$defs/DeclaredGraph"
+    },
+    {
+      "name": "LockedGraph",
+      "ref": "graphs.schema.json#/$defs/LockedGraph"
+    },
+    {
+      "name": "ResolvedGraph",
+      "ref": "graphs.schema.json#/$defs/ResolvedGraph"
+    },
+    {
+      "name": "InstalledGraph",
+      "ref": "graphs.schema.json#/$defs/InstalledGraph"
+    },
+    {
+      "name": "UsedGraph",
+      "ref": "graphs.schema.json#/$defs/UsedGraph"
+    },
+    {
+      "name": "ObservedActionGraph",
+      "ref": "graphs.schema.json#/$defs/ObservedActionGraph"
+    },
+    {
+      "name": "ValidatedGraph",
+      "ref": "graphs.schema.json#/$defs/ValidatedGraph"
+    },
+    {
+      "name": "Finding",
+      "ref": "finding.schema.json#/$defs/Finding"
+    },
+    {
+      "name": "EvidenceReference",
+      "ref": "finding.schema.json#/$defs/EvidenceReference"
+    },
+    {
+      "name": "BehaviorContract",
+      "ref": "policy.schema.json#/$defs/BehaviorContract"
+    },
+    {
+      "name": "OptimalityPolicy",
+      "ref": "policy.schema.json#/$defs/OptimalityPolicy"
+    },
+    {
+      "name": "CandidatePlan",
+      "ref": "candidate.schema.json#/$defs/CandidatePlan"
+    },
+    {
+      "name": "CandidatePatch",
+      "ref": "candidate.schema.json#/$defs/CandidatePatch"
+    },
+    {
+      "name": "CandidateLifecycle",
+      "ref": "candidate.schema.json#/$defs/CandidateLifecycle"
+    },
+    {
+      "name": "ValidationTarget",
+      "ref": "validation.schema.json#/$defs/ValidationTarget"
+    },
+    {
+      "name": "ValidationBatch",
+      "ref": "validation.schema.json#/$defs/ValidationBatch"
+    },
+    {
+      "name": "ValidationJob",
+      "ref": "validation.schema.json#/$defs/ValidationJob"
+    },
+    {
+      "name": "ValidationPhase",
+      "ref": "validation.schema.json#/$defs/ValidationPhase"
+    },
+    {
+      "name": "ValidationOutcome",
+      "ref": "validation.schema.json#/$defs/ValidationOutcome"
+    },
+    {
+      "name": "ValidationAttestation",
+      "ref": "validation.schema.json#/$defs/ValidationAttestation"
+    },
+    {
+      "name": "ValidationJobKey",
+      "ref": "operations.schema.json#/$defs/ValidationJobKey"
+    },
+    {
+      "name": "ValidationCacheEntry",
+      "ref": "operations.schema.json#/$defs/ValidationCacheEntry"
+    },
+    {
+      "name": "ConcurrencyLease",
+      "ref": "operations.schema.json#/$defs/ConcurrencyLease"
+    },
+    {
+      "name": "ExternalOperation",
+      "ref": "operations.schema.json#/$defs/ExternalOperation"
+    },
+    {
+      "name": "SecretReference",
+      "ref": "operations.schema.json#/$defs/SecretReference"
+    },
+    {
+      "name": "SecretBinding",
+      "ref": "operations.schema.json#/$defs/SecretBinding"
+    },
+    {
+      "name": "BraintrustOutboxRecord",
+      "ref": "operations.schema.json#/$defs/BraintrustOutboxRecord"
+    },
+    {
+      "name": "Recommendation",
+      "ref": "collaboration.schema.json#/$defs/Recommendation"
+    },
+    {
+      "name": "Approval",
+      "ref": "collaboration.schema.json#/$defs/Approval"
+    },
+    {
+      "name": "AuditEvent",
+      "ref": "collaboration.schema.json#/$defs/AuditEvent"
+    },
+    {
+      "name": "CompanionStatus",
+      "ref": "ipc.schema.json#/$defs/CompanionStatus"
+    },
+    {
+      "name": "CompanionRequest",
+      "ref": "ipc.schema.json#/$defs/CompanionRequest"
+    },
+    {
+      "name": "CompanionResponse",
+      "ref": "ipc.schema.json#/$defs/CompanionResponse"
+    },
+    {
+      "name": "CompanionNotification",
+      "ref": "ipc.schema.json#/$defs/CompanionNotification"
+    },
+    {
+      "name": "DeviceEnrollmentRequest",
+      "ref": "api.schema.json#/$defs/DeviceEnrollmentRequest"
+    },
+    {
+      "name": "DeviceEnrollmentResponse",
+      "ref": "api.schema.json#/$defs/DeviceEnrollmentResponse"
+    },
+    {
+      "name": "ObservationEventBatchRequest",
+      "ref": "api.schema.json#/$defs/ObservationEventBatchRequest"
+    },
+    {
+      "name": "IngestAcceptedResponse",
+      "ref": "api.schema.json#/$defs/IngestAcceptedResponse"
+    },
+    {
+      "name": "SnapshotIngestRequest",
+      "ref": "api.schema.json#/$defs/SnapshotIngestRequest"
+    },
+    {
+      "name": "CapabilityProfilePublishRequest",
+      "ref": "api.schema.json#/$defs/CapabilityProfilePublishRequest"
+    },
+    {
+      "name": "ChainAnchorPublishRequest",
+      "ref": "api.schema.json#/$defs/ChainAnchorPublishRequest"
+    },
+    {
+      "name": "CheckpointCreateRequest",
+      "ref": "api.schema.json#/$defs/CheckpointCreateRequest"
+    },
+    {
+      "name": "CheckpointCreateResponse",
+      "ref": "api.schema.json#/$defs/CheckpointCreateResponse"
+    },
+    {
+      "name": "ObjectUploadAuthorizationRequest",
+      "ref": "api.schema.json#/$defs/ObjectUploadAuthorizationRequest"
+    },
+    {
+      "name": "EphemeralObjectAuthorization",
+      "ref": "api.schema.json#/$defs/EphemeralObjectAuthorization"
+    },
+    {
+      "name": "ObjectFinalizeRequest",
+      "ref": "api.schema.json#/$defs/ObjectFinalizeRequest"
+    },
+    {
+      "name": "ObjectKeyExchangeRequest",
+      "ref": "api.schema.json#/$defs/ObjectKeyExchangeRequest"
+    },
+    {
+      "name": "ObjectKeyExchangeResponse",
+      "ref": "api.schema.json#/$defs/ObjectKeyExchangeResponse"
+    },
+    {
+      "name": "ReconcileQueueMessage",
+      "ref": "api.schema.json#/$defs/ReconcileQueueMessage"
+    },
+    {
+      "name": "ApiErrorResponse",
+      "ref": "api.schema.json#/$defs/ApiErrorResponse"
+    }
+  ]
+}

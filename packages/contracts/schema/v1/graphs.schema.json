@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-REDACTED.dev/v1/graphs.schema.json",
+  "title": "Environment Reconciler Dependency Graph Contracts v1",
+  "$defs": {
+    "GraphNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "ecosystem",
+        "name",
+        "versionAssessment",
+        "scope",
+        "realmId",
+        "layerId",
+        "attributes",
+        "evidenceReferenceIds"
+      ],
+      "properties": {
+        "nodeId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "ecosystem": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "versionAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "production",
+            "development",
+            "test",
+            "build",
+            "optional",
+            "peer",
+            "global",
+            "unknown"
+          ]
+        },
+        "realmId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "layerId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attributes": {
+          "$ref": "common.schema.json#/$defs/StringMap"
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "GraphEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edgeId",
+        "fromNodeId",
+        "toNodeId",
+        "relationship",
+        "constraintAssessment",
+        "attributes",
+        "evidenceReferenceIds"
+      ],
+      "properties": {
+        "edgeId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "fromNodeId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "toNodeId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "declares",
+            "locks",
+            "resolves",
+            "installs",
+            "uses",
+            "observes",
+            "validates",
+            "depends_on",
+            "conflicts_with",
+            "replaces"
+          ]
+        },
+        "constraintAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "constraint": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "attributes": {
+          "$ref": "common.schema.json#/$defs/StringMap"
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "GraphBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graphId",
+        "workspaceId",
+        "projectId",
+        "sourceInputDigest",
+        "realmIds",
+        "nodes",
+        "edges",
+        "completeness",
+        "evidenceReferenceIds",
+        "adapterVersions",
+        "createdAt"
+      ],
+      "properties": {
+        "graphId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "realmIds": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/GraphNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 250000,
+          "items": {
+            "$ref": "#/$defs/GraphEdge"
+          }
+        },
+        "completeness": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "evidenceReferenceIds": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "adapterVersions": {
+          "$ref": "common.schema.json#/$defs/VersionMap"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "DeclaredGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "declared_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        }
+      }
+    },
+    "LockedGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "locked_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        }
+      }
+    },
+    "ResolvedGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "resolved_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        }
+      }
+    },
+    "InstalledGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "installed_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        }
+      }
+    },
+    "UsedGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "used_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        }
+      }
+    },
+    "ObservedActionGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "observed_action_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        }
+      }
+    },
+    "ValidatedGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "graph", "validationJobId", "targetId", "outcome"],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validated_graph"
+        },
+        "graph": {
+          "$ref": "#/$defs/GraphBody"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["REDACTEDed", "failed", "inconclusive", "unsupported"]
+        }
+      }
+    }
+  }
+}

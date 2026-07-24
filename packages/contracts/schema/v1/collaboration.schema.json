@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-REDACTED.dev/v1/collaboration.schema.json",
+  "title": "Environment Reconciler Collaboration Contracts v1",
+  "$defs": {
+    "VerifiedRecommendationProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "attestationId", "attestationDigest"],
+      "properties": {
+        "result": {
+          "const": "verified"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attestationDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "ReconstructionRecommendationProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "attestationId", "attestationDigest", "reasonCodes"],
+      "properties": {
+        "result": {
+          "const": "reconstruction_REDACTEDed"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attestationDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        }
+      }
+    },
+    "UnverifiedRecommendationProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "reasonCodes"],
+      "properties": {
+        "result": {
+          "const": "not_verified"
+        },
+        "reasonCodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        }
+      }
+    },
+    "RecommendationProof": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/VerifiedRecommendationProof"
+        },
+        {
+          "$ref": "#/$defs/ReconstructionRecommendationProof"
+        },
+        {
+          "$ref": "#/$defs/UnverifiedRecommendationProof"
+        }
+      ]
+    },
+    "ValidationMatrixCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targetId",
+        "validationJobId",
+        "outcome",
+        "cacheAssessment",
+        "behaviorStepOutcomeIds"
+      ],
+      "properties": {
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "outcome": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "cacheAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "behaviorStepOutcomeIds": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        }
+      }
+    },
+    "Recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "recommendationId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "candidatePatchId",
+        "state",
+        "proof",
+        "findingIds",
+        "findingEvidenceReferenceIds",
+        "rationale",
+        "diffObjectId",
+        "diffDigest",
+        "validationMatrix",
+        "behaviorContract",
+        "policy",
+        "targetIds",
+        "limitations",
+        "invalidationInputDigests",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "recommendation"
+        },
+        "recommendationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidatePatchId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "reviewable",
+            "approved",
+            "applied",
+            "invalidated",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "proof": {
+          "$ref": "#/$defs/RecommendationProof"
+        },
+        "findingIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "findingEvidenceReferenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2048,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "rationale": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "diffObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "diffDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "validationMatrix": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/$defs/ValidationMatrixCell"
+          }
+        },
+        "behaviorContract": {
+          "$ref": "common.schema.json#/$defs/VersionedReference"
+        },
+        "policy": {
+          "$ref": "common.schema.json#/$defs/VersionedReference"
+        },
+        "targetIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/BoundedString"
+          }
+        },
+        "invalidationInputDigests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "common.schema.json#/$defs/Sha256Digest"
+          }
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "Approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "approvalId",
+        "workspaceId",
+        "projectId",
+        "recommendationId",
+        "candidateId",
+        "attestationId",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "decision",
+        "actorId",
+        "actorRole",
+        "commentAssessment",
+        "idempotencyKey",
+        "decidedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "approval"
+        },
+        "approvalId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "recommendationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "candidateId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "candidatePatchDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["approved", "rejected", "revoked"]
+        },
+        "actorId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "actorRole": {
+          "type": "string",
+          "enum": ["owner", "maintainer"]
+        },
+        "commentAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "comment": {
+          "$ref": "common.schema.json#/$defs/BoundedString"
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "decidedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "AuditEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "auditEventId",
+        "workspaceId",
+        "projectAssessment",
+        "actorId",
+        "actorType",
+        "action",
+        "targetType",
+        "targetId",
+        "idempotencyKeyAssessment",
+        "priorStateDigestAssessment",
+        "newStateDigestAssessment",
+        "metadata",
+        "occurredAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "audit_event"
+        },
+        "auditEventId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "actorId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "actorType": {
+          "type": "string",
+          "enum": ["REDACTED", "device", "service", "provider"]
+        },
+        "action": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "targetType": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "idempotencyKeyAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "idempotencyKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "priorStateDigestAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "priorStateDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "newStateDigestAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "newStateDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "metadata": {
+          "$ref": "common.schema.json#/$defs/StringMap"
+        },
+        "occurredAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}

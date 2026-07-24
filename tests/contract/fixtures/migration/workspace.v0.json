@@ -1,0 +1,12 @@
+{
+  "document": {
+    "createdAt": "2026-01-02T03:04:05Z",
+    "displayName": "Migrated workspace",
+    "id": "workspace-legacy",
+    "kind": "workspace_legacy",
+    "schemaVersion": 0
+  },
+  "fixtureVersion": 1,
+  "sourceSchemaVersion": 0,
+  "targetSchemaVersion": 1
+}

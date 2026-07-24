@@ -1,0 +1,4170 @@
+{
+  "$defs": {
+    "ActionEnvelope": {
+      "additionalProperties": false,
+      "properties": {
+        "actionId": { "$ref": "#/$defs/EntityId" },
+        "attribution": { "$ref": "#/$defs/ActorAttribution" },
+        "effectAssessment": { "$ref": "#/$defs/Assessment" },
+        "eventIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 2048,
+          "minItems": 1,
+          "type": "array"
+        },
+        "gapIds": { "items": { "$ref": "#/$defs/EntityId" }, "maxItems": 256, "type": "array" },
+        "kind": { "const": "action_envelope" },
+        "layerId": { "$ref": "#/$defs/EntityId" },
+        "overlappingActionIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "postSnapshotId": { "$ref": "#/$defs/EntityId" },
+        "postSnapshotState": { "$ref": "#/$defs/Assessment" },
+        "preSnapshotId": { "$ref": "#/$defs/EntityId" },
+        "preSnapshotState": { "$ref": "#/$defs/Assessment" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "providerEventId": { "$ref": "#/$defs/EntityId" },
+        "providerEventState": { "$ref": "#/$defs/Assessment" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "stabilization": { "enum": ["stable", "timed_out", "overlapping"], "type": "string" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "actionId",
+        "workspaceId",
+        "projectId",
+        "realmId",
+        "eventIds",
+        "providerEventState",
+        "preSnapshotState",
+        "postSnapshotState",
+        "attribution",
+        "stabilization",
+        "overlappingActionIds",
+        "gapIds",
+        "effectAssessment"
+      ],
+      "type": "object"
+    },
+    "ActorAttribution": {
+      "additionalProperties": false,
+      "properties": {
+        "approval": { "$ref": "#/$defs/ApprovalEvidence" },
+        "classification": {
+          "enum": ["human", "agent", "subagent", "system", "mixed", "unknown"],
+          "type": "string"
+        },
+        "confidence": { "$ref": "#/$defs/Confidence" },
+        "executorActor": { "$ref": "#/$defs/ActorReference" },
+        "factors": { "items": { "$ref": "#/$defs/ShortString" }, "maxItems": 128, "type": "array" },
+        "initiatorActor": { "$ref": "#/$defs/ActorReference" }
+      },
+      "required": [
+        "initiatorActor",
+        "executorActor",
+        "approval",
+        "classification",
+        "confidence",
+        "factors"
+      ],
+      "type": "object"
+    },
+    "ActorReference": {
+      "additionalProperties": false,
+      "properties": {
+        "actorClass": {
+          "enum": ["human", "agent", "subagent", "system", "mixed", "unknown"],
+          "type": "string"
+        },
+        "identityState": {
+          "enum": ["pseudonymous", "unknown", "not_applicable"],
+          "type": "string"
+        },
+        "provider": { "$ref": "#/$defs/ProviderName" },
+        "pseudonymousId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["actorClass", "identityState"],
+      "type": "object"
+    },
+    "AdapterInventoryResult": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterId": { "$ref": "#/$defs/EntityId" },
+        "adapterVersion": { "$ref": "#/$defs/ShortString" },
+        "assessment": { "$ref": "#/$defs/Assessment" },
+        "diagnosticCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "graphObjectIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "supportLevel": { "$ref": "#/$defs/SupportLevel" }
+      },
+      "required": [
+        "adapterId",
+        "adapterVersion",
+        "supportLevel",
+        "assessment",
+        "graphObjectIds",
+        "diagnosticCodes"
+      ],
+      "type": "object"
+    },
+    "ApiErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "error": { "$ref": "#/$defs/ProtocolError" },
+        "kind": { "const": "api_error_response" },
+        "occurredAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "requestId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "requestId", "error", "occurredAt"],
+      "type": "object"
+    },
+    "AppliedCandidateState": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalId": { "$ref": "#/$defs/EntityId" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "externalOperationId": { "$ref": "#/$defs/EntityId" },
+        "state": { "const": "applied" }
+      },
+      "required": ["state", "attestationId", "approvalId", "externalOperationId"],
+      "type": "object"
+    },
+    "Approval": {
+      "additionalProperties": false,
+      "properties": {
+        "actorId": { "$ref": "#/$defs/EntityId" },
+        "actorRole": { "enum": ["owner", "maintainer"], "type": "string" },
+        "approvalId": { "$ref": "#/$defs/EntityId" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "candidatePatchDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "comment": { "$ref": "#/$defs/BoundedString" },
+        "commentAssessment": { "$ref": "#/$defs/Assessment" },
+        "decidedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "decision": { "enum": ["approved", "rejected", "revoked"], "type": "string" },
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "approval" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "recommendationId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "approvalId",
+        "workspaceId",
+        "projectId",
+        "recommendationId",
+        "candidateId",
+        "attestationId",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "decision",
+        "actorId",
+        "actorRole",
+        "commentAssessment",
+        "idempotencyKey",
+        "decidedAt"
+      ],
+      "type": "object"
+    },
+    "ApprovalEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": { "$ref": "#/$defs/ActorReference" },
+        "decision": { "enum": ["approved", "denied", "not_required", "unknown"], "type": "string" },
+        "modifiedBeforeExecution": { "type": "boolean" }
+      },
+      "required": ["decision", "actor", "modifiedBeforeExecution"],
+      "type": "object"
+    },
+    "ApprovedCandidateState": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalId": { "$ref": "#/$defs/EntityId" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "state": { "const": "approved" }
+      },
+      "required": ["state", "attestationId", "approvalId"],
+      "type": "object"
+    },
+    "Assessment": {
+      "additionalProperties": false,
+      "properties": {
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "reasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 128,
+          "type": "array"
+        },
+        "state": { "$ref": "#/$defs/AssessmentState" }
+      },
+      "required": ["state", "reasonCodes", "evidenceReferenceIds"],
+      "type": "object"
+    },
+    "AssessmentState": {
+      "enum": ["known", "unknown", "partial", "not_applicable", "unsupported", "inconclusive"],
+      "type": "string"
+    },
+    "AttestedTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "cacheAssessment": { "$ref": "#/$defs/Assessment" },
+        "cacheIdentity": { "$ref": "#/$defs/Sha256Digest" },
+        "immutableBase": { "$ref": "#/$defs/ImmutableBaseIdentity" },
+        "targetDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "validationJobDigest": { "$ref": "#/$defs/Sha256Digest" }
+      },
+      "required": [
+        "targetId",
+        "targetDigest",
+        "immutableBase",
+        "validationJobDigest",
+        "cacheAssessment"
+      ],
+      "type": "object"
+    },
+    "AuditEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "action": { "$ref": "#/$defs/ShortString" },
+        "actorId": { "$ref": "#/$defs/EntityId" },
+        "actorType": { "enum": ["REDACTED", "device", "service", "provider"], "type": "string" },
+        "auditEventId": { "$ref": "#/$defs/EntityId" },
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "idempotencyKeyAssessment": { "$ref": "#/$defs/Assessment" },
+        "kind": { "const": "audit_event" },
+        "metadata": { "$ref": "#/$defs/StringMap" },
+        "newStateDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "newStateDigestAssessment": { "$ref": "#/$defs/Assessment" },
+        "occurredAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "priorStateDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "priorStateDigestAssessment": { "$ref": "#/$defs/Assessment" },
+        "projectAssessment": { "$ref": "#/$defs/Assessment" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "targetType": { "$ref": "#/$defs/ShortString" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "auditEventId",
+        "workspaceId",
+        "projectAssessment",
+        "actorId",
+        "actorType",
+        "action",
+        "targetType",
+        "targetId",
+        "idempotencyKeyAssessment",
+        "priorStateDigestAssessment",
+        "newStateDigestAssessment",
+        "metadata",
+        "occurredAt"
+      ],
+      "type": "object"
+    },
+    "Base64": {
+      "maxLength": 16384,
+      "minLength": 4,
+      "pattern": "^[A-Za-z0-9+/]+={0,2}$",
+      "type": "string"
+    },
+    "Base64Url": {
+      "maxLength": 16384,
+      "minLength": 4,
+      "pattern": "^[A-Za-z0-9_-]+={0,2}$",
+      "type": "string"
+    },
+    "BehaviorAssertion": {
+      "additionalProperties": false,
+      "properties": {
+        "assertionId": { "$ref": "#/$defs/EntityId" },
+        "expected": { "$ref": "#/$defs/BoundedString" },
+        "kind": {
+          "enum": [
+            "exit_status",
+            "file_exists",
+            "file_absent",
+            "stdout_matches",
+            "stderr_matches",
+            "http_status",
+            "duration_under",
+            "dependency_graph"
+          ],
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "equals",
+            "not_equals",
+            "contains",
+            "matches",
+            "exists",
+            "absent",
+            "less_than",
+            "greater_than"
+          ],
+          "type": "string"
+        },
+        "required": { "type": "boolean" },
+        "subject": { "$ref": "#/$defs/BoundedString" }
+      },
+      "required": ["assertionId", "kind", "subject", "operator", "expected", "required"],
+      "type": "object"
+    },
+    "BehaviorContract": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "acceptedBy": { "$ref": "#/$defs/EntityId" },
+        "contractDigest": {
+          "$ref": "#/$defs/Sha256Digest",
+          "description": "RFC 8785 SHA-256 digest of this object with contractDigest omitted."
+        },
+        "contractId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "invalidatedBySourceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "kind": { "const": "behavior_contract" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "reviewAssessment": { "$ref": "#/$defs/Assessment" },
+        "reviewState": {
+          "enum": ["discovered", "needs_review", "accepted", "invalidated"],
+          "type": "string"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "steps": {
+          "items": { "$ref": "#/$defs/BehaviorStep" },
+          "maxItems": 1024,
+          "minItems": 1,
+          "type": "array"
+        },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "version": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "contractId",
+        "workspaceId",
+        "projectId",
+        "version",
+        "sourceInputDigest",
+        "reviewState",
+        "reviewAssessment",
+        "invalidatedBySourceIds",
+        "steps",
+        "contractDigest",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "BehaviorStep": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "items": { "maxLength": 4096, "type": "string" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "assertions": {
+          "items": { "$ref": "#/$defs/BehaviorAssertion" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "discoveryEvidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "discoveryFingerprint": { "$ref": "#/$defs/Sha256Digest" },
+        "enabled": { "type": "boolean" },
+        "executable": { "$ref": "#/$defs/ShortString" },
+        "expectedExitStatuses": {
+          "items": { "maximum": 2147483647, "minimum": -2147483648, "type": "integer" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "resolve",
+            "install",
+            "build",
+            "lint",
+            "typecheck",
+            "test",
+            "smoke",
+            "benchmark"
+          ],
+          "type": "string"
+        },
+        "order": { "maximum": 100000, "minimum": 0, "type": "integer" },
+        "realmAssessment": { "$ref": "#/$defs/Assessment" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "required": { "type": "boolean" },
+        "REDACTEDReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "stepId": { "$ref": "#/$defs/EntityId" },
+        "targetSelector": { "$ref": "#/$defs/ShortString" },
+        "timeoutSeconds": { "maximum": 86400, "minimum": 1, "type": "integer" },
+        "workingDirectory": { "$ref": "#/$defs/RelativePath" }
+      },
+      "required": [
+        "stepId",
+        "order",
+        "enabled",
+        "kind",
+        "executable",
+        "arguments",
+        "workingDirectory",
+        "realmAssessment",
+        "targetSelector",
+        "timeoutSeconds",
+        "REDACTEDReferenceIds",
+        "expectedExitStatuses",
+        "assertions",
+        "required",
+        "discoveryEvidenceReferenceIds",
+        "discoveryFingerprint"
+      ],
+      "type": "object"
+    },
+    "BoundedString": { "maxLength": 16384, "type": "string" },
+    "BraintrustOutboxRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "attemptCount": { "maximum": 1000, "minimum": 0, "type": "integer" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "encryptedPayloadDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "encryptedPayloadObjectId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "braintrust_outbox_record" },
+        "lastErrorCode": { "$ref": "#/$defs/ShortString" },
+        "lastErrorCodeAssessment": { "$ref": "#/$defs/Assessment" },
+        "nextAttemptAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "nextAttemptAtAssessment": { "$ref": "#/$defs/Assessment" },
+        "outboxRecordId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": {
+          "enum": ["pending", "exporting", "exported", "retry_wait", "failed_terminal"],
+          "type": "string"
+        },
+        "traceId": { "$ref": "#/$defs/EntityId" },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "outboxRecordId",
+        "workspaceId",
+        "traceId",
+        "encryptedPayloadObjectId",
+        "encryptedPayloadDigest",
+        "state",
+        "attemptCount",
+        "nextAttemptAtAssessment",
+        "lastErrorCodeAssessment",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "ByteCount": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+    "CacheArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactClass": {
+          "enum": [
+            "integrity_checked_download",
+            "immutable_toolchain",
+            "source_mirror",
+            "complete_attestation"
+          ],
+          "type": "string"
+        },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "integrityState": { "const": "verified" },
+        "objectId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["artifactClass", "objectId", "contentDigest", "integrityState"],
+      "type": "object"
+    },
+    "CandidateLifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "candidatePatchAssessment": { "$ref": "#/$defs/Assessment" },
+        "candidatePatchId": { "$ref": "#/$defs/EntityId" },
+        "candidatePlanId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "currentState": { "$ref": "#/$defs/CandidateState" },
+        "invalidationInputDigests": {
+          "items": { "$ref": "#/$defs/Sha256Digest" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "kind": { "const": "candidate_lifecycle" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "transitions": {
+          "items": { "$ref": "#/$defs/CandidateTransition" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "candidateId",
+        "candidatePlanId",
+        "candidatePatchAssessment",
+        "workspaceId",
+        "projectId",
+        "currentState",
+        "transitions",
+        "invalidationInputDigests",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "CandidateOperation": {
+      "oneOf": [
+        { "$ref": "#/$defs/CandidatePackageOperation" },
+        { "$ref": "#/$defs/RuntimeSelectionOperation" },
+        { "$ref": "#/$defs/LockfileOperation" },
+        { "$ref": "#/$defs/ConfigurationEditOperation" }
+      ]
+    },
+    "CandidatePackageOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "ecosystem": { "$ref": "#/$defs/ShortString" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "manager": { "$ref": "#/$defs/ShortString" },
+        "operationId": { "$ref": "#/$defs/EntityId" },
+        "operationKind": {
+          "enum": ["package_add", "package_remove", "package_update"],
+          "type": "string"
+        },
+        "packageName": { "$ref": "#/$defs/ShortString" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "requestedVersion": { "$ref": "#/$defs/ShortString" },
+        "scope": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "ecosystem",
+        "manager",
+        "packageName",
+        "requestedVersion",
+        "scope",
+        "realmId"
+      ],
+      "type": "object"
+    },
+    "CandidatePatch": {
+      "additionalProperties": false,
+      "properties": {
+        "candidatePatchId": { "$ref": "#/$defs/EntityId" },
+        "candidatePlanId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "files": {
+          "items": { "$ref": "#/$defs/PatchFile" },
+          "maxItems": 4096,
+          "minItems": 1,
+          "type": "array"
+        },
+        "guardResults": {
+          "items": { "$ref": "#/$defs/PatchGuardResult" },
+          "maxItems": 64,
+          "minItems": 1,
+          "type": "array"
+        },
+        "kind": { "const": "candidate_patch" },
+        "materializerVersions": { "$ref": "#/$defs/VersionMap" },
+        "operations": {
+          "items": { "$ref": "#/$defs/CandidateOperation" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "patchDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "patchObjectId": { "$ref": "#/$defs/EntityId" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "resultingTreeDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "candidatePatchId",
+        "candidatePlanId",
+        "workspaceId",
+        "projectId",
+        "sourceInputDigest",
+        "patchObjectId",
+        "patchDigest",
+        "resultingTreeDigest",
+        "files",
+        "operations",
+        "guardResults",
+        "materializerVersions",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "CandidatePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "affectedFiles": {
+          "items": { "$ref": "#/$defs/RelativePath" },
+          "maxItems": 4096,
+          "minItems": 1,
+          "type": "array"
+        },
+        "assumptions": {
+          "items": { "$ref": "#/$defs/BoundedString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "behaviorContractDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "candidatePlanId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 2048,
+          "minItems": 1,
+          "type": "array"
+        },
+        "expectedGraphChanges": {
+          "items": { "$ref": "#/$defs/ExpectedGraphChange" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "expectedValidationImpact": {
+          "items": { "$ref": "#/$defs/ExpectedValidationImpact" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generationSource": {
+          "enum": ["fireworks", "deterministic_rule", "REDACTED_authored"],
+          "type": "string"
+        },
+        "kind": { "const": "candidate_plan" },
+        "operations": {
+          "items": { "$ref": "#/$defs/CandidateOperation" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "policyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "proposedValidationProbes": {
+          "items": { "$ref": "#/$defs/ProbeProposal" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "rationale": { "$ref": "#/$defs/BoundedString" },
+        "risks": { "items": { "$ref": "#/$defs/BoundedString" }, "maxItems": 256, "type": "array" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "candidatePlanId",
+        "workspaceId",
+        "projectId",
+        "sourceInputDigest",
+        "findingIds",
+        "operations",
+        "evidenceReferenceIds",
+        "affectedFiles",
+        "rationale",
+        "expectedGraphChanges",
+        "expectedValidationImpact",
+        "assumptions",
+        "risks",
+        "proposedValidationProbes",
+        "generationSource",
+        "policyDigest",
+        "behaviorContractDigest",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "CandidateState": {
+      "oneOf": [
+        { "$ref": "#/$defs/VerifiedCandidateState" },
+        { "$ref": "#/$defs/UnverifiedCandidateState" },
+        { "$ref": "#/$defs/ApprovedCandidateState" },
+        { "$ref": "#/$defs/AppliedCandidateState" }
+      ]
+    },
+    "CandidateTransition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorId": { "$ref": "#/$defs/EntityId" },
+        "fromState": { "$ref": "#/$defs/ShortString" },
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "occurredAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "reasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "toState": { "$ref": "#/$defs/ShortString" },
+        "transitionId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "transitionId",
+        "fromState",
+        "toState",
+        "idempotencyKey",
+        "actorId",
+        "reasonCodes",
+        "occurredAt"
+      ],
+      "type": "object"
+    },
+    "CapabilityProfilePublishRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "capability_profile_publish_request" },
+        "profile": { "$ref": "#/$defs/ProviderCapabilityProfile" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "publishedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "signature": { "$ref": "#/$defs/Base64Url" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "profile",
+        "signature",
+        "publishedAt"
+      ],
+      "type": "object"
+    },
+    "CapabilityState": {
+      "enum": ["supported", "partial", "unavailable", "unknown", "not_applicable", "unsupported"],
+      "type": "string"
+    },
+    "CaptureGap": {
+      "additionalProperties": false,
+      "properties": {
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "endedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "gapId": { "$ref": "#/$defs/EntityId" },
+        "gapType": {
+          "enum": [
+            "provider_event_loss",
+            "observer_disabled",
+            "permission_denied",
+            "snapshot_missing",
+            "stabilization_timeout",
+            "realm_unobserved",
+            "unsupported_surface",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "impact": { "$ref": "#/$defs/Assessment" },
+        "kind": { "const": "capture_gap" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "reasonCode": { "$ref": "#/$defs/ShortString" },
+        "resolutionState": { "enum": ["open", "resolved", "not_resolvable"], "type": "string" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "scope": { "$ref": "#/$defs/ShortString" },
+        "startedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "gapId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "gapType",
+        "scope",
+        "reasonCode",
+        "impact",
+        "startedAt",
+        "resolutionState"
+      ],
+      "type": "object"
+    },
+    "CaptureGapCreatedNotification": {
+      "additionalProperties": false,
+      "properties": {
+        "gap": { "$ref": "#/$defs/CaptureGapSummary" },
+        "type": { "const": "capture_gap.created" }
+      },
+      "required": ["type", "gap"],
+      "type": "object"
+    },
+    "CaptureGapSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "captureGapId": { "$ref": "#/$defs/EntityId" },
+        "reasonCode": { "$ref": "#/$defs/ShortString" },
+        "sessionId": { "$ref": "#/$defs/EntityId" },
+        "severity": { "enum": ["info", "warning", "blocking"], "type": "string" },
+        "startedAt": { "$ref": "#/$defs/Rfc3339Timestamp" }
+      },
+      "required": ["captureGapId", "sessionId", "reasonCode", "severity", "startedAt"],
+      "type": "object"
+    },
+    "ChainAnchorPublishRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "chainAnchorId": { "$ref": "#/$defs/EntityId" },
+        "chainHash": { "$ref": "#/$defs/Sha256Digest" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "chain_anchor_publish_request" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sequence": { "$ref": "#/$defs/DecimalCounter" },
+        "signature": { "$ref": "#/$defs/Base64Url" },
+        "streamId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "chainAnchorId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "streamId",
+        "sequence",
+        "chainHash",
+        "signature",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "CheckpointCreateCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": { "enum": ["manual", "session_end"], "type": "string" },
+        "type": { "const": "checkpoint.create" }
+      },
+      "required": ["type", "reason"],
+      "type": "object"
+    },
+    "CheckpointCreateRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "checkpoint_create_request" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "reason": {
+          "enum": ["manual", "session_end", "pull_request", "source_change"],
+          "type": "string"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sessionIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "snapshotIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "sourceInputId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "reason",
+        "sourceInputId",
+        "snapshotIds",
+        "sessionIds",
+        "idempotencyKey"
+      ],
+      "type": "object"
+    },
+    "CheckpointCreateResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "checkpointId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deduplicated": { "type": "boolean" },
+        "kind": { "const": "checkpoint_create_response" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": { "enum": ["queued", "reconciling", "complete", "failed"], "type": "string" }
+      },
+      "required": ["schemaVersion", "kind", "checkpointId", "state", "deduplicated", "createdAt"],
+      "type": "object"
+    },
+    "CleanupFailedOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "cleanupStatus": { "const": "cleanup_failed" },
+        "outcome": { "const": "cleanup_failed" },
+        "precedingOutcome": {
+          "enum": [
+            "REDACTEDed",
+            "project_or_candidate_failed",
+            "infrastructure_failed",
+            "resource_budget_failed",
+            "timed_out",
+            "security_blocked",
+            "unsupported_target_or_capability",
+            "inconclusive"
+          ],
+          "type": "string"
+        }
+      },
+      "required": ["outcome", "cleanupStatus", "precedingOutcome"],
+      "type": "object"
+    },
+    "CompanionCommand": {
+      "oneOf": [
+        { "$ref": "#/$defs/StatusGetCommand" },
+        { "$ref": "#/$defs/WorkspaceEnrollCommand" },
+        { "$ref": "#/$defs/ProjectBindCommand" },
+        { "$ref": "#/$defs/ObservationStartCommand" },
+        { "$ref": "#/$defs/ObservationStopCommand" },
+        { "$ref": "#/$defs/CheckpointCreateCommand" },
+        { "$ref": "#/$defs/CoverageDiagnoseCommand" }
+      ]
+    },
+    "CompanionFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "error": { "$ref": "#/$defs/ProtocolError" },
+        "result": { "const": "failure" }
+      },
+      "required": ["result", "error"],
+      "type": "object"
+    },
+    "CompanionNotification": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "companion_notification" },
+        "notificationId": { "$ref": "#/$defs/EntityId" },
+        "payload": { "$ref": "#/$defs/CompanionNotificationPayload" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sentAt": { "$ref": "#/$defs/Rfc3339Timestamp" }
+      },
+      "required": ["schemaVersion", "kind", "notificationId", "payload", "sentAt"],
+      "type": "object"
+    },
+    "CompanionNotificationPayload": {
+      "oneOf": [
+        { "$ref": "#/$defs/StatusChangedNotification" },
+        { "$ref": "#/$defs/SessionChangedNotification" },
+        { "$ref": "#/$defs/CaptureGapCreatedNotification" },
+        { "$ref": "#/$defs/FindingAvailableNotification" },
+        { "$ref": "#/$defs/UploadChangedNotification" }
+      ]
+    },
+    "CompanionRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "challengeSignature": { "$ref": "#/$defs/Base64Url" },
+        "command": { "$ref": "#/$defs/CompanionCommand" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "companion_request" },
+        "requestId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sentAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "startupChallengeId": { "$ref": "#/$defs/OpaqueTokenId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "deviceId",
+        "startupChallengeId",
+        "challengeSignature",
+        "command",
+        "sentAt"
+      ],
+      "type": "object"
+    },
+    "CompanionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "companion_response" },
+        "outcome": { "$ref": "#/$defs/CompanionResponseOutcome" },
+        "requestId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sentAt": { "$ref": "#/$defs/Rfc3339Timestamp" }
+      },
+      "required": ["schemaVersion", "kind", "requestId", "outcome", "sentAt"],
+      "type": "object"
+    },
+    "CompanionResponseOutcome": {
+      "oneOf": [{ "$ref": "#/$defs/CompanionSuccess" }, { "$ref": "#/$defs/CompanionFailure" }]
+    },
+    "CompanionStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "activeProject": { "$ref": "#/$defs/Assessment" },
+        "activeProjectId": { "$ref": "#/$defs/EntityId" },
+        "activeSession": { "$ref": "#/$defs/Assessment" },
+        "activeSessionId": { "$ref": "#/$defs/EntityId" },
+        "companionVersion": { "$ref": "#/$defs/ShortString" },
+        "coverage": { "$ref": "#/$defs/Assessment" },
+        "deviceEnrollment": { "$ref": "#/$defs/Assessment" },
+        "kind": { "const": "companion_status" },
+        "pendingUploadBatches": { "maximum": 2147483647, "minimum": 0, "type": "integer" },
+        "protocolVersion": { "const": 1, "type": "integer" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": {
+          "enum": [
+            "disconnected",
+            "observing",
+            "offline_buffering",
+            "capture_gap",
+            "finding",
+            "validating",
+            "verified",
+            "error"
+          ],
+          "type": "string"
+        },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "state",
+        "deviceEnrollment",
+        "activeProject",
+        "activeSession",
+        "coverage",
+        "pendingUploadBatches",
+        "companionVersion",
+        "protocolVersion",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "CompanionSuccess": {
+      "additionalProperties": false,
+      "properties": {
+        "resourceAssessment": { "$ref": "#/$defs/Assessment" },
+        "resourceId": { "$ref": "#/$defs/EntityId" },
+        "result": { "const": "success" },
+        "status": { "$ref": "#/$defs/CompanionStatus" }
+      },
+      "required": ["result", "status", "resourceAssessment"],
+      "type": "object"
+    },
+    "ConcurrencyLease": {
+      "additionalProperties": false,
+      "properties": {
+        "acquiredAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "expiresAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "heartbeatAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "holderOperationId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "concurrency_lease" },
+        "leaseId": { "$ref": "#/$defs/EntityId" },
+        "resourceIdentity": { "$ref": "#/$defs/ShortString" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "scope": { "enum": ["workspace", "repository", "target", "registry"], "type": "string" },
+        "state": { "enum": ["active", "releasing", "released", "expired"], "type": "string" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "leaseId",
+        "workspaceId",
+        "scope",
+        "resourceIdentity",
+        "holderOperationId",
+        "state",
+        "acquiredAt",
+        "expiresAt",
+        "heartbeatAt"
+      ],
+      "type": "object"
+    },
+    "Confidence": { "maximum": 1, "minimum": 0, "type": "number" },
+    "ConfigurationEditOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "editKind": { "enum": ["set", "remove", "append", "merge"], "type": "string" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "filePath": { "$ref": "#/$defs/RelativePath" },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "newValue": { "$ref": "#/$defs/BoundedString" },
+        "operationId": { "$ref": "#/$defs/EntityId" },
+        "operationKind": { "const": "configuration_edit" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "semanticPath": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "filePath",
+        "semanticPath",
+        "editKind",
+        "newValue",
+        "realmId"
+      ],
+      "type": "object"
+    },
+    "CoverageDiagnoseCommand": {
+      "additionalProperties": false,
+      "properties": { "type": { "const": "coverage.diagnose" } },
+      "required": ["type"],
+      "type": "object"
+    },
+    "DecimalCounter": { "maxLength": 32, "pattern": "^(?:0|[1-9][0-9]*)$", "type": "string" },
+    "DeclaredGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "declared_graph" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "graph"],
+      "type": "object"
+    },
+    "Device": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": { "$ref": "#/$defs/ShortString" },
+        "REDACTEDVersion": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "displayName": { "$ref": "#/$defs/ShortString" },
+        "enrolledAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "device" },
+        "platform": { "enum": ["windows", "linux", "macos"], "type": "string" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "signingPublicKey": { "$ref": "#/$defs/Base64" },
+        "status": { "enum": ["paired", "online", "offline", "revoked"], "type": "string" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "deviceId",
+        "workspaceId",
+        "displayName",
+        "platform",
+        "architecture",
+        "signingPublicKey",
+        "REDACTEDVersion",
+        "status",
+        "enrolledAt"
+      ],
+      "type": "object"
+    },
+    "DeviceEnrollmentRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "companionVersion": { "$ref": "#/$defs/ShortString" },
+        "deviceName": { "$ref": "#/$defs/ShortString" },
+        "devicePublicKey": { "$ref": "#/$defs/Base64Url" },
+        "enrollmentToken": { "$ref": "#/$defs/OpaqueTokenId" },
+        "kind": { "const": "device_enrollment_request" },
+        "platform": { "enum": ["windows", "linux", "macos"], "type": "string" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "enrollmentToken",
+        "devicePublicKey",
+        "deviceName",
+        "platform",
+        "companionVersion"
+      ],
+      "type": "object"
+    },
+    "DeviceEnrollmentResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "REDACTEDExpiresAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deviceCredential": { "$ref": "#/$defs/OpaqueTokenId" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "issuedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "device_enrollment_response" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "serverPublicKey": { "$ref": "#/$defs/Base64Url" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "deviceId",
+        "deviceCredential",
+        "REDACTEDExpiresAt",
+        "serverPublicKey",
+        "issuedAt"
+      ],
+      "type": "object"
+    },
+    "DigestReference": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": { "$ref": "#/$defs/Sha256Digest" },
+        "id": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["id", "digest"],
+      "type": "object"
+    },
+    "DurationMs": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+    "EntityId": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "type": "string"
+    },
+    "EnvironmentFingerprint": {
+      "oneOf": [
+        { "$ref": "#/$defs/EnvironmentFingerprintComparable" },
+        { "$ref": "#/$defs/EnvironmentFingerprintUnavailable" }
+      ]
+    },
+    "EnvironmentFingerprintComparable": {
+      "additionalProperties": false,
+      "properties": {
+        "fingerprint": { "$ref": "#/$defs/Sha256Digest" },
+        "keyVersion": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "state": { "const": "comparable" }
+      },
+      "required": ["state", "keyVersion", "fingerprint"],
+      "type": "object"
+    },
+    "EnvironmentFingerprintUnavailable": {
+      "additionalProperties": false,
+      "properties": {
+        "reasonCode": { "$ref": "#/$defs/ShortString" },
+        "state": { "enum": ["unknown", "not_applicable", "unsupported"], "type": "string" }
+      },
+      "required": ["state", "reasonCode"],
+      "type": "object"
+    },
+    "EnvironmentVariableObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "enum": ["added", "removed", "changed", "unchanged", "unknown"],
+          "type": "string"
+        },
+        "fingerprint": { "$ref": "#/$defs/EnvironmentFingerprint" },
+        "name": { "$ref": "#/$defs/ShortString" },
+        "present": { "type": "boolean" },
+        "scope": {
+          "enum": ["process", "session", "project", "REDACTED", "system", "unknown"],
+          "type": "string"
+        },
+        "REDACTEDDetected": { "type": "boolean" }
+      },
+      "required": ["name", "present", "scope", "change", "REDACTEDDetected", "fingerprint"],
+      "type": "object"
+    },
+    "EphemeralObjectAuthorization": {
+      "additionalProperties": false,
+      "properties": {
+        "authorizationId": { "$ref": "#/$defs/EntityId" },
+        "expiresAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "headers": { "$ref": "#/$defs/StringMap" },
+        "kind": { "const": "ephemeral_object_authorization" },
+        "method": { "enum": ["GET", "PUT"], "type": "string" },
+        "objectId": { "$ref": "#/$defs/EntityId" },
+        "retention": { "const": "ephemeral" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sealedObjectKey": { "$ref": "#/$defs/Base64" },
+        "url": { "$ref": "#/$defs/HttpUrl" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "authorizationId",
+        "objectId",
+        "method",
+        "url",
+        "headers",
+        "sealedObjectKey",
+        "retention",
+        "expiresAt"
+      ],
+      "type": "object"
+    },
+    "EvidenceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "endLine": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "lineAssessment": { "$ref": "#/$defs/Assessment" },
+        "path": { "$ref": "#/$defs/RelativePath" },
+        "pathAssessment": { "$ref": "#/$defs/Assessment" },
+        "sourceId": { "$ref": "#/$defs/EntityId" },
+        "sourceKind": {
+          "enum": [
+            "observation_event",
+            "action_envelope",
+            "snapshot",
+            "source_input",
+            "repository_file",
+            "dependency_graph",
+            "validation_phase",
+            "validation_job",
+            "REDACTED_statement",
+            "system_capability"
+          ],
+          "type": "string"
+        },
+        "startLine": { "maximum": 2147483647, "minimum": 1, "type": "integer" }
+      },
+      "required": ["sourceKind", "sourceId", "pathAssessment", "lineAssessment", "contentDigest"],
+      "type": "object"
+    },
+    "EvidenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "capturedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "evidenceReferenceId": { "$ref": "#/$defs/EntityId" },
+        "evidenceType": {
+          "enum": [
+            "direct_observation",
+            "declared_configuration",
+            "locked_resolution",
+            "installed_inventory",
+            "runtime_use",
+            "validation_result",
+            "human_confirmation",
+            "capability_limit",
+            "capture_gap"
+          ],
+          "type": "string"
+        },
+        "kind": { "const": "evidence_reference" },
+        "location": { "$ref": "#/$defs/EvidenceLocation" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "redactionState": {
+          "enum": ["not_required", "redacted", "metadata_only"],
+          "type": "string"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "statement": { "$ref": "#/$defs/BoundedString" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "evidenceReferenceId",
+        "workspaceId",
+        "projectId",
+        "evidenceType",
+        "location",
+        "statement",
+        "redactionState",
+        "capturedAt"
+      ],
+      "type": "object"
+    },
+    "ExpectedGraphChange": {
+      "additionalProperties": false,
+      "properties": {
+        "changeKind": {
+          "enum": ["add", "remove", "update", "resolve_contradiction", "no_change_expected"],
+          "type": "string"
+        },
+        "expectedAfter": { "$ref": "#/$defs/BoundedString" },
+        "expectedBefore": { "$ref": "#/$defs/BoundedString" },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "graphKind": {
+          "enum": [
+            "declared",
+            "locked",
+            "resolved",
+            "installed",
+            "used",
+            "observed_action",
+            "validated"
+          ],
+          "type": "string"
+        },
+        "subject": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": [
+        "graphKind",
+        "changeKind",
+        "subject",
+        "expectedBefore",
+        "expectedAfter",
+        "findingIds"
+      ],
+      "type": "object"
+    },
+    "ExpectedValidationImpact": {
+      "additionalProperties": false,
+      "properties": {
+        "behaviorStepIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "expectedOutcome": { "enum": ["improve", "no_regression", "unknown"], "type": "string" },
+        "risk": { "$ref": "#/$defs/BoundedString" },
+        "targetId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["targetId", "behaviorStepIds", "expectedOutcome", "risk"],
+      "type": "object"
+    },
+    "ExternalOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptedResultAssessment": { "$ref": "#/$defs/Assessment" },
+        "acceptedResultDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "accumulatedCostMicrousd": { "$ref": "#/$defs/DecimalCounter" },
+        "attemptCount": { "maximum": 1000, "minimum": 0, "type": "integer" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "externalOperationId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "external_operation" },
+        "operationKey": { "$ref": "#/$defs/EntityId" },
+        "operationKind": { "$ref": "#/$defs/ShortString" },
+        "provider": { "enum": ["fireworks", "daytona", "braintrust", "github"], "type": "string" },
+        "providerResourceAssessment": { "$ref": "#/$defs/Assessment" },
+        "providerResourceId": { "$ref": "#/$defs/EntityId" },
+        "reconciliationState": { "$ref": "#/$defs/ShortString" },
+        "requestFingerprint": { "$ref": "#/$defs/Sha256Digest" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": {
+          "enum": ["reserved", "started", "succeeded", "failed", "reconciling"],
+          "type": "string"
+        },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "externalOperationId",
+        "workspaceId",
+        "operationKey",
+        "provider",
+        "operationKind",
+        "requestFingerprint",
+        "state",
+        "providerResourceAssessment",
+        "acceptedResultAssessment",
+        "attemptCount",
+        "accumulatedCostMicrousd",
+        "reconciliationState",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "FieldIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": { "$ref": "#/$defs/ShortString" },
+        "keyword": { "$ref": "#/$defs/ShortString" },
+        "path": { "maxLength": 2048, "type": "string" }
+      },
+      "required": ["path", "keyword", "code"],
+      "type": "object"
+    },
+    "FileEffect": {
+      "additionalProperties": false,
+      "properties": {
+        "afterDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "beforeDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "contentCaptured": { "const": false },
+        "effect": {
+          "enum": ["created", "modified", "deleted", "renamed", "read", "unknown"],
+          "type": "string"
+        },
+        "path": { "$ref": "#/$defs/RelativePath" }
+      },
+      "required": ["path", "effect", "contentCaptured"],
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "affectedFiles": {
+          "items": { "$ref": "#/$defs/RelativePath" },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "affectedRealmIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "checkpointId": { "$ref": "#/$defs/EntityId" },
+        "coverage": { "$ref": "#/$defs/Assessment" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "findingCode": { "$ref": "#/$defs/ShortString" },
+        "findingId": { "$ref": "#/$defs/EntityId" },
+        "graphReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "kind": { "const": "finding" },
+        "missingEvidence": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "ruleVersions": { "$ref": "#/$defs/VersionMap" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "severity": { "enum": ["info", "low", "medium", "high", "critical"], "type": "string" },
+        "state": {
+          "enum": ["open", "needs_evidence", "accepted", "rejected", "superseded"],
+          "type": "string"
+        },
+        "statements": {
+          "items": { "$ref": "#/$defs/FindingStatement" },
+          "maxItems": 1024,
+          "minItems": 1,
+          "type": "array"
+        },
+        "summary": { "$ref": "#/$defs/BoundedString" },
+        "title": { "$ref": "#/$defs/ShortString" },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "findingId",
+        "workspaceId",
+        "projectId",
+        "checkpointId",
+        "findingCode",
+        "state",
+        "severity",
+        "title",
+        "summary",
+        "affectedRealmIds",
+        "affectedFiles",
+        "graphReferenceIds",
+        "statements",
+        "missingEvidence",
+        "coverage",
+        "ruleVersions",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "FindingAvailableNotification": {
+      "additionalProperties": false,
+      "properties": {
+        "findingId": { "$ref": "#/$defs/EntityId" },
+        "type": { "const": "finding.available" }
+      },
+      "required": ["type", "findingId"],
+      "type": "object"
+    },
+    "FindingStatement": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": { "$ref": "#/$defs/Confidence" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "statementId": { "$ref": "#/$defs/EntityId" },
+        "statementType": { "enum": ["evidence", "inference"], "type": "string" },
+        "text": { "$ref": "#/$defs/BoundedString" }
+      },
+      "required": ["statementId", "statementType", "text", "evidenceReferenceIds", "confidence"],
+      "type": "object"
+    },
+    "GitCommitSourceInput": {
+      "additionalProperties": false,
+      "properties": {
+        "archiveDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "archiveObjectId": { "$ref": "#/$defs/EntityId" },
+        "commitSha": { "$ref": "#/$defs/GitObjectId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "source_input_git_commit" },
+        "lfsIdentities": {
+          "items": { "$ref": "#/$defs/LfsIdentity" },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "repositoryId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputId": { "$ref": "#/$defs/EntityId" },
+        "submoduleIdentities": {
+          "items": { "$ref": "#/$defs/SubmoduleIdentity" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "supportGapIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "treeDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourceInputId",
+        "workspaceId",
+        "projectId",
+        "repositoryId",
+        "commitSha",
+        "treeDigest",
+        "archiveObjectId",
+        "archiveDigest",
+        "submoduleIdentities",
+        "lfsIdentities",
+        "supportGapIds",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "GitObjectId": { "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$", "type": "string" },
+    "GraphBody": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterVersions": { "$ref": "#/$defs/VersionMap" },
+        "completeness": { "$ref": "#/$defs/Assessment" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "edges": { "items": { "$ref": "#/$defs/GraphEdge" }, "maxItems": 250000, "type": "array" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 10000,
+          "type": "array"
+        },
+        "graphId": { "$ref": "#/$defs/EntityId" },
+        "nodes": { "items": { "$ref": "#/$defs/GraphNode" }, "maxItems": 100000, "type": "array" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "realmIds": { "items": { "$ref": "#/$defs/EntityId" }, "maxItems": 256, "type": "array" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "graphId",
+        "workspaceId",
+        "projectId",
+        "sourceInputDigest",
+        "realmIds",
+        "nodes",
+        "edges",
+        "completeness",
+        "evidenceReferenceIds",
+        "adapterVersions",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "GraphEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": { "$ref": "#/$defs/StringMap" },
+        "constraint": { "$ref": "#/$defs/ShortString" },
+        "constraintAssessment": { "$ref": "#/$defs/Assessment" },
+        "edgeId": { "$ref": "#/$defs/EntityId" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "fromNodeId": { "$ref": "#/$defs/EntityId" },
+        "relationship": {
+          "enum": [
+            "declares",
+            "locks",
+            "resolves",
+            "installs",
+            "uses",
+            "observes",
+            "validates",
+            "depends_on",
+            "conflicts_with",
+            "replaces"
+          ],
+          "type": "string"
+        },
+        "toNodeId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "edgeId",
+        "fromNodeId",
+        "toNodeId",
+        "relationship",
+        "constraintAssessment",
+        "attributes",
+        "evidenceReferenceIds"
+      ],
+      "type": "object"
+    },
+    "GraphNode": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": { "$ref": "#/$defs/StringMap" },
+        "ecosystem": { "$ref": "#/$defs/ShortString" },
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "layerId": { "$ref": "#/$defs/EntityId" },
+        "name": { "$ref": "#/$defs/ShortString" },
+        "nodeId": { "$ref": "#/$defs/EntityId" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "scope": {
+          "enum": [
+            "production",
+            "development",
+            "test",
+            "build",
+            "optional",
+            "peer",
+            "global",
+            "unknown"
+          ],
+          "type": "string"
+        },
+        "version": { "$ref": "#/$defs/ShortString" },
+        "versionAssessment": { "$ref": "#/$defs/Assessment" }
+      },
+      "required": [
+        "nodeId",
+        "ecosystem",
+        "name",
+        "versionAssessment",
+        "scope",
+        "realmId",
+        "layerId",
+        "attributes",
+        "evidenceReferenceIds"
+      ],
+      "type": "object"
+    },
+    "HealthState": { "enum": ["healthy", "degraded", "unavailable", "unknown"], "type": "string" },
+    "HttpUrl": { "format": "uri", "maxLength": 4096, "pattern": "^https?://", "type": "string" },
+    "ImmutableBaseIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "imageDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "imageReference": { "$ref": "#/$defs/ShortString" },
+        "provider": { "$ref": "#/$defs/ShortString" },
+        "snapshotAssessment": { "$ref": "#/$defs/Assessment" },
+        "snapshotId": { "$ref": "#/$defs/EntityId" },
+        "toolchainDigest": { "$ref": "#/$defs/Sha256Digest" }
+      },
+      "required": [
+        "provider",
+        "imageReference",
+        "imageDigest",
+        "snapshotAssessment",
+        "toolchainDigest"
+      ],
+      "type": "object"
+    },
+    "IngestAcceptedResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "acceptedResourceId": { "$ref": "#/$defs/EntityId" },
+        "deduplicated": { "type": "boolean" },
+        "kind": { "const": "ingest_accepted_response" },
+        "requestId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "requestId",
+        "acceptedResourceId",
+        "deduplicated",
+        "acceptedAt"
+      ],
+      "type": "object"
+    },
+    "InstalledGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "installed_graph" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "graph"],
+      "type": "object"
+    },
+    "InventoryScope": {
+      "additionalProperties": false,
+      "properties": {
+        "layerIds": { "items": { "$ref": "#/$defs/EntityId" }, "maxItems": 256, "type": "array" },
+        "managerIds": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "pathPseudonyms": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "realmId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["realmId", "layerIds", "managerIds", "pathPseudonyms"],
+      "type": "object"
+    },
+    "Layer": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": { "$ref": "#/$defs/Assessment" },
+        "kind": { "const": "layer" },
+        "layerId": { "$ref": "#/$defs/EntityId" },
+        "layerType": {
+          "enum": ["system", "REDACTED", "project", "virtual_environment", "container", "sandbox"],
+          "type": "string"
+        },
+        "parentLayerId": { "$ref": "#/$defs/EntityId" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "selectors": { "$ref": "#/$defs/StringMap" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "layerId",
+        "realmId",
+        "layerType",
+        "selectors",
+        "coverage"
+      ],
+      "type": "object"
+    },
+    "LfsIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "contentState": {
+          "enum": ["included", "pointer_only", "missing", "unsupported"],
+          "type": "string"
+        },
+        "kind": { "const": "lfs_identity" },
+        "oidSha256": { "$ref": "#/$defs/Sha256Digest" },
+        "path": { "$ref": "#/$defs/RelativePath" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "size": { "$ref": "#/$defs/ByteCount" }
+      },
+      "required": ["schemaVersion", "kind", "path", "oidSha256", "size", "contentState"],
+      "type": "object"
+    },
+    "LocalSessionSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": { "$ref": "#/$defs/Assessment" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "provider": { "$ref": "#/$defs/ProviderName" },
+        "sessionId": { "$ref": "#/$defs/EntityId" },
+        "startedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "state": {
+          "enum": [
+            "registered",
+            "observing",
+            "draining",
+            "checkpointing",
+            "ended",
+            "partial_capture"
+          ],
+          "type": "string"
+        }
+      },
+      "required": ["sessionId", "projectId", "provider", "state", "coverage", "startedAt"],
+      "type": "object"
+    },
+    "LockedGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "locked_graph" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "graph"],
+      "type": "object"
+    },
+    "LockfileOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "lockfilePath": { "$ref": "#/$defs/RelativePath" },
+        "manager": { "$ref": "#/$defs/ShortString" },
+        "manifestPath": { "$ref": "#/$defs/RelativePath" },
+        "operationId": { "$ref": "#/$defs/EntityId" },
+        "operationKind": { "const": "lockfile_regenerate" },
+        "realmId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "manager",
+        "manifestPath",
+        "lockfilePath",
+        "realmId"
+      ],
+      "type": "object"
+    },
+    "NetworkPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedHosts": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "deniedHosts": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "mode": { "enum": ["deny_all", "allow_list", "unrestricted"], "type": "string" },
+        "policyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "registryHosts": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        }
+      },
+      "required": ["mode", "allowedHosts", "deniedHosts", "registryHosts", "policyDigest"],
+      "type": "object"
+    },
+    "NonCleanupFailureOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "cleanupStatus": { "const": "deleted" },
+        "outcome": {
+          "enum": [
+            "project_or_candidate_failed",
+            "infrastructure_failed",
+            "resource_budget_failed",
+            "timed_out",
+            "security_blocked",
+            "unsupported_target_or_capability",
+            "inconclusive"
+          ],
+          "type": "string"
+        }
+      },
+      "required": ["outcome", "cleanupStatus"],
+      "type": "object"
+    },
+    "NonEmptyString": { "maxLength": 4096, "minLength": 1, "type": "string" },
+    "ObjectAuthorizationClass": {
+      "enum": [
+        "workspace_private",
+        "validation_job_scoped",
+        "system_outbox",
+        "private_alpha_raw_opt_in"
+      ],
+      "type": "string"
+    },
+    "ObjectClass": {
+      "enum": [
+        "event_batch",
+        "snapshot",
+        "inventory",
+        "source_bundle",
+        "candidate_patch",
+        "validation_diagnostics",
+        "attestation",
+        "braintrust_outbox",
+        "raw_opt_in"
+      ],
+      "type": "string"
+    },
+    "ObjectCompression": { "enum": ["none", "gzip", "zstd"], "type": "string" },
+    "ObjectDeletionState": {
+      "enum": ["active", "delete_pending", "deleted", "tombstoned"],
+      "type": "string"
+    },
+    "ObjectFinalizeRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "authenticatedMetadataDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "authorizationId": { "$ref": "#/$defs/EntityId" },
+        "ciphertextDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "contentLength": { "$ref": "#/$defs/ByteCount" },
+        "encryptionKeyVersion": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "object_finalize_request" },
+        "nonce": { "$ref": "#/$defs/Base64Url" },
+        "objectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "authorizationId",
+        "objectId",
+        "workspaceId",
+        "contentDigest",
+        "ciphertextDigest",
+        "contentLength",
+        "nonce",
+        "encryptionKeyVersion",
+        "authenticatedMetadataDigest",
+        "idempotencyKey"
+      ],
+      "type": "object"
+    },
+    "ObjectKeyExchangeRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "object_key_exchange_request" },
+        "objectId": { "$ref": "#/$defs/EntityId" },
+        "oneTimeAccessToken": { "$ref": "#/$defs/OpaqueTokenId" },
+        "sandboxEphemeralPublicKey": { "$ref": "#/$defs/Base64Url" },
+        "sandboxId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "validationJobId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "objectId",
+        "workspaceId",
+        "validationJobId",
+        "sandboxId",
+        "sandboxEphemeralPublicKey",
+        "oneTimeAccessToken"
+      ],
+      "type": "object"
+    },
+    "ObjectKeyExchangeResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "authenticatedMetadataDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "expiresAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "object_key_exchange_response" },
+        "objectId": { "$ref": "#/$defs/EntityId" },
+        "retention": { "const": "ephemeral" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sealedObjectKey": { "$ref": "#/$defs/Base64" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "objectId",
+        "sealedObjectKey",
+        "authenticatedMetadataDigest",
+        "retention",
+        "expiresAt"
+      ],
+      "type": "object"
+    },
+    "ObjectMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "authenticatedMetadataDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "authenticatedMetadataVersion": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "authorizationClass": { "$ref": "#/$defs/ObjectAuthorizationClass" },
+        "ciphertextDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "ciphertextLength": { "$ref": "#/$defs/ByteCount" },
+        "compression": { "$ref": "#/$defs/ObjectCompression" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "contentLength": { "$ref": "#/$defs/ByteCount" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deletedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deletedAtAssessment": { "$ref": "#/$defs/Assessment" },
+        "deletionState": { "$ref": "#/$defs/ObjectDeletionState" },
+        "encryptionKeyVersion": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "encryptionVersion": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "integrityState": { "enum": ["verified", "pending", "failed"], "type": "string" },
+        "kind": { "const": "object_metadata" },
+        "mediaType": { "$ref": "#/$defs/ShortString" },
+        "nonce": { "$ref": "#/$defs/Base64Url" },
+        "objectClass": { "$ref": "#/$defs/ObjectClass" },
+        "objectId": { "$ref": "#/$defs/EntityId" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "retentionClass": { "$ref": "#/$defs/ShortString" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "storageKey": { "$ref": "#/$defs/RelativePath" },
+        "tombstoneReasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "objectId",
+        "workspaceId",
+        "projectId",
+        "objectClass",
+        "storageKey",
+        "contentDigest",
+        "ciphertextDigest",
+        "contentLength",
+        "ciphertextLength",
+        "mediaType",
+        "compression",
+        "nonce",
+        "encryptionVersion",
+        "encryptionKeyVersion",
+        "authenticatedMetadataDigest",
+        "authenticatedMetadataVersion",
+        "retentionClass",
+        "authorizationClass",
+        "deletionState",
+        "deletedAtAssessment",
+        "tombstoneReasonCodes",
+        "createdAt",
+        "integrityState"
+      ],
+      "type": "object"
+    },
+    "ObjectUploadAuthorizationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "ciphertextDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "contentLength": { "$ref": "#/$defs/ByteCount" },
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "object_upload_authorization_request" },
+        "mediaType": { "$ref": "#/$defs/ShortString" },
+        "objectClass": { "$ref": "#/$defs/ShortString" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "uploaderEphemeralPublicKey": { "$ref": "#/$defs/Base64Url" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "objectClass",
+        "contentDigest",
+        "ciphertextDigest",
+        "contentLength",
+        "mediaType",
+        "uploaderEphemeralPublicKey",
+        "idempotencyKey"
+      ],
+      "type": "object"
+    },
+    "ObservationEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "actionType": { "$ref": "#/$defs/ShortString" },
+        "actor": { "$ref": "#/$defs/ActorAttribution" },
+        "bootId": { "$ref": "#/$defs/EntityId" },
+        "capture": { "$ref": "#/$defs/Assessment" },
+        "causalParentEventIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 128,
+          "type": "array"
+        },
+        "clockUncertaintyMs": { "$ref": "#/$defs/DurationMs" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "eventHash": { "$ref": "#/$defs/Sha256Digest" },
+        "eventId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "observation_event" },
+        "layerId": { "$ref": "#/$defs/EntityId" },
+        "localSequence": { "$ref": "#/$defs/DecimalCounter" },
+        "monotonicNanos": { "$ref": "#/$defs/DecimalCounter" },
+        "outcome": { "enum": ["attempted", "succeeded", "failed", "unknown"], "type": "string" },
+        "payload": { "$ref": "#/$defs/RedactedActionPayload" },
+        "previousEventHashState": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "digest": { "$ref": "#/$defs/Sha256Digest" },
+                "state": { "const": "known" }
+              },
+              "required": ["state", "digest"],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": { "state": { "const": "not_applicable" } },
+              "required": ["state"],
+              "type": "object"
+            }
+          ]
+        },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "redactionPolicyVersion": { "$ref": "#/$defs/ShortString" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sessionId": { "$ref": "#/$defs/EntityId" },
+        "sessionState": { "$ref": "#/$defs/Assessment" },
+        "source": { "$ref": "#/$defs/ObservationSource" },
+        "sourceSequenceState": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "state": { "const": "known" },
+                "value": { "$ref": "#/$defs/DecimalCounter" }
+              },
+              "required": ["state", "value"],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "reasonCode": { "$ref": "#/$defs/ShortString" },
+                "state": { "enum": ["unknown", "unsupported", "not_applicable"], "type": "string" }
+              },
+              "required": ["state", "reasonCode"],
+              "type": "object"
+            }
+          ]
+        },
+        "sourceStreamId": { "$ref": "#/$defs/EntityId" },
+        "timestampUtc": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "toolCallId": { "$ref": "#/$defs/EntityId" },
+        "toolCallState": { "$ref": "#/$defs/Assessment" },
+        "turnId": { "$ref": "#/$defs/EntityId" },
+        "turnState": { "$ref": "#/$defs/Assessment" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "eventId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "bootId",
+        "source",
+        "sourceStreamId",
+        "sourceSequenceState",
+        "localSequence",
+        "causalParentEventIds",
+        "realmId",
+        "sessionState",
+        "turnState",
+        "toolCallState",
+        "actor",
+        "actionType",
+        "outcome",
+        "payload",
+        "capture",
+        "timestampUtc",
+        "monotonicNanos",
+        "clockUncertaintyMs",
+        "redactionPolicyVersion",
+        "previousEventHashState",
+        "eventHash"
+      ],
+      "type": "object"
+    },
+    "ObservationEventBatchRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "batchId": { "$ref": "#/$defs/EntityId" },
+        "chainEndHash": { "$ref": "#/$defs/Sha256Digest" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "eventCount": { "maximum": 10000, "minimum": 1, "type": "integer" },
+        "firstSequence": { "$ref": "#/$defs/DecimalCounter" },
+        "kind": { "const": "observation_event_batch_request" },
+        "lastSequence": { "$ref": "#/$defs/DecimalCounter" },
+        "objectId": { "$ref": "#/$defs/EntityId" },
+        "previousChainHash": { "$ref": "#/$defs/Sha256Digest" },
+        "previousChainHashAssessment": { "$ref": "#/$defs/Assessment" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "signature": { "$ref": "#/$defs/Base64Url" },
+        "streamId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "batchId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "streamId",
+        "firstSequence",
+        "lastSequence",
+        "eventCount",
+        "previousChainHashAssessment",
+        "chainEndHash",
+        "objectId",
+        "contentDigest",
+        "signature",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "ObservationPackageOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "manager": { "$ref": "#/$defs/ShortString" },
+        "operation": {
+          "enum": ["install", "remove", "update", "resolve", "sync", "unknown"],
+          "type": "string"
+        },
+        "packageName": { "$ref": "#/$defs/ShortString" },
+        "requestedVersion": { "maxLength": 512, "type": "string" },
+        "scope": {
+          "enum": ["project", "workspace", "virtual_environment", "REDACTED", "system", "unknown"],
+          "type": "string"
+        }
+      },
+      "required": ["manager", "operation", "packageName", "requestedVersion", "scope"],
+      "type": "object"
+    },
+    "ObservationSource": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "$ref": "#/$defs/ProviderName" },
+        "providerState": { "enum": ["identified", "unknown", "not_applicable"], "type": "string" },
+        "sourceKind": {
+          "enum": ["provider", "process", "filesystem", "inventory", "extension", "system"],
+          "type": "string"
+        },
+        "surface": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": ["sourceKind", "providerState"],
+      "type": "object"
+    },
+    "ObservationStartCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "providerSurface": { "$ref": "#/$defs/ShortString" },
+        "type": { "const": "observation.start" }
+      },
+      "required": ["type", "projectId", "providerSurface"],
+      "type": "object"
+    },
+    "ObservationStopCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/EntityId" },
+        "type": { "const": "observation.stop" }
+      },
+      "required": ["type", "sessionId"],
+      "type": "object"
+    },
+    "ObservedActionGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "observed_action_graph" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "graph"],
+      "type": "object"
+    },
+    "OpaqueTokenId": {
+      "maxLength": 256,
+      "minLength": 16,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "type": "string"
+    },
+    "OptimalityPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "budgets": { "$ref": "#/$defs/PolicyBudgets" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "createdBy": { "$ref": "#/$defs/EntityId" },
+        "hardConstraints": {
+          "items": { "$ref": "#/$defs/PolicyConstraint" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "kind": { "const": "optimality_policy" },
+        "mode": { "enum": ["default", "REDACTED_defined", "hybrid"], "type": "string" },
+        "objectives": {
+          "items": { "$ref": "#/$defs/PolicyObjective" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "policyDigest": {
+          "$ref": "#/$defs/Sha256Digest",
+          "description": "RFC 8785 SHA-256 digest of this object with policyDigest omitted."
+        },
+        "policyId": { "$ref": "#/$defs/EntityId" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "requiredTargetIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "version": { "maximum": 2147483647, "minimum": 1, "type": "integer" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "policyId",
+        "workspaceId",
+        "projectId",
+        "version",
+        "mode",
+        "hardConstraints",
+        "objectives",
+        "requiredTargetIds",
+        "budgets",
+        "policyDigest",
+        "createdBy",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "PassedOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "attestationDigest": {
+          "$ref": "#/$defs/Sha256Digest",
+          "description": "RFC 8785 SHA-256 digest of this object with attestationDigest omitted."
+        },
+        "cleanupStatus": { "const": "deleted" },
+        "outcome": { "const": "REDACTEDed" }
+      },
+      "required": ["outcome", "cleanupStatus", "attestationDigest"],
+      "type": "object"
+    },
+    "PatchFile": {
+      "additionalProperties": false,
+      "properties": {
+        "afterDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "afterDigestAssessment": { "$ref": "#/$defs/Assessment" },
+        "beforeDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "beforeDigestAssessment": { "$ref": "#/$defs/Assessment" },
+        "changeKind": { "enum": ["added", "modified", "deleted", "renamed"], "type": "string" },
+        "generatedFile": { "type": "boolean" },
+        "operationIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "path": { "$ref": "#/$defs/RelativePath" }
+      },
+      "required": [
+        "path",
+        "changeKind",
+        "beforeDigestAssessment",
+        "afterDigestAssessment",
+        "generatedFile",
+        "operationIds"
+      ],
+      "type": "object"
+    },
+    "PatchGuardResult": {
+      "additionalProperties": false,
+      "properties": {
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "guard": {
+          "enum": [
+            "schema",
+            "path_scope",
+            "REDACTED_scan",
+            "diff_size",
+            "semantic_parse",
+            "manifest_lock_coherence",
+            "generated_file",
+            "policy",
+            "operation_traceability",
+            "static_contradiction"
+          ],
+          "type": "string"
+        },
+        "reasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "state": { "enum": ["REDACTEDed", "failed", "inconclusive", "unsupported"], "type": "string" }
+      },
+      "required": ["guard", "state", "reasonCodes", "evidenceReferenceIds"],
+      "type": "object"
+    },
+    "PolicyBudgets": {
+      "additionalProperties": false,
+      "properties": {
+        "maxAttempts": { "maximum": 100, "minimum": 1, "type": "integer" },
+        "maxCandidates": { "maximum": 1000, "minimum": 1, "type": "integer" },
+        "maxConcurrentJobs": { "maximum": 1000, "minimum": 1, "type": "integer" },
+        "maxElapsedSeconds": { "maximum": 604800, "minimum": 1, "type": "integer" },
+        "maxEstimatedCostMicrousd": { "$ref": "#/$defs/DecimalCounter" }
+      },
+      "required": [
+        "maxCandidates",
+        "maxConcurrentJobs",
+        "maxAttempts",
+        "maxElapsedSeconds",
+        "maxEstimatedCostMicrousd"
+      ],
+      "type": "object"
+    },
+    "PolicyConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "constraintId": { "$ref": "#/$defs/EntityId" },
+        "failureCode": { "$ref": "#/$defs/ShortString" },
+        "kind": {
+          "enum": [
+            "required_target",
+            "allowed_manager",
+            "allowed_package",
+            "denied_package",
+            "maximum_dependency_count",
+            "required_test",
+            "required_lockfile",
+            "network_policy",
+            "resource_budget",
+            "path_scope",
+            "REDACTED_policy",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "operand": { "$ref": "#/$defs/BoundedString" },
+        "operator": {
+          "enum": [
+            "equals",
+            "not_equals",
+            "contains",
+            "not_contains",
+            "less_than_or_equal",
+            "greater_than_or_equal",
+            "matches"
+          ],
+          "type": "string"
+        },
+        "subject": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": ["constraintId", "kind", "subject", "operator", "operand", "failureCode"],
+      "type": "object"
+    },
+    "PolicyObjective": {
+      "additionalProperties": false,
+      "properties": {
+        "direction": { "enum": ["minimize", "maximize"], "type": "string" },
+        "kind": {
+          "enum": [
+            "validation_REDACTED_rate",
+            "dependency_count",
+            "install_duration",
+            "build_duration",
+            "test_duration",
+            "artifact_size",
+            "security_risk",
+            "version_freshness",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "measurement": { "$ref": "#/$defs/ShortString" },
+        "objectiveId": { "$ref": "#/$defs/EntityId" },
+        "REDACTEDSupplied": { "type": "boolean" },
+        "weight": { "maximum": 1000, "minimum": 1, "type": "integer" }
+      },
+      "required": ["objectiveId", "kind", "direction", "weight", "measurement", "REDACTEDSupplied"],
+      "type": "object"
+    },
+    "ProbeProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "items": { "maxLength": 4096, "type": "string" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "executable": { "$ref": "#/$defs/ShortString" },
+        "expectedExitStatuses": {
+          "items": { "maximum": 2147483647, "minimum": -2147483648, "type": "integer" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "phase": {
+          "enum": ["preflight", "resolve", "install", "build", "test", "smoke", "benchmark"],
+          "type": "string"
+        },
+        "probeId": { "$ref": "#/$defs/EntityId" },
+        "rationale": { "$ref": "#/$defs/BoundedString" },
+        "timeoutSeconds": { "maximum": 86400, "minimum": 1, "type": "integer" },
+        "workingDirectory": { "$ref": "#/$defs/RelativePath" }
+      },
+      "required": [
+        "probeId",
+        "phase",
+        "executable",
+        "arguments",
+        "workingDirectory",
+        "timeoutSeconds",
+        "expectedExitStatuses",
+        "rationale"
+      ],
+      "type": "object"
+    },
+    "Project": {
+      "additionalProperties": false,
+      "properties": {
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "defaultBranch": { "$ref": "#/$defs/ShortString" },
+        "kind": { "const": "project" },
+        "projectGoal": { "$ref": "#/$defs/BoundedString" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "repositoryFullName": { "$ref": "#/$defs/ShortString" },
+        "repositoryId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "projectId",
+        "workspaceId",
+        "repositoryId",
+        "repositoryFullName",
+        "defaultBranch",
+        "projectGoal",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "ProjectBindCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "repositoryPath": { "maxLength": 4096, "minLength": 1, "type": "string" },
+        "type": { "const": "project.bind" }
+      },
+      "required": ["type", "repositoryPath", "projectId"],
+      "type": "object"
+    },
+    "ProtocolError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": { "$ref": "#/$defs/ShortString" },
+        "issues": { "items": { "$ref": "#/$defs/FieldIssue" }, "maxItems": 256, "type": "array" },
+        "message": { "maxLength": 1024, "minLength": 1, "type": "string" },
+        "retryable": { "type": "boolean" }
+      },
+      "required": ["code", "message", "retryable", "issues"],
+      "type": "object"
+    },
+    "ProviderCapabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "commandResults": { "$ref": "#/$defs/CapabilityState" },
+        "fileOperations": { "$ref": "#/$defs/CapabilityState" },
+        "permissionDecisions": { "$ref": "#/$defs/CapabilityState" },
+        "sessionLifecycle": { "$ref": "#/$defs/CapabilityState" },
+        "shellCommands": { "$ref": "#/$defs/CapabilityState" },
+        "sourceSequence": { "$ref": "#/$defs/CapabilityState" },
+        "subagents": { "$ref": "#/$defs/CapabilityState" },
+        "toolLifecycle": { "$ref": "#/$defs/CapabilityState" }
+      },
+      "required": [
+        "sessionLifecycle",
+        "toolLifecycle",
+        "shellCommands",
+        "commandResults",
+        "fileOperations",
+        "permissionDecisions",
+        "subagents",
+        "sourceSequence"
+      ],
+      "type": "object"
+    },
+    "ProviderCapabilityProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterVersion": { "$ref": "#/$defs/ShortString" },
+        "capabilities": { "$ref": "#/$defs/ProviderCapabilities" },
+        "capabilityReportId": { "$ref": "#/$defs/EntityId" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "provider_capability_profile" },
+        "knownGaps": {
+          "items": { "$ref": "#/$defs/BoundedString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "observedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "provider": { "$ref": "#/$defs/ProviderName" },
+        "providerVersion": { "$ref": "#/$defs/ShortString" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "supportedEventTypes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "surface": { "$ref": "#/$defs/ShortString" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "capabilityReportId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "provider",
+        "surface",
+        "providerVersion",
+        "adapterVersion",
+        "supportedEventTypes",
+        "capabilities",
+        "knownGaps",
+        "observedAt"
+      ],
+      "type": "object"
+    },
+    "ProviderName": { "enum": ["codex", "claude_code", "cursor"], "type": "string" },
+    "Realm": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": { "$ref": "#/$defs/ShortString" },
+        "coverage": { "$ref": "#/$defs/Assessment" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "displayLabel": { "$ref": "#/$defs/ShortString" },
+        "kind": { "const": "realm" },
+        "parentRealmId": { "$ref": "#/$defs/EntityId" },
+        "platform": { "$ref": "#/$defs/ShortString" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "realmType": {
+          "enum": [
+            "host",
+            "wsl",
+            "dev_container",
+            "remote_ssh",
+            "codespace",
+            "cloud_environment",
+            "validation_sandbox"
+          ],
+          "type": "string"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "realmId",
+        "deviceId",
+        "realmType",
+        "platform",
+        "architecture",
+        "displayLabel",
+        "coverage"
+      ],
+      "type": "object"
+    },
+    "Recommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "behaviorContract": { "$ref": "#/$defs/VersionedReference" },
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "candidatePatchId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "diffDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "diffObjectId": { "$ref": "#/$defs/EntityId" },
+        "findingEvidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 2048,
+          "minItems": 1,
+          "type": "array"
+        },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "invalidationInputDigests": {
+          "items": { "$ref": "#/$defs/Sha256Digest" },
+          "maxItems": 1024,
+          "minItems": 1,
+          "type": "array"
+        },
+        "kind": { "const": "recommendation" },
+        "limitations": {
+          "items": { "$ref": "#/$defs/BoundedString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "policy": { "$ref": "#/$defs/VersionedReference" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "proof": { "$ref": "#/$defs/RecommendationProof" },
+        "rationale": { "$ref": "#/$defs/BoundedString" },
+        "recommendationId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": {
+          "enum": [
+            "draft",
+            "reviewable",
+            "approved",
+            "applied",
+            "invalidated",
+            "rejected",
+            "superseded"
+          ],
+          "type": "string"
+        },
+        "targetIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "validationMatrix": {
+          "items": { "$ref": "#/$defs/ValidationMatrixCell" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "recommendationId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "candidatePatchId",
+        "state",
+        "proof",
+        "findingIds",
+        "findingEvidenceReferenceIds",
+        "rationale",
+        "diffObjectId",
+        "diffDigest",
+        "validationMatrix",
+        "behaviorContract",
+        "policy",
+        "targetIds",
+        "limitations",
+        "invalidationInputDigests",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "RecommendationProof": {
+      "oneOf": [
+        { "$ref": "#/$defs/VerifiedRecommendationProof" },
+        { "$ref": "#/$defs/ReconstructionRecommendationProof" },
+        { "$ref": "#/$defs/UnverifiedRecommendationProof" }
+      ]
+    },
+    "ReconcileQueueMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": { "maximum": 100, "minimum": 1, "type": "integer" },
+        "checkpointId": { "$ref": "#/$defs/EntityId" },
+        "enqueuedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "idempotencyKey": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "reconcile_queue_message" },
+        "messageId": { "$ref": "#/$defs/EntityId" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "messageId",
+        "workspaceId",
+        "projectId",
+        "checkpointId",
+        "sourceInputId",
+        "idempotencyKey",
+        "attempt",
+        "enqueuedAt"
+      ],
+      "type": "object"
+    },
+    "ReconstructionRecommendationProof": {
+      "additionalProperties": false,
+      "properties": {
+        "attestationDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "reasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "result": { "const": "reconstruction_REDACTEDed" }
+      },
+      "required": ["result", "attestationId", "attestationDigest", "reasonCodes"],
+      "type": "object"
+    },
+    "RedactedActionPayload": {
+      "additionalProperties": false,
+      "properties": {
+        "argumentShape": {
+          "items": { "maxLength": 128, "type": "string" },
+          "maxItems": 128,
+          "type": "array"
+        },
+        "diagnosticCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "environmentVariables": {
+          "items": { "$ref": "#/$defs/EnvironmentVariableObservation" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "executableFamily": { "maxLength": 256, "type": "string" },
+        "fileEffects": {
+          "items": { "$ref": "#/$defs/FileEffect" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "operationKind": {
+          "enum": ["package", "process", "file", "configuration", "service", "runtime", "unknown"],
+          "type": "string"
+        },
+        "packageOperations": {
+          "items": { "$ref": "#/$defs/ObservationPackageOperation" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "summary": { "maxLength": 2048, "type": "string" }
+      },
+      "required": [
+        "operationKind",
+        "summary",
+        "executableFamily",
+        "argumentShape",
+        "packageOperations",
+        "fileEffects",
+        "environmentVariables",
+        "diagnosticCodes"
+      ],
+      "type": "object"
+    },
+    "RelativePath": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "pattern": "^(?:[^./\\\\:\\u0000][^/\\\\:\\u0000]*|\\.[^./\\\\:\\u0000][^/\\\\:\\u0000]*|\\.\\.[^/\\\\:\\u0000]+)(?:/(?:[^./\\\\:\\u0000][^/\\\\:\\u0000]*|\\.[^./\\\\:\\u0000][^/\\\\:\\u0000]*|\\.\\.[^/\\\\:\\u0000]+))*$",
+      "type": "string"
+    },
+    "ResolvedGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "resolved_graph" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "graph"],
+      "type": "object"
+    },
+    "ResourcePolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "cpuCount": { "maximum": 1024, "minimum": 1, "type": "integer" },
+        "diskBytes": { "$ref": "#/$defs/ByteCount" },
+        "maxElapsedSeconds": { "maximum": 604800, "minimum": 1, "type": "integer" },
+        "maxEstimatedCostMicrousd": { "$ref": "#/$defs/DecimalCounter" },
+        "memoryBytes": { "$ref": "#/$defs/ByteCount" }
+      },
+      "required": [
+        "cpuCount",
+        "memoryBytes",
+        "diskBytes",
+        "maxElapsedSeconds",
+        "maxEstimatedCostMicrousd"
+      ],
+      "type": "object"
+    },
+    "Rfc3339Timestamp": { "format": "date-time", "maxLength": 64, "type": "string" },
+    "RuntimeSelectionOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "evidenceReferenceIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "findingIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "operationId": { "$ref": "#/$defs/EntityId" },
+        "operationKind": { "const": "runtime_select" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "runtime": { "$ref": "#/$defs/ShortString" },
+        "version": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": [
+        "operationId",
+        "operationKind",
+        "findingIds",
+        "evidenceReferenceIds",
+        "runtime",
+        "version",
+        "realmId"
+      ],
+      "type": "object"
+    },
+    "SchemaVersion": { "const": 1, "type": "integer" },
+    "SecretBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedHosts": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "REDACTED_binding" },
+        "mountedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "mountedAtAssessment": { "$ref": "#/$defs/Assessment" },
+        "removedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "removedAtAssessment": { "$ref": "#/$defs/Assessment" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "REDACTEDBindingId": { "$ref": "#/$defs/EntityId" },
+        "REDACTEDReferenceId": { "$ref": "#/$defs/EntityId" },
+        "state": {
+          "enum": ["reserved", "mounted", "removed", "removal_failed", "expired"],
+          "type": "string"
+        },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "validationJobId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "REDACTEDBindingId",
+        "REDACTEDReferenceId",
+        "workspaceId",
+        "validationJobId",
+        "targetId",
+        "allowedHosts",
+        "state",
+        "mountedAtAssessment",
+        "removedAtAssessment",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "SecretReference": {
+      "additionalProperties": false,
+      "properties": {
+        "allowedHosts": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "expiresAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "expiryAssessment": { "$ref": "#/$defs/Assessment" },
+        "kind": { "const": "REDACTED_reference" },
+        "opaqueProviderReference": { "$ref": "#/$defs/OpaqueTokenId" },
+        "permittedTargetIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "provider": {
+          "enum": ["daytona_host_restricted", "external_REDACTED_manager"],
+          "type": "string"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "REDACTEDReferenceId": { "$ref": "#/$defs/EntityId" },
+        "versionIdentity": { "$ref": "#/$defs/ShortString" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "REDACTEDReferenceId",
+        "workspaceId",
+        "provider",
+        "opaqueProviderReference",
+        "versionIdentity",
+        "permittedTargetIds",
+        "allowedHosts",
+        "expiryAssessment",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "Session": {
+      "additionalProperties": false,
+      "properties": {
+        "boundarySource": {
+          "enum": ["provider", "extension_manual", "companion_inferred"],
+          "type": "string"
+        },
+        "capabilityReportId": { "$ref": "#/$defs/EntityId" },
+        "capture": { "$ref": "#/$defs/Assessment" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "endedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "session" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "provider": { "$ref": "#/$defs/ProviderName" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sessionId": { "$ref": "#/$defs/EntityId" },
+        "startedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "status": {
+          "enum": [
+            "registered",
+            "observing",
+            "draining",
+            "checkpointing",
+            "ended",
+            "partial_capture"
+          ],
+          "type": "string"
+        },
+        "surface": { "$ref": "#/$defs/ShortString" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sessionId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "provider",
+        "surface",
+        "capabilityReportId",
+        "status",
+        "boundarySource",
+        "capture",
+        "startedAt"
+      ],
+      "type": "object"
+    },
+    "SessionChangedNotification": {
+      "additionalProperties": false,
+      "properties": {
+        "session": { "$ref": "#/$defs/LocalSessionSummary" },
+        "type": { "const": "session.changed" }
+      },
+      "required": ["type", "session"],
+      "type": "object"
+    },
+    "Sha256Digest": { "pattern": "^sha256:[a-f0-9]{64}$", "type": "string" },
+    "ShortString": { "maxLength": 256, "minLength": 1, "type": "string" },
+    "Snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterResults": {
+          "items": { "$ref": "#/$defs/AdapterInventoryResult" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "completeness": { "$ref": "#/$defs/Assessment" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "gapIds": { "items": { "$ref": "#/$defs/EntityId" }, "maxItems": 512, "type": "array" },
+        "intervalEnd": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "intervalStart": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "snapshot" },
+        "layerId": { "$ref": "#/$defs/EntityId" },
+        "parentSnapshotId": { "$ref": "#/$defs/EntityId" },
+        "parentSnapshotState": { "$ref": "#/$defs/Assessment" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "realmId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "scope": { "$ref": "#/$defs/InventoryScope" },
+        "snapshotId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "snapshotId",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "realmId",
+        "parentSnapshotState",
+        "intervalStart",
+        "intervalEnd",
+        "scope",
+        "completeness",
+        "adapterResults",
+        "gapIds",
+        "contentDigest"
+      ],
+      "type": "object"
+    },
+    "SnapshotIngestRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "deviceId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "snapshot_ingest_request" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "signature": { "$ref": "#/$defs/Base64Url" },
+        "snapshotDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "snapshotId": { "$ref": "#/$defs/EntityId" },
+        "snapshotObjectId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "workspaceId",
+        "projectId",
+        "deviceId",
+        "snapshotId",
+        "snapshotObjectId",
+        "snapshotDigest",
+        "signature",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "SourceInput": {
+      "oneOf": [
+        { "$ref": "#/$defs/GitCommitSourceInput" },
+        { "$ref": "#/$defs/WorkingTreeSourceInput" }
+      ]
+    },
+    "StatusChangedNotification": {
+      "additionalProperties": false,
+      "properties": {
+        "status": { "$ref": "#/$defs/CompanionStatus" },
+        "type": { "const": "status.changed" }
+      },
+      "required": ["type", "status"],
+      "type": "object"
+    },
+    "StatusGetCommand": {
+      "additionalProperties": false,
+      "properties": { "type": { "const": "status.get" } },
+      "required": ["type"],
+      "type": "object"
+    },
+    "StringMap": {
+      "additionalProperties": { "maxLength": 4096, "type": "string" },
+      "maxProperties": 256,
+      "type": "object"
+    },
+    "SubmoduleIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "commitId": { "$ref": "#/$defs/GitObjectId" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "kind": { "const": "submodule_identity" },
+        "path": { "$ref": "#/$defs/RelativePath" },
+        "repositoryIdentity": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "path",
+        "repositoryIdentity",
+        "commitId",
+        "contentDigest"
+      ],
+      "type": "object"
+    },
+    "SupportLevel": {
+      "enum": ["full_native", "native_validation", "observed_only", "unsupported", "unknown"],
+      "type": "string"
+    },
+    "UnverifiedCandidateState": {
+      "additionalProperties": false,
+      "properties": {
+        "reasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "state": {
+          "enum": [
+            "draft",
+            "static_rejected",
+            "ready_for_validation",
+            "validating",
+            "validation_failed",
+            "inconclusive",
+            "stale"
+          ],
+          "type": "string"
+        }
+      },
+      "required": ["state", "reasonCodes"],
+      "type": "object"
+    },
+    "UnverifiedRecommendationProof": {
+      "additionalProperties": false,
+      "properties": {
+        "reasonCodes": {
+          "items": { "$ref": "#/$defs/ShortString" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "result": { "const": "not_verified" }
+      },
+      "required": ["result", "reasonCodes"],
+      "type": "object"
+    },
+    "UploadChangedNotification": {
+      "additionalProperties": false,
+      "properties": {
+        "pendingBatches": { "maximum": 2147483647, "minimum": 0, "type": "integer" },
+        "type": { "const": "upload.changed" }
+      },
+      "required": ["type", "pendingBatches"],
+      "type": "object"
+    },
+    "UsedGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "used_graph" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" }
+      },
+      "required": ["schemaVersion", "kind", "graph"],
+      "type": "object"
+    },
+    "ValidatedGraph": {
+      "additionalProperties": false,
+      "properties": {
+        "graph": { "$ref": "#/$defs/GraphBody" },
+        "kind": { "const": "validated_graph" },
+        "outcome": {
+          "enum": ["REDACTEDed", "failed", "inconclusive", "unsupported"],
+          "type": "string"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "validationJobId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["schemaVersion", "kind", "graph", "validationJobId", "targetId", "outcome"],
+      "type": "object"
+    },
+    "ValidationAttestation": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterVersions": { "$ref": "#/$defs/VersionMap" },
+        "attestationDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "attestedTargets": {
+          "items": { "$ref": "#/$defs/AttestedTarget" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "behaviorContract": { "$ref": "#/$defs/VersionedReference" },
+        "behaviorContractDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "candidatePatchDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "validation_attestation" },
+        "limitations": {
+          "items": { "$ref": "#/$defs/BoundedString" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "nativeToolVersions": { "$ref": "#/$defs/VersionMap" },
+        "policy": { "$ref": "#/$defs/VersionedReference" },
+        "policyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "requiredTargetIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "result": { "enum": ["reconstruction_REDACTEDed", "verified"], "type": "string" },
+        "ruleVersions": { "$ref": "#/$defs/VersionMap" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInput": { "$ref": "#/$defs/SourceInput" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "validatorVersion": { "$ref": "#/$defs/ShortString" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "attestationId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "sourceInput",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "behaviorContract",
+        "behaviorContractDigest",
+        "policy",
+        "policyDigest",
+        "requiredTargetIds",
+        "attestedTargets",
+        "adapterVersions",
+        "ruleVersions",
+        "validatorVersion",
+        "nativeToolVersions",
+        "limitations",
+        "result",
+        "attestationDigest",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "ValidationBatch": {
+      "additionalProperties": false,
+      "properties": {
+        "budgetReservationId": { "$ref": "#/$defs/EntityId" },
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "candidatePatchDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "jobIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "kind": { "const": "validation_batch" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "requiredTargetIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "state": {
+          "enum": [
+            "reserved",
+            "queued",
+            "running",
+            "cancelling",
+            "aggregating",
+            "REDACTEDed",
+            "failed",
+            "inconclusive",
+            "superseded"
+          ],
+          "type": "string"
+        },
+        "supersededByAssessment": { "$ref": "#/$defs/Assessment" },
+        "supersededByBatchId": { "$ref": "#/$defs/EntityId" },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "validationBatchId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationBatchId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "requiredTargetIds",
+        "jobIds",
+        "state",
+        "budgetReservationId",
+        "supersededByAssessment",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "ValidationCacheEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "items": { "$ref": "#/$defs/CacheArtifact" },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array"
+        },
+        "attestationAssessment": { "$ref": "#/$defs/Assessment" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "cacheEntryId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "expiresAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "jobKeyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "kind": { "const": "validation_cache_entry" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": { "enum": ["ready", "stale", "expired", "invalid"], "type": "string" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "cacheEntryId",
+        "workspaceId",
+        "projectId",
+        "jobKeyDigest",
+        "state",
+        "artifacts",
+        "attestationAssessment",
+        "createdAt",
+        "expiresAt"
+      ],
+      "type": "object"
+    },
+    "ValidationDiagnostic": {
+      "additionalProperties": false,
+      "properties": {
+        "commandId": { "$ref": "#/$defs/EntityId" },
+        "diagnosticId": { "$ref": "#/$defs/EntityId" },
+        "errorSignature": { "$ref": "#/$defs/ShortString" },
+        "errorSignatureAssessment": { "$ref": "#/$defs/Assessment" },
+        "evidenceObjectAssessment": { "$ref": "#/$defs/Assessment" },
+        "evidenceObjectId": { "$ref": "#/$defs/EntityId" },
+        "exitStatus": { "maximum": 2147483647, "minimum": -2147483648, "type": "integer" },
+        "exitStatusAssessment": { "$ref": "#/$defs/Assessment" },
+        "redactedExcerpt": { "maxLength": 8192, "type": "string" },
+        "truncated": { "type": "boolean" }
+      },
+      "required": [
+        "diagnosticId",
+        "commandId",
+        "errorSignatureAssessment",
+        "exitStatusAssessment",
+        "redactedExcerpt",
+        "truncated",
+        "evidenceObjectAssessment"
+      ],
+      "type": "object"
+    },
+    "ValidationJob": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": { "maximum": 100, "minimum": 1, "type": "integer" },
+        "cacheAssessment": { "$ref": "#/$defs/Assessment" },
+        "cacheEntryId": { "$ref": "#/$defs/EntityId" },
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "currentPhaseAssessment": { "$ref": "#/$defs/Assessment" },
+        "currentPhaseId": { "$ref": "#/$defs/EntityId" },
+        "daytonaSandboxAssessment": { "$ref": "#/$defs/Assessment" },
+        "daytonaSandboxId": { "$ref": "#/$defs/EntityId" },
+        "jobKeyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "kind": { "const": "validation_job" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "state": {
+          "enum": [
+            "queued",
+            "provisioning",
+            "preflight",
+            "source_prepare",
+            "resolve",
+            "install",
+            "build",
+            "test",
+            "smoke",
+            "benchmark",
+            "evidence_persist",
+            "cleanup",
+            "terminal"
+          ],
+          "type": "string"
+        },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "updatedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "validationBatchId": { "$ref": "#/$defs/EntityId" },
+        "validationJobId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationJobId",
+        "validationBatchId",
+        "workspaceId",
+        "projectId",
+        "candidateId",
+        "targetId",
+        "jobKeyDigest",
+        "state",
+        "daytonaSandboxAssessment",
+        "currentPhaseAssessment",
+        "cacheAssessment",
+        "attempt",
+        "createdAt",
+        "updatedAt"
+      ],
+      "type": "object"
+    },
+    "ValidationJobKey": {
+      "additionalProperties": false,
+      "properties": {
+        "adapterVersionsDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "behaviorContractDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "candidatePatchDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "immutableBaseDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "kind": { "const": "validation_job_key" },
+        "nativeToolVersionsDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "networkPolicyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "policyDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "ruleVersionsDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "REDACTEDBindingSchemaAssessment": { "$ref": "#/$defs/Assessment" },
+        "REDACTEDBindingSchemaDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "sourceInputDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "targetDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "validatorVersion": { "$ref": "#/$defs/ShortString" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "targetDigest",
+        "immutableBaseDigest",
+        "behaviorContractDigest",
+        "policyDigest",
+        "adapterVersionsDigest",
+        "ruleVersionsDigest",
+        "validatorVersion",
+        "nativeToolVersionsDigest",
+        "networkPolicyDigest",
+        "REDACTEDBindingSchemaAssessment"
+      ],
+      "type": "object"
+    },
+    "ValidationMatrixCell": {
+      "additionalProperties": false,
+      "properties": {
+        "behaviorStepOutcomeIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "cacheAssessment": { "$ref": "#/$defs/Assessment" },
+        "outcome": { "$ref": "#/$defs/ShortString" },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "validationJobId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "targetId",
+        "validationJobId",
+        "outcome",
+        "cacheAssessment",
+        "behaviorStepOutcomeIds"
+      ],
+      "type": "object"
+    },
+    "ValidationOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "candidateId": { "$ref": "#/$defs/EntityId" },
+        "kind": { "const": "validation_outcome" },
+        "originConfidence": { "$ref": "#/$defs/Confidence" },
+        "phaseIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 64,
+          "minItems": 1,
+          "type": "array"
+        },
+        "result": { "$ref": "#/$defs/ValidationOutcomeResult" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "suspectedOrigin": {
+          "enum": ["project", "candidate", "daytona", "registry", "network", "resource", "unknown"],
+          "type": "string"
+        },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "terminalAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "validationJobId": { "$ref": "#/$defs/EntityId" },
+        "validationOutcomeId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationOutcomeId",
+        "validationJobId",
+        "candidateId",
+        "targetId",
+        "suspectedOrigin",
+        "originConfidence",
+        "phaseIds",
+        "result",
+        "terminalAt"
+      ],
+      "type": "object"
+    },
+    "ValidationOutcomeResult": {
+      "oneOf": [
+        { "$ref": "#/$defs/PassedOutcome" },
+        { "$ref": "#/$defs/NonCleanupFailureOutcome" },
+        { "$ref": "#/$defs/CleanupFailedOutcome" }
+      ]
+    },
+    "ValidationPhase": {
+      "additionalProperties": false,
+      "properties": {
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "diagnostics": {
+          "items": { "$ref": "#/$defs/ValidationDiagnostic" },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "durationAssessment": { "$ref": "#/$defs/Assessment" },
+        "durationMs": { "$ref": "#/$defs/DurationMs" },
+        "finishedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "finishedAtAssessment": { "$ref": "#/$defs/Assessment" },
+        "kind": { "const": "validation_phase" },
+        "phase": {
+          "enum": [
+            "provisioning",
+            "preflight",
+            "source_prepare",
+            "resolve",
+            "install",
+            "build",
+            "test",
+            "smoke",
+            "benchmark",
+            "evidence_persist",
+            "cleanup"
+          ],
+          "type": "string"
+        },
+        "providerHealth": { "$ref": "#/$defs/HealthState" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "startedAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "startedAtAssessment": { "$ref": "#/$defs/Assessment" },
+        "state": {
+          "enum": [
+            "queued",
+            "running",
+            "REDACTEDed",
+            "failed",
+            "timed_out",
+            "skipped",
+            "cancelled",
+            "inconclusive"
+          ],
+          "type": "string"
+        },
+        "validationJobId": { "$ref": "#/$defs/EntityId" },
+        "validationPhaseId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "validationPhaseId",
+        "validationJobId",
+        "phase",
+        "state",
+        "startedAtAssessment",
+        "finishedAtAssessment",
+        "durationAssessment",
+        "diagnostics",
+        "providerHealth",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "ValidationTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": { "$ref": "#/$defs/ShortString" },
+        "capabilityAssessment": { "$ref": "#/$defs/Assessment" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "immutableBase": { "$ref": "#/$defs/ImmutableBaseIdentity" },
+        "kind": { "const": "validation_target" },
+        "managerSelections": { "$ref": "#/$defs/VersionMap" },
+        "name": { "$ref": "#/$defs/ShortString" },
+        "networkPolicy": { "$ref": "#/$defs/NetworkPolicy" },
+        "os": { "$ref": "#/$defs/ShortString" },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "resourcePolicy": { "$ref": "#/$defs/ResourcePolicy" },
+        "runtimeSelections": { "$ref": "#/$defs/VersionMap" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "targetDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "targetId": { "$ref": "#/$defs/EntityId" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "targetId",
+        "workspaceId",
+        "projectId",
+        "name",
+        "os",
+        "architecture",
+        "runtimeSelections",
+        "managerSelections",
+        "immutableBase",
+        "resourcePolicy",
+        "networkPolicy",
+        "capabilityAssessment",
+        "targetDigest",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "VerifiedCandidateState": {
+      "additionalProperties": false,
+      "properties": {
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "state": { "const": "verified" }
+      },
+      "required": ["state", "attestationId"],
+      "type": "object"
+    },
+    "VerifiedRecommendationProof": {
+      "additionalProperties": false,
+      "properties": {
+        "attestationDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "attestationId": { "$ref": "#/$defs/EntityId" },
+        "result": { "const": "verified" }
+      },
+      "required": ["result", "attestationId", "attestationDigest"],
+      "type": "object"
+    },
+    "VersionedReference": {
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/EntityId" },
+        "version": { "maximum": 2147483647, "minimum": 1, "type": "integer" }
+      },
+      "required": ["id", "version"],
+      "type": "object"
+    },
+    "VersionMap": {
+      "additionalProperties": { "maxLength": 256, "minLength": 1, "type": "string" },
+      "maxProperties": 256,
+      "propertyNames": { "maxLength": 256, "minLength": 1 },
+      "type": "object"
+    },
+    "WorkingTreeBundle": {
+      "additionalProperties": false,
+      "properties": {
+        "baseCommitSha": { "$ref": "#/$defs/GitObjectId" },
+        "bundleId": { "$ref": "#/$defs/EntityId" },
+        "contentDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "excludedPathReasonCodes": {
+          "additionalProperties": { "$ref": "#/$defs/ShortString" },
+          "maxProperties": 10000,
+          "type": "object"
+        },
+        "includedPathDigests": {
+          "additionalProperties": { "$ref": "#/$defs/Sha256Digest" },
+          "maxProperties": 10000,
+          "type": "object"
+        },
+        "kind": { "const": "working_tree_bundle" },
+        "patchObjectId": { "$ref": "#/$defs/EntityId" },
+        "resultingTreeDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "REDACTEDScanAssessment": { "$ref": "#/$defs/Assessment" },
+        "sourceInputId": { "$ref": "#/$defs/EntityId" },
+        "untrackedObjectId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "bundleId",
+        "sourceInputId",
+        "baseCommitSha",
+        "resultingTreeDigest",
+        "patchObjectId",
+        "includedPathDigests",
+        "excludedPathReasonCodes",
+        "REDACTEDScanAssessment",
+        "contentDigest"
+      ],
+      "type": "object"
+    },
+    "WorkingTreeSourceInput": {
+      "additionalProperties": false,
+      "properties": {
+        "baseCommitSha": { "$ref": "#/$defs/GitObjectId" },
+        "bundleDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "bundleObjectId": { "$ref": "#/$defs/EntityId" },
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "ignorePolicyVersion": { "$ref": "#/$defs/ShortString" },
+        "includedPathManifestDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "kind": { "const": "source_input_working_tree" },
+        "lfsIdentities": {
+          "items": { "$ref": "#/$defs/LfsIdentity" },
+          "maxItems": 4096,
+          "type": "array"
+        },
+        "projectId": { "$ref": "#/$defs/EntityId" },
+        "repositoryId": { "$ref": "#/$defs/EntityId" },
+        "resultingTreeDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "REDACTEDScanPolicyVersion": { "$ref": "#/$defs/ShortString" },
+        "sourceInputId": { "$ref": "#/$defs/EntityId" },
+        "submoduleIdentities": {
+          "items": { "$ref": "#/$defs/SubmoduleIdentity" },
+          "maxItems": 1024,
+          "type": "array"
+        },
+        "supportGapIds": {
+          "items": { "$ref": "#/$defs/EntityId" },
+          "maxItems": 512,
+          "type": "array"
+        },
+        "untrackedBundleDigest": { "$ref": "#/$defs/Sha256Digest" },
+        "untrackedBundleState": { "$ref": "#/$defs/Assessment" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" },
+        "worktreePatchDigest": { "$ref": "#/$defs/Sha256Digest" }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourceInputId",
+        "workspaceId",
+        "projectId",
+        "repositoryId",
+        "baseCommitSha",
+        "resultingTreeDigest",
+        "worktreePatchDigest",
+        "untrackedBundleState",
+        "bundleObjectId",
+        "bundleDigest",
+        "includedPathManifestDigest",
+        "ignorePolicyVersion",
+        "REDACTEDScanPolicyVersion",
+        "submoduleIdentities",
+        "lfsIdentities",
+        "supportGapIds",
+        "createdAt"
+      ],
+      "type": "object"
+    },
+    "Workspace": {
+      "additionalProperties": false,
+      "properties": {
+        "createdAt": { "$ref": "#/$defs/Rfc3339Timestamp" },
+        "kind": { "const": "workspace" },
+        "name": { "$ref": "#/$defs/ShortString" },
+        "retentionClass": { "$ref": "#/$defs/ShortString" },
+        "schemaVersion": { "$ref": "#/$defs/SchemaVersion" },
+        "workspaceId": { "$ref": "#/$defs/EntityId" }
+      },
+      "required": ["schemaVersion", "kind", "workspaceId", "name", "createdAt", "retentionClass"],
+      "type": "object"
+    },
+    "WorkspaceEnrollCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "enrollmentToken": { "$ref": "#/$defs/OpaqueTokenId" },
+        "type": { "const": "workspace.enroll" }
+      },
+      "required": ["type", "enrollmentToken"],
+      "type": "object"
+    },
+    "WorkspaceRole": { "enum": ["owner", "member"], "type": "string" }
+  },
+  "$id": "https://schemas.environment-REDACTED.dev/v1/protocol.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Discriminated union of every independently stored or transmitted v1 payload.",
+  "oneOf": [
+    { "$ref": "#/$defs/Workspace" },
+    { "$ref": "#/$defs/Project" },
+    { "$ref": "#/$defs/Device" },
+    { "$ref": "#/$defs/Realm" },
+    { "$ref": "#/$defs/Layer" },
+    { "$ref": "#/$defs/ProviderCapabilityProfile" },
+    { "$ref": "#/$defs/Session" },
+    { "$ref": "#/$defs/ObservationEvent" },
+    { "$ref": "#/$defs/ActionEnvelope" },
+    { "$ref": "#/$defs/CaptureGap" },
+    { "$ref": "#/$defs/Snapshot" },
+    { "$ref": "#/$defs/SourceInput" },
+    { "$ref": "#/$defs/WorkingTreeBundle" },
+    { "$ref": "#/$defs/SubmoduleIdentity" },
+    { "$ref": "#/$defs/LfsIdentity" },
+    { "$ref": "#/$defs/ObjectMetadata" },
+    { "$ref": "#/$defs/DeclaredGraph" },
+    { "$ref": "#/$defs/LockedGraph" },
+    { "$ref": "#/$defs/ResolvedGraph" },
+    { "$ref": "#/$defs/InstalledGraph" },
+    { "$ref": "#/$defs/UsedGraph" },
+    { "$ref": "#/$defs/ObservedActionGraph" },
+    { "$ref": "#/$defs/ValidatedGraph" },
+    { "$ref": "#/$defs/Finding" },
+    { "$ref": "#/$defs/EvidenceReference" },
+    { "$ref": "#/$defs/BehaviorContract" },
+    { "$ref": "#/$defs/OptimalityPolicy" },
+    { "$ref": "#/$defs/CandidatePlan" },
+    { "$ref": "#/$defs/CandidatePatch" },
+    { "$ref": "#/$defs/CandidateLifecycle" },
+    { "$ref": "#/$defs/ValidationTarget" },
+    { "$ref": "#/$defs/ValidationBatch" },
+    { "$ref": "#/$defs/ValidationJob" },
+    { "$ref": "#/$defs/ValidationPhase" },
+    { "$ref": "#/$defs/ValidationOutcome" },
+    { "$ref": "#/$defs/ValidationAttestation" },
+    { "$ref": "#/$defs/ValidationJobKey" },
+    { "$ref": "#/$defs/ValidationCacheEntry" },
+    { "$ref": "#/$defs/ConcurrencyLease" },
+    { "$ref": "#/$defs/ExternalOperation" },
+    { "$ref": "#/$defs/SecretReference" },
+    { "$ref": "#/$defs/SecretBinding" },
+    { "$ref": "#/$defs/BraintrustOutboxRecord" },
+    { "$ref": "#/$defs/Recommendation" },
+    { "$ref": "#/$defs/Approval" },
+    { "$ref": "#/$defs/AuditEvent" },
+    { "$ref": "#/$defs/CompanionStatus" },
+    { "$ref": "#/$defs/CompanionRequest" },
+    { "$ref": "#/$defs/CompanionResponse" },
+    { "$ref": "#/$defs/CompanionNotification" },
+    { "$ref": "#/$defs/DeviceEnrollmentRequest" },
+    { "$ref": "#/$defs/DeviceEnrollmentResponse" },
+    { "$ref": "#/$defs/ObservationEventBatchRequest" },
+    { "$ref": "#/$defs/IngestAcceptedResponse" },
+    { "$ref": "#/$defs/SnapshotIngestRequest" },
+    { "$ref": "#/$defs/CapabilityProfilePublishRequest" },
+    { "$ref": "#/$defs/ChainAnchorPublishRequest" },
+    { "$ref": "#/$defs/CheckpointCreateRequest" },
+    { "$ref": "#/$defs/CheckpointCreateResponse" },
+    { "$ref": "#/$defs/ObjectUploadAuthorizationRequest" },
+    { "$ref": "#/$defs/EphemeralObjectAuthorization" },
+    { "$ref": "#/$defs/ObjectFinalizeRequest" },
+    { "$ref": "#/$defs/ObjectKeyExchangeRequest" },
+    { "$ref": "#/$defs/ObjectKeyExchangeResponse" },
+    { "$ref": "#/$defs/ReconcileQueueMessage" },
+    { "$ref": "#/$defs/ApiErrorResponse" }
+  ],
+  "title": "ProtocolDocumentV1"
+}

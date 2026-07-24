@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "graph-rules",
+  "category": "graph-rules",
+  "corpusVersion": "1.0.0",
+  "fixtures": [
+    {
+      "fixtureId": "graph-concurrent-human-agent",
+      "title": "Concurrent human and agent dependency actions",
+      "description": "A human edits the declaration while an overlapping agent install changes the lock and installed graphs. The evidence supports mixed attribution, never an agent-only claim.",
+      "input": {
+        "ecosystem": "npm",
+        "graphs": {
+          "declared": [
+            {
+              "package": "sharp",
+              "specifier": "^0.34.0"
+            }
+          ],
+          "locked": [
+            {
+              "package": "sharp",
+              "version": "0.34.3"
+            }
+          ],
+          "installed": [
+            {
+              "package": "sharp",
+              "version": "0.34.3",
+              "realm": "project"
+            }
+          ],
+          "used": []
+        },
+        "observedActions": [
+          {
+            "actor": "agent",
+            "action": "install",
+            "package": "sharp",
+            "startedOffsetMs": 100,
+            "endedOffsetMs": 500
+          },
+          {
+            "actor": "human",
+            "action": "manifest-edit",
+            "package": "sharp",
+            "startedOffsetMs": 200,
+            "endedOffsetMs": 300
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "uncertain",
+        "findingCodes": [],
+        "gapCodes": ["mixed-attribution"],
+        "attribution": "mixed",
+        "agentOnlyClaimAllowed": false,
+        "recommendationState": "blocked-pending-more-evidence",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "graph-hidden-global-state",
+      "title": "Used dependency exists only in global state",
+      "description": "The project imports a package that is absent from declarations and project installation but present globally. The deterministic rule reports undeclared use and requires clean reproduction.",
+      "input": {
+        "ecosystem": "npm",
+        "graphs": {
+          "declared": [],
+          "locked": [],
+          "installed": [
+            {
+              "package": "tsx",
+              "version": "4.20.3",
+              "realm": "REDACTED-global"
+            }
+          ],
+          "used": [
+            {
+              "package": "tsx",
+              "evidence": "static-import"
+            }
+          ]
+        },
+        "observedActions": []
+      },
+      "expected": {
+        "outcome": "finding",
+        "findingCodes": ["dependency.used-but-undeclared"],
+        "gapCodes": ["clean-reproduction-required", "hidden-global-state"],
+        "attribution": "unattributed-state",
+        "agentOnlyClaimAllowed": false,
+        "recommendationState": "eligible-for-candidate-not-verified",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "graph-install-then-remove",
+      "title": "Successful install is followed by removal",
+      "description": "The same actor installs and removes a package, and the final declared, locked, installed, and used graphs contain no package node. History is retained without a current disagreement finding.",
+      "input": {
+        "ecosystem": "python",
+        "graphs": {
+          "declared": [],
+          "locked": [],
+          "installed": [],
+          "used": []
+        },
+        "observedActions": [
+          {
+            "actor": "agent",
+            "action": "install",
+            "package": "httpx",
+            "sequence": 1,
+            "result": "succeeded"
+          },
+          {
+            "actor": "agent",
+            "action": "remove",
+            "package": "httpx",
+            "sequence": 2,
+            "result": "succeeded"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "no-finding",
+        "findingCodes": [],
+        "gapCodes": [],
+        "attribution": "agent",
+        "agentOnlyClaimAllowed": true,
+        "recommendationState": "not-needed",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "graph-stale-lock",
+      "title": "Manifest and lock resolution disagree",
+      "description": "The declared range requires a newer major version than the exact lock entry. The deterministic stale-lock rule creates a finding without asking an LLM to decide truth.",
+      "input": {
+        "ecosystem": "npm",
+        "graphs": {
+          "declared": [
+            {
+              "package": "zod",
+              "specifier": "^4.0.0"
+            }
+          ],
+          "locked": [
+            {
+              "package": "zod",
+              "version": "3.25.76"
+            }
+          ],
+          "installed": [
+            {
+              "package": "zod",
+              "version": "3.25.76",
+              "realm": "project"
+            }
+          ],
+          "used": [
+            {
+              "package": "zod",
+              "evidence": "static-import"
+            }
+          ]
+        },
+        "observedActions": []
+      },
+      "expected": {
+        "outcome": "finding",
+        "findingCodes": ["dependency.lock-stale"],
+        "gapCodes": ["native-resolution-required"],
+        "attribution": "unattributed-state",
+        "agentOnlyClaimAllowed": false,
+        "recommendationState": "eligible-for-candidate-not-verified",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "graph-transient-experiment",
+      "title": "Package is used only by a transient experiment",
+      "description": "An agent temporarily installs and invokes a benchmark package outside the project behavior contract. The evidence is preserved as ambiguous intent and does not force a project declaration.",
+      "input": {
+        "ecosystem": "python",
+        "graphs": {
+          "declared": [],
+          "locked": [],
+          "installed": [],
+          "used": []
+        },
+        "observedActions": [
+          {
+            "actor": "agent",
+            "action": "install",
+            "package": "pyperf",
+            "realm": "temporary-tool",
+            "sequence": 1,
+            "result": "succeeded"
+          },
+          {
+            "actor": "agent",
+            "action": "execute",
+            "package": "pyperf",
+            "realm": "temporary-tool",
+            "sequence": 2,
+            "result": "succeeded"
+          },
+          {
+            "actor": "agent",
+            "action": "remove",
+            "package": "pyperf",
+            "realm": "temporary-tool",
+            "sequence": 3,
+            "result": "succeeded"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "uncertain",
+        "findingCodes": [],
+        "gapCodes": ["transient-experiment"],
+        "attribution": "agent",
+        "agentOnlyClaimAllowed": true,
+        "recommendationState": "not-needed",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "graph-unknown-actor",
+      "title": "Installed state changes without actor evidence",
+      "description": "The after-snapshot contains a new package but no provider or process lineage identifies who changed it. The system reports an attribution gap and makes no agent claim.",
+      "input": {
+        "ecosystem": "npm",
+        "graphs": {
+          "declared": [],
+          "locked": [],
+          "installed": [
+            {
+              "package": "dotenv",
+              "version": "17.2.1",
+              "realm": "project"
+            }
+          ],
+          "used": []
+        },
+        "observedActions": [
+          {
+            "actor": "unknown",
+            "action": "state-change-observed",
+            "package": "dotenv",
+            "result": "unknown"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "uncertain",
+        "findingCodes": [],
+        "gapCodes": ["actor-unknown", "intent-unknown"],
+        "attribution": "unknown",
+        "agentOnlyClaimAllowed": false,
+        "recommendationState": "blocked-pending-more-evidence",
+        "verified": false
+      }
+    },
+    {
+      "fixtureId": "graph-unsupported-format",
+      "title": "Dependency declaration format is unsupported",
+      "description": "A project file is observed but no full-native adapter can parse its manifest version. Coverage is explicit and no absence-based dependency conclusion is allowed.",
+      "input": {
+        "ecosystem": "unknown",
+        "graphs": {
+          "declared": [],
+          "locked": [],
+          "installed": [],
+          "used": []
+        },
+        "observedActions": [
+          {
+            "actor": "agent",
+            "action": "file-modified",
+            "pathClass": "unsupported-manifest",
+            "result": "observed-only"
+          }
+        ],
+        "adapterCapability": "observed-only"
+      },
+      "expected": {
+        "outcome": "unsupported",
+        "findingCodes": [],
+        "gapCodes": ["unsupported-format"],
+        "attribution": "agent",
+        "agentOnlyClaimAllowed": true,
+        "recommendationState": "blocked-unsupported",
+        "verified": false
+      }
+    }
+  ]
+}

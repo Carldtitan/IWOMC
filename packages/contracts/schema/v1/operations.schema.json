@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.environment-REDACTED.dev/v1/operations.schema.json",
+  "title": "Environment Reconciler Operational Contracts v1",
+  "$defs": {
+    "ValidationJobKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "sourceInputDigest",
+        "candidatePatchDigest",
+        "targetDigest",
+        "immutableBaseDigest",
+        "behaviorContractDigest",
+        "policyDigest",
+        "adapterVersionsDigest",
+        "ruleVersionsDigest",
+        "validatorVersion",
+        "nativeToolVersionsDigest",
+        "networkPolicyDigest",
+        "REDACTEDBindingSchemaAssessment"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_job_key"
+        },
+        "sourceInputDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "candidatePatchDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "targetDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "immutableBaseDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "behaviorContractDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "policyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "adapterVersionsDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "ruleVersionsDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "validatorVersion": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "nativeToolVersionsDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "networkPolicyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "REDACTEDBindingSchemaAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "REDACTEDBindingSchemaDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        }
+      }
+    },
+    "CacheArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactClass", "objectId", "contentDigest", "integrityState"],
+      "properties": {
+        "artifactClass": {
+          "type": "string",
+          "enum": [
+            "integrity_checked_download",
+            "immutable_toolchain",
+            "source_mirror",
+            "complete_attestation"
+          ]
+        },
+        "objectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "contentDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "integrityState": {
+          "const": "verified"
+        }
+      }
+    },
+    "ValidationCacheEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "cacheEntryId",
+        "workspaceId",
+        "projectId",
+        "jobKeyDigest",
+        "state",
+        "artifacts",
+        "attestationAssessment",
+        "createdAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "validation_cache_entry"
+        },
+        "cacheEntryId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "projectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "jobKeyDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["ready", "stale", "expired", "invalid"]
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/CacheArtifact"
+          }
+        },
+        "attestationAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "attestationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "expiresAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ConcurrencyLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "leaseId",
+        "workspaceId",
+        "scope",
+        "resourceIdentity",
+        "holderOperationId",
+        "state",
+        "acquiredAt",
+        "expiresAt",
+        "heartbeatAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "concurrency_lease"
+        },
+        "leaseId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["workspace", "repository", "target", "registry"]
+        },
+        "resourceIdentity": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "holderOperationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["active", "releasing", "released", "expired"]
+        },
+        "acquiredAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "expiresAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "heartbeatAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "ExternalOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "externalOperationId",
+        "workspaceId",
+        "operationKey",
+        "provider",
+        "operationKind",
+        "requestFingerprint",
+        "state",
+        "providerResourceAssessment",
+        "acceptedResultAssessment",
+        "attemptCount",
+        "accumulatedCostMicrousd",
+        "reconciliationState",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "external_operation"
+        },
+        "externalOperationId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "operationKey": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["fireworks", "daytona", "braintrust", "github"]
+        },
+        "operationKind": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "requestFingerprint": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["reserved", "started", "succeeded", "failed", "reconciling"]
+        },
+        "providerResourceAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "providerResourceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "acceptedResultAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "acceptedResultDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "attemptCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "accumulatedCostMicrousd": {
+          "$ref": "common.schema.json#/$defs/DecimalCounter"
+        },
+        "reconciliationState": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "SecretReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "REDACTEDReferenceId",
+        "workspaceId",
+        "provider",
+        "opaqueProviderReference",
+        "versionIdentity",
+        "permittedTargetIds",
+        "allowedHosts",
+        "expiryAssessment",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "REDACTED_reference"
+        },
+        "REDACTEDReferenceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["daytona_host_restricted", "external_REDACTED_manager"]
+        },
+        "opaqueProviderReference": {
+          "$ref": "common.schema.json#/$defs/OpaqueTokenId"
+        },
+        "versionIdentity": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "permittedTargetIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/EntityId"
+          }
+        },
+        "allowedHosts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "expiryAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "expiresAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "SecretBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "REDACTEDBindingId",
+        "REDACTEDReferenceId",
+        "workspaceId",
+        "validationJobId",
+        "targetId",
+        "allowedHosts",
+        "state",
+        "mountedAtAssessment",
+        "removedAtAssessment",
+        "createdAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "REDACTED_binding"
+        },
+        "REDACTEDBindingId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "REDACTEDReferenceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "validationJobId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "targetId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "allowedHosts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "common.schema.json#/$defs/ShortString"
+          }
+        },
+        "state": {
+          "type": "string",
+          "enum": ["reserved", "mounted", "removed", "removal_failed", "expired"]
+        },
+        "mountedAtAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "mountedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "removedAtAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "removedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    },
+    "BraintrustOutboxRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "kind",
+        "outboxRecordId",
+        "workspaceId",
+        "traceId",
+        "encryptedPayloadObjectId",
+        "encryptedPayloadDigest",
+        "state",
+        "attemptCount",
+        "nextAttemptAtAssessment",
+        "lastErrorCodeAssessment",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "common.schema.json#/$defs/SchemaVersion"
+        },
+        "kind": {
+          "const": "braintrust_outbox_record"
+        },
+        "outboxRecordId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "workspaceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "traceId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "encryptedPayloadObjectId": {
+          "$ref": "common.schema.json#/$defs/EntityId"
+        },
+        "encryptedPayloadDigest": {
+          "$ref": "common.schema.json#/$defs/Sha256Digest"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["pending", "exporting", "exported", "retry_wait", "failed_terminal"]
+        },
+        "attemptCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "nextAttemptAtAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "nextAttemptAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "lastErrorCodeAssessment": {
+          "$ref": "common.schema.json#/$defs/Assessment"
+        },
+        "lastErrorCode": {
+          "$ref": "common.schema.json#/$defs/ShortString"
+        },
+        "createdAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        },
+        "updatedAt": {
+          "$ref": "common.schema.json#/$defs/Rfc3339Timestamp"
+        }
+      }
+    }
+  }
+}
