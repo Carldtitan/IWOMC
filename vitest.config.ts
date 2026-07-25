@@ -25,7 +25,7 @@ export default defineConfig({
             "tests/contract/**/*.test.ts",
             "tests/integration/**/*.test.ts",
             "tests/e2e/**/*.spec.ts",
-            "apps/worker/src/api/configuration/service.test.ts"
+            "apps/worker/src/api/configuration/*.test.ts"
           ]
         }
       },
@@ -43,7 +43,7 @@ export default defineConfig({
           exclude: [
             "**/node_modules/**",
             "**/dist/**",
-            "apps/worker/src/api/configuration/service.test.ts"
+            "apps/worker/src/api/configuration/*.test.ts"
           ]
         }
       },

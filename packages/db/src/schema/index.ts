@@ -214,6 +214,69 @@ export const projects = pgTable(
   ]
 );
 
+/**
+ * Immutable, fully materialized project-configuration revisions.
+ *
+ * The control-plane entities above keep the normalized operational metadata
+ * used by validation. This table is the authoritative editable document
+ * history exposed by the configuration API.
+ */
+export const configurationRevisions = pgTable(
+  "configuration_revisions",
+  {
+    id: requiredId(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id").notNull(),
+    documentKind: text("document_kind").notNull(),
+    objectId: text("object_id").notNull(),
+    version: integer("version").notNull(),
+    document: jsonb("document").$type<Readonly<Record<string, unknown>>>().notNull(),
+    protectedConstraintIds: jsonb("protected_constraint_ids")
+      .$type<readonly string[]>()
+      .default([])
+      .notNull(),
+    documentDigest: digest("document_digest"),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull()
+  },
+  (table) => [
+    uniqueIndex("configuration_revisions_ws_id_uq").on(table.workspaceId, table.id),
+    uniqueIndex("configuration_revisions_project_kind_version_uq").on(
+      table.workspaceId,
+      table.projectId,
+      table.documentKind,
+      table.version
+    ),
+    uniqueIndex("configuration_revisions_object_version_uq").on(
+      table.workspaceId,
+      table.projectId,
+      table.documentKind,
+      table.objectId,
+      table.version
+    ),
+    index("configuration_revisions_current_idx").on(
+      table.workspaceId,
+      table.projectId,
+      table.documentKind,
+      table.version
+    ),
+    foreignKey({
+      columns: [table.workspaceId, table.projectId],
+      foreignColumns: [projects.workspaceId, projects.id],
+      name: "configuration_revisions_project_fk"
+    }).onDelete("cascade"),
+    check(
+      "configuration_revisions_kind_ck",
+      sql`${table.documentKind} in ('project_goal', 'behavior_contract', 'optimality_policy')`
+    ),
+    check("configuration_revisions_version_ck", sql`${table.version} > 0`)
+  ]
+);
+
 export const repositories = pgTable(
   "repositories",
   {
@@ -1463,6 +1526,47 @@ export const candidates = pgTable(
       sql`${table.state} in ('draft', 'static_rejected', 'ready_for_validation', 'validating', 'validation_failed', 'inconclusive', 'verified', 'stale', 'approved', 'applied')`
     ),
     check("candidates_state_version_ck", sql`${table.stateVersion} >= 0`)
+  ]
+);
+
+/**
+ * Records the exact configuration versions used to generate a candidate.
+ * Editing any bound document can therefore invalidate only affected
+ * candidates without guessing from mutable project state.
+ */
+export const candidateConfigurationBindings = pgTable(
+  "candidate_configuration_bindings",
+  {
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    candidateId: uuid("candidate_id").notNull(),
+    bindingKind: text("binding_kind").notNull(),
+    bindingObjectId: text("binding_object_id").notNull(),
+    bindingVersion: integer("binding_version").notNull(),
+    createdAt: createdAt()
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.workspaceId, table.candidateId, table.bindingKind],
+      name: "candidate_configuration_bindings_pk"
+    }),
+    index("candidate_configuration_bindings_lookup_idx").on(
+      table.workspaceId,
+      table.bindingKind,
+      table.bindingObjectId,
+      table.bindingVersion
+    ),
+    foreignKey({
+      columns: [table.workspaceId, table.candidateId],
+      foreignColumns: [candidates.workspaceId, candidates.id],
+      name: "candidate_configuration_bindings_candidate_fk"
+    }).onDelete("cascade"),
+    check(
+      "candidate_configuration_bindings_kind_ck",
+      sql`${table.bindingKind} in ('project_goal', 'behavior_contract', 'optimality_policy')`
+    ),
+    check("candidate_configuration_bindings_version_ck", sql`${table.bindingVersion} > 0`)
   ]
 );
 

@@ -36,6 +36,13 @@
       "when": 1784944800000,
       "tag": "0004_github_user_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784952000000,
+      "tag": "0005_configuration_revisions",
+      "breakpoints": true
     }
   ]
 }

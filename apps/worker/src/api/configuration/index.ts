@@ -20,3 +20,4 @@ export {
   type EditProjectGoalRequest,
   type VersionedOptimalityPolicy
 } from "./service.js";
+export { PostgresConfigurationStore } from "./postgres-store.js";
