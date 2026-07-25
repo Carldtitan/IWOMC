@@ -152,6 +152,8 @@ export interface ReconciliationUncertainty {
     | "failed_install_without_effect"
     | "incomplete_capture"
     | "installed_without_use"
+    | "necessity_not_established"
+    | "unsupported_capture"
     | "unsupported_evidence"
     | "use_without_installed_effect";
   readonly evidence: readonly EvidenceReference[];

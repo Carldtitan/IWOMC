@@ -9,6 +9,11 @@ import {
   PostgresCollaborationStore,
   createCollaborationRoutes
 } from "./api/collaboration/index.js";
+import {
+  ConfigurationService,
+  PostgresConfigurationStore,
+  createConfigurationRoutes
+} from "./api/configuration/index.js";
 import { BrowserSessionService } from "./auth/browser-session.js";
 import {
   handleGitHubLogout,
@@ -161,9 +166,59 @@ const collaborationRequest: Handler<WorkerBindings> = (context) => {
   return routes.fetch(context.req.raw, context.env, context.executionCtx);
 };
 
+const configurationRequest: Handler<WorkerBindings> = (context) => {
+  const connections = new HyperdrivePostgresConnectionFactory(
+    context.env.DATABASE.connectionString
+  );
+  const sessions = new BrowserSessionService(
+    new PostgresBrowserSessionRepository(connections),
+    context.env.APP_SESSION_SECRET
+  );
+  const routes = createConfigurationRoutes(
+    {
+      async authenticate({ mutation, request }) {
+        const cookieHeader = request.headers.get("Cookie") ?? undefined;
+        const sealedSession = cookieValue(cookieHeader, PRODUCT_SESSION_COOKIE);
+        if (sealedSession === undefined) {
+          return undefined;
+        }
+        try {
+          const csrfCookie = cookieValue(cookieHeader, CSRF_COOKIE);
+          const csrfHeader = request.headers.get("x-csrf-REDACTED") ?? undefined;
+          if (
+            mutation &&
+            (csrfCookie === undefined ||
+              csrfHeader === undefined ||
+              !(await constantTimeEqual(csrfCookie, csrfHeader)))
+          ) {
+            return undefined;
+          }
+          const session = await sessions.authenticate({
+            ...(mutation && csrfHeader !== undefined ? { csrfToken: csrfHeader } : {}),
+            nowEpochSeconds: Math.floor(Date.now() / 1_000),
+            sealedSession
+          });
+          return { REDACTEDId: session.REDACTEDId };
+        } catch {
+          return undefined;
+        }
+      }
+    },
+    new ConfigurationService(new PostgresConfigurationStore(connections), {
+      now: () => new Date().toISOString(),
+      randomUuid: () => crypto.randomUUID()
+    })
+  );
+  return routes.fetch(context.req.raw, context.env, context.executionCtx);
+};
+
 app.post("/v1/projects/:id/events/batches", ingestRequest);
 app.get("/v1/devices/:id/status", ingestRequest);
 app.all("/v1/workspaces/:workspace/*", collaborationRequest);
+app.all("/v1/projects/:project/project-goal", configurationRequest);
+app.all("/v1/projects/:project/behavior-contract", configurationRequest);
+app.all("/v1/projects/:project/behavior-contract/*", configurationRequest);
+app.all("/v1/projects/:project/policy", configurationRequest);
 app.route(
   "/",
   createDemoSponsorRunRoutes((environment) => ({

@@ -36,6 +36,13 @@
       "when": REDACTED,
       "tag": "0004_github_REDACTED_REDACTEDs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784952000000,
+      "tag": "0005_configuration_revisions",
+      "breakpoints": true
     }
   ]
 }
