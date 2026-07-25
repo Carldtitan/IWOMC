@@ -51,12 +51,16 @@ export class PostgresGitHubIdentityStore implements GitHubIdentityStore {
       const localUserId = requiredText(REDACTED.rows[0]?.id, "REDACTED id");
       await connection.query(
         `INSERT INTO github_REDACTED_REDACTEDs (
-           REDACTED_id, encrypted_REDACTEDs, REDACTED_expires_at, updated_at
-         ) VALUES ($1, $2, $3, to_timestamp($4))
+           REDACTED_id, encrypted_REDACTEDs, REDACTED_expires_at, updated_at, revoked_at,
+           refresh_lease_id, refresh_lease_expires_at
+         ) VALUES ($1, $2, $3, to_timestamp($4), NULL, NULL, NULL)
          ON CONFLICT (REDACTED_id) DO UPDATE
          SET encrypted_REDACTEDs = EXCLUDED.encrypted_REDACTEDs,
              REDACTED_expires_at = EXCLUDED.REDACTED_expires_at,
-             updated_at = EXCLUDED.updated_at`,
+             updated_at = EXCLUDED.updated_at,
+             revoked_at = NULL,
+             refresh_lease_id = NULL,
+             refresh_lease_expires_at = NULL`,
         [
           localUserId,
           identity.encryptedCredentials,

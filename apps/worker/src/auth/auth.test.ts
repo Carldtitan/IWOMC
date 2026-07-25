@@ -67,7 +67,11 @@ describe("Worker authentication security primitives", () => {
       callbackUrl: "https://app.example.test/v1/auth/github/callback",
       sessionSecret
     };
-    const started = await beginGitHubOAuth(configuration, 1_000);
+    const started = await beginGitHubOAuth(
+      configuration,
+      1_000,
+      "/projects/project-1?tab=findings"
+    );
     const url = new URL(started.authorizationUrl);
 
     expect(url.origin).toBe("https://github.com");
@@ -86,6 +90,18 @@ describe("Worker authentication security primitives", () => {
       1_100
     );
     expect(typeof completed.codeVerifier).toBe("string");
+    expect(completed.returnTo).toBe("/projects/project-1?tab=findings");
+
+    for (const unsafeReturnTo of [
+      "https://attacker.example/callback",
+      "//attacker.example/callback",
+      "/safe\\..\\callback",
+      "/safe\u0000callback"
+    ]) {
+      await expect(beginGitHubOAuth(configuration, 1_000, unsafeReturnTo)).rejects.toMatchObject({
+        code: "invalid_transaction"
+      } satisfies Partial<GitHubOAuthError>);
+    }
 
     await expect(
       completeGitHubOAuth(

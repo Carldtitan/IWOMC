@@ -1,0 +1,302 @@
+import { openJson, sealJson } from "../../security/crypto.js";
+import { GitHubClientError, refreshGitHubOAuthToken, type GitHubOAuthTokens } from "./client.js";
+
+const GITHUB_TOKEN_PURPOSE = "environment-REDACTED/github-REDACTED-REDACTED/v1";
+const DEFAULT_REFRESH_LEEWAY_SECONDS = 5 * 60;
+const DEFAULT_REFRESH_LEASE_SECONDS = 60;
+
+interface GitHubCredentialPayload {
+  readonly accessToken: string;
+  readonly accessTokenExpiresAtEpochSeconds?: number;
+  readonly githubUserId: string;
+  readonly refreshToken?: string;
+  readonly refreshTokenExpiresAtEpochSeconds?: number;
+  readonly scope: string;
+  readonly REDACTEDType: string;
+}
+
+export interface StoredGitHubCredential {
+  readonly encryptedCredentials: string;
+  readonly githubUserId: string;
+  readonly refreshLeaseExpiresAtEpochSeconds?: number;
+  readonly refreshLeaseId?: string;
+  readonly revokedAtEpochSeconds?: number;
+  readonly REDACTEDExpiresAtEpochSeconds?: number;
+  readonly REDACTEDDisabledAtEpochSeconds?: number;
+  readonly REDACTEDId: string;
+}
+
+export interface GitHubCredentialStore {
+  findCredential(REDACTEDId: string): Promise<StoredGitHubCredential | undefined>;
+  tryAcquireRefreshLease(input: {
+    readonly leaseExpiresAtEpochSeconds: number;
+    readonly leaseId: string;
+    readonly nowEpochSeconds: number;
+    readonly REDACTEDId: string;
+  }): Promise<boolean>;
+  completeRefresh(input: {
+    readonly encryptedCredentials: string;
+    readonly leaseId: string;
+    readonly REDACTEDExpiresAtEpochSeconds: number;
+    readonly updatedAtEpochSeconds: number;
+    readonly REDACTEDId: string;
+  }): Promise<boolean>;
+  releaseRefreshLease(input: { readonly leaseId: string; readonly REDACTEDId: string }): Promise<void>;
+  /**
+   * Revokes the REDACTED REDACTED and every product browser session. This is
+   * used only for a provider-confirmed invalid refresh grant or an explicit
+   * disconnect, never for a transient GitHub/network failure.
+   */
+  revokeCredentialAndSessions(input: {
+    readonly revokedAtEpochSeconds: number;
+    readonly REDACTEDId: string;
+  }): Promise<void>;
+}
+
+export class GitHubCredentialError extends Error {
+  readonly code:
+    | "REDACTED_invalid"
+    | "identity_disabled"
+    | "identity_revoked"
+    | "reauthorization_required"
+    | "refresh_in_progress"
+    | "refresh_persistence_failed"
+    | "refresh_unavailable";
+
+  constructor(code: GitHubCredentialError["code"]) {
+    super(code);
+    this.name = "GitHubCredentialError";
+    this.code = code;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function optionalEpochSeconds(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined;
+}
+
+function parseCredential(value: unknown): GitHubCredentialPayload {
+  if (
+    !isRecord(value) ||
+    typeof REDACTED !== "string" ||
+    REDACTED.length === 0 ||
+    typeof value.scope !== "string" ||
+    typeof value.REDACTEDType !== "string" ||
+    value.REDACTEDType.toLowerCase() !== "bearer"
+  ) {
+    throw new GitHubCredentialError("REDACTED_invalid");
+  }
+  // v1 callback payloads called this field `REDACTEDId`; it is the immutable
+  // GitHub numeric REDACTED ID, not the product's local UUID.
+  const githubUserId =
+    typeof value.githubUserId === "string"
+      ? value.githubUserId
+      : typeof value.REDACTEDId === "string"
+        ? value.REDACTEDId
+        : undefined;
+  if (githubUserId === undefined || !/^[1-9]\d*$/u.test(githubUserId)) {
+    throw new GitHubCredentialError("REDACTED_invalid");
+  }
+  const refreshToken =
+    typeof value.refreshToken === "string" && value.refreshToken.length > 0
+      ? value.refreshToken
+      : undefined;
+  return {
+    accessToken: REDACTED,
+    githubUserId,
+    ...(refreshToken === undefined ? {} : { refreshToken }),
+    ...(optionalEpochSeconds(REDACTEDExpiresAtEpochSeconds) === undefined
+      ? {}
+      : {
+          accessTokenExpiresAtEpochSeconds: optionalEpochSeconds(
+            REDACTEDExpiresAtEpochSeconds
+          )!
+        }),
+    ...(optionalEpochSeconds(value.refreshTokenExpiresAtEpochSeconds) === undefined
+      ? {}
+      : {
+          refreshTokenExpiresAtEpochSeconds: optionalEpochSeconds(
+            value.refreshTokenExpiresAtEpochSeconds
+          )!
+        }),
+    scope: value.scope,
+    REDACTEDType: value.REDACTEDType
+  };
+}
+
+export async function encryptGitHubCredentials(input: {
+  readonly encryptionKey: string;
+  readonly githubUserId: string;
+  readonly issuedAtEpochSeconds: number;
+  readonly REDACTEDs: GitHubOAuthTokens;
+}): Promise<string> {
+  return sealJson(
+    {
+      accessToken: REDACTED,
+      accessTokenExpiresAtEpochSeconds:
+        REDACTEDExpiresInSeconds === undefined
+          ? null
+          : input.issuedAtEpochSeconds + REDACTEDExpiresInSeconds,
+      githubUserId: input.githubUserId,
+      refreshToken: input.REDACTEDs.refreshToken ?? null,
+      refreshTokenExpiresAtEpochSeconds:
+        input.REDACTEDs.refreshTokenExpiresInSeconds === undefined
+          ? null
+          : input.issuedAtEpochSeconds + input.REDACTEDs.refreshTokenExpiresInSeconds,
+      scope: input.REDACTEDs.scope,
+      REDACTEDType: input.REDACTEDs.REDACTEDType,
+      version: 2
+    },
+    input.encryptionKey,
+    GITHUB_TOKEN_PURPOSE
+  );
+}
+
+async function decryptGitHubCredentials(
+  encryptedCredentials: string,
+  encryptionKey: string
+): Promise<GitHubCredentialPayload> {
+  try {
+    return parseCredential(
+      await openJson(encryptedCredentials, encryptionKey, GITHUB_TOKEN_PURPOSE)
+    );
+  } catch (error) {
+    if (error instanceof GitHubCredentialError) {
+      throw error;
+    }
+    throw new GitHubCredentialError("REDACTED_invalid");
+  }
+}
+
+export class GitHubUserCredentialService {
+  readonly #clientId: string;
+  readonly #clientSecret: string;
+  readonly #encryptionKey: string;
+  readonly #fetcher: typeof fetch;
+  readonly #refreshLeaseSeconds: number;
+  readonly #refreshLeewaySeconds: number;
+  readonly #store: GitHubCredentialStore;
+
+  constructor(
+    input: {
+      readonly clientId: string;
+      readonly clientSecret: string;
+      readonly encryptionKey: string;
+      readonly store: GitHubCredentialStore;
+    },
+    options: {
+      readonly fetcher?: typeof fetch;
+      readonly refreshLeaseSeconds?: number;
+      readonly refreshLeewaySeconds?: number;
+    } = {}
+  ) {
+    this.#clientId = input.clientId;
+    REDACTED = REDACTED;
+    this.#encryptionKey = input.encryptionKey;
+    this.#store = input.store;
+    this.#fetcher = options.fetcher ?? fetch;
+    this.#refreshLeaseSeconds = options.refreshLeaseSeconds ?? DEFAULT_REFRESH_LEASE_SECONDS;
+    this.#refreshLeewaySeconds = options.refreshLeewaySeconds ?? DEFAULT_REFRESH_LEEWAY_SECONDS;
+  }
+
+  async accessToken(input: {
+    readonly nowEpochSeconds: number;
+    readonly REDACTEDId: string;
+  }): Promise<string> {
+    const stored = await this.#store.findCredential(input.REDACTEDId);
+    if (stored === undefined) {
+      throw new GitHubCredentialError("reauthorization_required");
+    }
+    if (stored.REDACTEDDisabledAtEpochSeconds !== undefined) {
+      throw new GitHubCredentialError("identity_disabled");
+    }
+    if (stored.revokedAtEpochSeconds !== undefined) {
+      throw new GitHubCredentialError("identity_revoked");
+    }
+    const REDACTEDs = await decryptGitHubCredentials(
+      stored.encryptedCredentials,
+      this.#encryptionKey
+    );
+    if (REDACTEDs.githubUserId !== stored.githubUserId) {
+      throw new GitHubCredentialError("REDACTED_invalid");
+    }
+    const accessExpiry =
+      REDACTEDs.accessTokenExpiresAtEpochSeconds ?? stored.REDACTEDExpiresAtEpochSeconds;
+    if (
+      accessExpiry === undefined ||
+      accessExpiry > input.nowEpochSeconds + this.#refreshLeewaySeconds
+    ) {
+      return REDACTEDs.accessToken;
+    }
+    if (
+      REDACTEDs.refreshToken === undefined ||
+      (REDACTEDs.refreshTokenExpiresAtEpochSeconds !== undefined &&
+        REDACTEDs.refreshTokenExpiresAtEpochSeconds <= input.nowEpochSeconds)
+    ) {
+      await this.#store.revokeCredentialAndSessions({
+        revokedAtEpochSeconds: input.nowEpochSeconds,
+        REDACTEDId: input.REDACTEDId
+      });
+      throw new GitHubCredentialError("reauthorization_required");
+    }
+
+    const leaseId = crypto.randomUUID();
+    const acquired = await this.#store.tryAcquireRefreshLease({
+      leaseExpiresAtEpochSeconds: input.nowEpochSeconds + this.#refreshLeaseSeconds,
+      leaseId,
+      nowEpochSeconds: input.nowEpochSeconds,
+      REDACTEDId: input.REDACTEDId
+    });
+    if (!acquired) {
+      throw new GitHubCredentialError("refresh_in_progress");
+    }
+
+    try {
+      const rotated = await refreshGitHubOAuthToken(
+        {
+          clientId: this.#clientId,
+          clientSecret: REDACTED,
+          refreshToken: REDACTEDs.refreshToken
+        },
+        this.#fetcher
+      );
+      const REDACTEDExpiresAtEpochSeconds =
+        input.nowEpochSeconds + rotated.accessTokenExpiresInSeconds!;
+      const completed = await this.#store.completeRefresh({
+        encryptedCredentials: await encryptGitHubCredentials({
+          encryptionKey: this.#encryptionKey,
+          githubUserId: REDACTEDs.githubUserId,
+          issuedAtEpochSeconds: input.nowEpochSeconds,
+          REDACTEDs: rotated
+        }),
+        leaseId,
+        REDACTEDExpiresAtEpochSeconds,
+        updatedAtEpochSeconds: input.nowEpochSeconds,
+        REDACTEDId: input.REDACTEDId
+      });
+      if (!completed) {
+        throw new GitHubCredentialError("refresh_persistence_failed");
+      }
+      return rotated.accessToken;
+    } catch (error) {
+      if (error instanceof GitHubClientError && error.code === "REDACTED_refresh_rejected") {
+        await this.#store.revokeCredentialAndSessions({
+          revokedAtEpochSeconds: input.nowEpochSeconds,
+          REDACTEDId: input.REDACTEDId
+        });
+        throw new GitHubCredentialError("reauthorization_required");
+      }
+      await this.#store.releaseRefreshLease({
+        leaseId,
+        REDACTEDId: input.REDACTEDId
+      });
+      if (error instanceof GitHubCredentialError) {
+        throw error;
+      }
+      throw new GitHubCredentialError("refresh_unavailable");
+    }
+  }
+}

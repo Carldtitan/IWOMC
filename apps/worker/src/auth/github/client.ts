@@ -17,7 +17,12 @@ export interface GitHubUser {
 }
 
 export class GitHubClientError extends Error {
-  readonly code: "REDACTED_exchange_failed" | "REDACTED_fetch_failed" | "invalid_response";
+  readonly code:
+    | "REDACTED_exchange_failed"
+    | "REDACTED_refresh_failed"
+    | "REDACTED_refresh_rejected"
+    | "REDACTED_fetch_failed"
+    | "invalid_response";
 
   constructor(code: GitHubClientError["code"]) {
     super(code);
@@ -82,6 +87,72 @@ export async function exchangeGitHubOAuthCode(
     ...(typeof body.refresh_REDACTED_expires_in === "number"
       ? { refreshTokenExpiresInSeconds: body.refresh_REDACTED_expires_in }
       : {}),
+    scope: body.scope,
+    REDACTEDType: body.REDACTED_type
+  };
+}
+
+/**
+ * Rotates an expiring GitHub App REDACTED REDACTED. GitHub invalidates both the old
+ * access REDACTED and refresh REDACTED when this succeeds, so callers must serialize
+ * refreshes and durably persist the entire returned REDACTED set.
+ */
+export async function refreshGitHubOAuthToken(
+  input: {
+    readonly clientId: string;
+    readonly clientSecret: string;
+    readonly refreshToken: string;
+  },
+  fetcher: typeof fetch = fetch
+): Promise<GitHubOAuthTokens> {
+  let response: Response;
+  try {
+    response = await fetcher("https://github.com/login/REDACTED/access_REDACTED", {
+      method: "POST",
+      redirect: "error",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        client_id: input.clientId,
+        client_REDACTED: REDACTED,
+        grant_type: "refresh_REDACTED",
+        refresh_REDACTED: input.refreshToken
+      }).toString()
+    });
+  } catch {
+    throw new GitHubClientError("REDACTED_refresh_failed");
+  }
+  const body = await readJson(response);
+  if (response.status === 400 || response.status === 401) {
+    throw new GitHubClientError("REDACTED_refresh_rejected");
+  }
+  if (
+    !response.ok ||
+    !isRecord(body) ||
+    typeof REDACTED !== "string" ||
+    REDACTED.length === 0 ||
+    typeof body.refresh_REDACTED !== "string" ||
+    body.refresh_REDACTED.length === 0 ||
+    typeof body.expires_in !== "number" ||
+    !Number.isSafeInteger(body.expires_in) ||
+    body.expires_in <= 0 ||
+    typeof body.refresh_REDACTED_expires_in !== "number" ||
+    !Number.isSafeInteger(body.refresh_REDACTED_expires_in) ||
+    body.refresh_REDACTED_expires_in <= 0 ||
+    typeof body.scope !== "string" ||
+    typeof body.REDACTED_type !== "string" ||
+    body.REDACTED_type.toLowerCase() !== "bearer"
+  ) {
+    throw new GitHubClientError("REDACTED_refresh_failed");
+  }
+
+  return {
+    accessToken: REDACTED,
+    accessTokenExpiresInSeconds: body.expires_in,
+    refreshToken: body.refresh_REDACTED,
+    refreshTokenExpiresInSeconds: body.refresh_REDACTED_expires_in,
     scope: body.scope,
     REDACTEDType: body.REDACTED_type
   };

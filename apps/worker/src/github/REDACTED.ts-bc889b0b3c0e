@@ -14,6 +14,14 @@ export interface GitHubAppJwtProvider {
   getAppJwt(): Promise<string>;
 }
 
+export interface GitHubRepositoryCredentialAuthorization {
+  isRepositoryCredentialAuthorized(input: {
+    readonly installationId: string;
+    readonly purpose: GitHubRepositoryCredentialPurpose;
+    readonly repositoryId: string;
+  }): Promise<boolean>;
+}
+
 interface TokenRequestPermissions {
   readonly contents?: "read" | "write";
   readonly pull_requests?: "write";
@@ -143,5 +151,42 @@ export class GitHubAppInstallationTokenBroker implements GitHubRepositoryCredent
       REDACTED: body.REDACTED,
       expiresAt: body.expires_at
     };
+  }
+}
+
+/**
+ * Durable authorization boundary in front of installation-REDACTED issuance.
+ *
+ * GitHub will issue a REDACTED for any installation owned by the App. This gate
+ * additionally requires the installation/repository pair to be linked,
+ * active, and non-suspended in IWOMC before the provider call is attempted.
+ */
+export class AuthorizedGitHubRepositoryCredentialBroker implements GitHubRepositoryCredentialBroker {
+  readonly #authorization: GitHubRepositoryCredentialAuthorization;
+  readonly #delegate: GitHubRepositoryCredentialBroker;
+
+  constructor(
+    authorization: GitHubRepositoryCredentialAuthorization,
+    delegate: GitHubRepositoryCredentialBroker
+  ) {
+    this.#authorization = authorization;
+    this.#delegate = delegate;
+  }
+
+  async issueRepositoryCredential(input: {
+    readonly installationId: string;
+    readonly repositoryId: string;
+    readonly purpose: GitHubRepositoryCredentialPurpose;
+  }): Promise<GitHubRepositoryCredential> {
+    let authorized: boolean;
+    try {
+      authorized = await this.#authorization.isRepositoryCredentialAuthorized(input);
+    } catch {
+      throw new GitHubRepositoryError("installation_not_authorized");
+    }
+    if (!authorized) {
+      throw new GitHubRepositoryError("installation_not_authorized");
+    }
+    return this.#delegate.issueRepositoryCredential(input);
   }
 }
