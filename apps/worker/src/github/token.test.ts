@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { GitHubRepositoryError } from "./errors.js";
-import { GitHubAppInstallationTokenBroker } from "./token.js";
+import {
+  AuthorizedGitHubRepositoryCredentialBroker,
+  GitHubAppInstallationTokenBroker
+} from "./token.js";
 
 describe("GitHubAppInstallationTokenBroker", () => {
   it.each([
@@ -82,5 +85,56 @@ describe("GitHubAppInstallationTokenBroker", () => {
     expect(error).toMatchObject({ code: "token_issue_failed" });
     expect(String(error)).not.toContain("app-jwt-secret");
     expect(String(error)).not.toContain("provider leaked");
+  });
+});
+
+describe("AuthorizedGitHubRepositoryCredentialBroker", () => {
+  it("rejects an unlinked, suspended, or deleted installation before token issuance", async () => {
+    const delegate = {
+      issueRepositoryCredential: vi.fn().mockResolvedValue({
+        expiresAt: "2999-01-01T00:00:00Z",
+        token: "must-not-be-issued"
+      })
+    };
+    const broker = new AuthorizedGitHubRepositoryCredentialBroker(
+      {
+        isRepositoryCredentialAuthorized: vi.fn().mockResolvedValue(false)
+      },
+      delegate
+    );
+
+    await expect(
+      broker.issueRepositoryCredential({
+        installationId: "41",
+        repositoryId: "73",
+        purpose: "contents_write"
+      })
+    ).rejects.toMatchObject({ code: "installation_not_authorized" });
+    expect(delegate.issueRepositoryCredential).not.toHaveBeenCalled();
+  });
+
+  it("passes only the exact authorized installation, repository, and purpose", async () => {
+    const authorization = {
+      isRepositoryCredentialAuthorized: vi.fn().mockResolvedValue(true)
+    };
+    const delegate = {
+      issueRepositoryCredential: vi.fn().mockResolvedValue({
+        expiresAt: "2999-01-01T00:00:00Z",
+        token: "scoped-token"
+      })
+    };
+    const broker = new AuthorizedGitHubRepositoryCredentialBroker(authorization, delegate);
+    const input = {
+      installationId: "41",
+      repositoryId: "73",
+      purpose: "contents_read" as const
+    };
+
+    await expect(broker.issueRepositoryCredential(input)).resolves.toEqual({
+      expiresAt: "2999-01-01T00:00:00Z",
+      token: "scoped-token"
+    });
+    expect(authorization.isRepositoryCredentialAuthorized).toHaveBeenCalledWith(input);
+    expect(delegate.issueRepositoryCredential).toHaveBeenCalledWith(input);
   });
 });

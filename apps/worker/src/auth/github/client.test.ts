@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { GitHubClientError, exchangeGitHubOAuthCode, fetchGitHubUser } from "./client.js";
+import {
+  GitHubClientError,
+  exchangeGitHubOAuthCode,
+  fetchGitHubUser,
+  refreshGitHubOAuthToken
+} from "./client.js";
 
 describe("GitHub OAuth API client", () => {
   it("exchanges a code with PKCE and parses expiring tokens", async () => {
@@ -74,5 +79,81 @@ describe("GitHub OAuth API client", () => {
     const [input, request] = fetcher.mock.calls[0]!;
     expect(input).toBe("https://api.github.com/user");
     expect(new Headers(request?.headers).get("Authorization")).toBe("Bearer access-token");
+  });
+});
+
+describe("GitHub OAuth token refresh", () => {
+  it("uses the refresh grant and requires GitHub's rotated token pair", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        access_token: "rotated-access",
+        expires_in: 28_800,
+        refresh_token: "rotated-refresh",
+        refresh_token_expires_in: 15_897_600,
+        scope: "",
+        token_type: "bearer"
+      })
+    );
+
+    await expect(
+      refreshGitHubOAuthToken(
+        {
+          clientId: "client-id",
+          clientSecret: "client-secret",
+          refreshToken: "old-refresh"
+        },
+        fetcher
+      )
+    ).resolves.toEqual({
+      accessToken: "rotated-access",
+      accessTokenExpiresInSeconds: 28_800,
+      refreshToken: "rotated-refresh",
+      refreshTokenExpiresInSeconds: 15_897_600,
+      scope: "",
+      tokenType: "bearer"
+    });
+
+    const [url, init] = fetcher.mock.calls[0]!;
+    expect(url).toBe("https://github.com/login/oauth/access_token");
+    expect(init?.redirect).toBe("error");
+    expect(Object.fromEntries(new URLSearchParams(String(init?.body)))).toEqual({
+      client_id: "client-id",
+      client_secret: "client-secret",
+      grant_type: "refresh_token",
+      refresh_token: "old-refresh"
+    });
+  });
+
+  it("distinguishes a revoked refresh grant from a transient or malformed response", async () => {
+    await expect(
+      refreshGitHubOAuthToken(
+        {
+          clientId: "client-id",
+          clientSecret: "client-secret",
+          refreshToken: "revoked-refresh"
+        },
+        vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(Response.json({ error: "bad_verification_code" }, { status: 400 }))
+      )
+    ).rejects.toEqual(new GitHubClientError("oauth_refresh_rejected"));
+
+    await expect(
+      refreshGitHubOAuthToken(
+        {
+          clientId: "client-id",
+          clientSecret: "client-secret",
+          refreshToken: "old-refresh"
+        },
+        vi.fn<typeof fetch>().mockResolvedValue(
+          Response.json({
+            access_token: "access-without-rotated-refresh",
+            expires_in: 28_800,
+            scope: "",
+            token_type: "bearer"
+          })
+        )
+      )
+    ).rejects.toEqual(new GitHubClientError("oauth_refresh_failed"));
   });
 });

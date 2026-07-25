@@ -253,14 +253,14 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
   - **Exit:** The npm fixture deterministically produces one evidence-backed hidden-dependency finding, while every negative fixture produces its expected non-finding or uncertainty state.
   - _Requirements: R8, R9, R16.2, R22.2-R22.3_
 
-- [ ] 13. Implement behavior-contract discovery and the default policy
+- [x] 13. Implement behavior-contract discovery and the default policy
   - [x] 13.1 Persist an editable human-authored project goal and discover npm install/build/lint/typecheck/test/smoke/benchmark commands from package scripts and CI configuration.
   - [x] 13.2 Implement behavior-contract step IDs/order, enable/disable, discovery evidence/fingerprint, review state, acceptance actor/time, invalidation source, working directory, realm/target applicability, timeout, expected exit statuses, secret references, and assertions.
   - [x] 13.3 Implement the default policy with hard target/behavior gates followed by dependency-count, reproducibility, supported-version, and change-surface preferences.
   - [x] 13.4 Implement candidate, concurrency, retry, elapsed-time, and cost budgets.
   - [x] 13.5 Ensure clean installation without an accepted behavior contract can produce only `reconstruction_passed`.
   - [x] 13.6 Add property tests proving hard constraints dominate, policies are immutable once referenced, and changes invalidate affected candidates.
-  - [ ] 13.7 Implement authenticated project-goal, behavior-contract, and policy read/edit/reorder/enable/disable/accept APIs with optimistic version checks and audit events.
+  - [x] 13.7 Implement authenticated project-goal, behavior-contract, and policy read/edit/reorder/enable/disable/accept APIs with optimistic version checks and audit events.
   - **Exit:** The vertical fixture has an accepted, versioned behavior contract and a default policy that cannot be overridden by an LLM.
   - _Requirements: R10, R13.1-R13.3, R15.8_
 

@@ -23,6 +23,7 @@ export interface GitHubOAuthStart {
 
 export interface GitHubOAuthCompletion {
   readonly codeVerifier: string;
+  readonly returnTo: string;
 }
 
 export class GitHubOAuthError extends Error {
@@ -40,6 +41,7 @@ interface OAuthTransaction {
   readonly callbackUrl: string;
   readonly codeVerifier: string;
   readonly expiresAtEpochSeconds: number;
+  readonly returnTo: string;
   readonly stateDigest: string;
 }
 
@@ -53,6 +55,7 @@ function parseTransaction(value: unknown): OAuthTransaction {
     typeof value.callbackUrl !== "string" ||
     typeof value.codeVerifier !== "string" ||
     typeof value.expiresAtEpochSeconds !== "number" ||
+    typeof value.returnTo !== "string" ||
     typeof value.stateDigest !== "string"
   ) {
     throw new GitHubOAuthError("invalid_transaction");
@@ -61,8 +64,27 @@ function parseTransaction(value: unknown): OAuthTransaction {
     callbackUrl: value.callbackUrl,
     codeVerifier: value.codeVerifier,
     expiresAtEpochSeconds: value.expiresAtEpochSeconds,
+    returnTo: safeReturnTo(value.returnTo),
     stateDigest: value.stateDigest
   };
+}
+
+function safeReturnTo(value: string): string {
+  if (
+    value.length === 0 ||
+    value.length > 1_024 ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    /[\u0000-\u001f\u007f]/u.test(value)
+  ) {
+    throw new GitHubOAuthError("invalid_transaction");
+  }
+  const parsed = new URL(value, "https://product.invalid");
+  if (parsed.origin !== "https://product.invalid") {
+    throw new GitHubOAuthError("invalid_transaction");
+  }
+  return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 }
 
 function validateConfiguration(configuration: GitHubOAuthConfiguration): void {
@@ -77,7 +99,8 @@ function validateConfiguration(configuration: GitHubOAuthConfiguration): void {
 
 export async function beginGitHubOAuth(
   configuration: GitHubOAuthConfiguration,
-  nowEpochSeconds: number
+  nowEpochSeconds: number,
+  returnTo = "/"
 ): Promise<GitHubOAuthStart> {
   validateConfiguration(configuration);
   const state = randomToken();
@@ -86,6 +109,7 @@ export async function beginGitHubOAuth(
     callbackUrl: configuration.callbackUrl,
     codeVerifier,
     expiresAtEpochSeconds: nowEpochSeconds + MAX_TRANSACTION_SECONDS,
+    returnTo: safeReturnTo(returnTo),
     stateDigest: await sha256Base64Url(state)
   };
   const sealedTransaction = await sealJson(
@@ -137,5 +161,5 @@ export async function completeGitHubOAuth(
   if (!(await constantTimeEqual(await sha256Base64Url(input.state), transaction.stateDigest))) {
     throw new GitHubOAuthError("invalid_state");
   }
-  return { codeVerifier: transaction.codeVerifier };
+  return { codeVerifier: transaction.codeVerifier, returnTo: transaction.returnTo };
 }

@@ -17,7 +17,12 @@ export interface GitHubUser {
 }
 
 export class GitHubClientError extends Error {
-  readonly code: "oauth_exchange_failed" | "user_fetch_failed" | "invalid_response";
+  readonly code:
+    | "oauth_exchange_failed"
+    | "oauth_refresh_failed"
+    | "oauth_refresh_rejected"
+    | "user_fetch_failed"
+    | "invalid_response";
 
   constructor(code: GitHubClientError["code"]) {
     super(code);
@@ -82,6 +87,72 @@ export async function exchangeGitHubOAuthCode(
     ...(typeof body.refresh_token_expires_in === "number"
       ? { refreshTokenExpiresInSeconds: body.refresh_token_expires_in }
       : {}),
+    scope: body.scope,
+    tokenType: body.token_type
+  };
+}
+
+/**
+ * Rotates an expiring GitHub App user token. GitHub invalidates both the old
+ * access token and refresh token when this succeeds, so callers must serialize
+ * refreshes and durably persist the entire returned token set.
+ */
+export async function refreshGitHubOAuthToken(
+  input: {
+    readonly clientId: string;
+    readonly clientSecret: string;
+    readonly refreshToken: string;
+  },
+  fetcher: typeof fetch = fetch
+): Promise<GitHubOAuthTokens> {
+  let response: Response;
+  try {
+    response = await fetcher("https://github.com/login/oauth/access_token", {
+      method: "POST",
+      redirect: "error",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        client_id: input.clientId,
+        client_secret: input.clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: input.refreshToken
+      }).toString()
+    });
+  } catch {
+    throw new GitHubClientError("oauth_refresh_failed");
+  }
+  const body = await readJson(response);
+  if (response.status === 400 || response.status === 401) {
+    throw new GitHubClientError("oauth_refresh_rejected");
+  }
+  if (
+    !response.ok ||
+    !isRecord(body) ||
+    typeof body.access_token !== "string" ||
+    body.access_token.length === 0 ||
+    typeof body.refresh_token !== "string" ||
+    body.refresh_token.length === 0 ||
+    typeof body.expires_in !== "number" ||
+    !Number.isSafeInteger(body.expires_in) ||
+    body.expires_in <= 0 ||
+    typeof body.refresh_token_expires_in !== "number" ||
+    !Number.isSafeInteger(body.refresh_token_expires_in) ||
+    body.refresh_token_expires_in <= 0 ||
+    typeof body.scope !== "string" ||
+    typeof body.token_type !== "string" ||
+    body.token_type.toLowerCase() !== "bearer"
+  ) {
+    throw new GitHubClientError("oauth_refresh_failed");
+  }
+
+  return {
+    accessToken: body.access_token,
+    accessTokenExpiresInSeconds: body.expires_in,
+    refreshToken: body.refresh_token,
+    refreshTokenExpiresInSeconds: body.refresh_token_expires_in,
     scope: body.scope,
     tokenType: body.token_type
   };

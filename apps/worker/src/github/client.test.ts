@@ -387,6 +387,30 @@ describe("GitHubRepositoryClient exact archive", () => {
 });
 
 describe("GitHubRepositoryClient exact pull-request application", () => {
+  it("rejects any patch mutation after approval before requesting a credential", async () => {
+    const fixture = await applyFixture();
+    const changedContent = new TextEncoder().encode("changed after approval\n");
+    const changedRequest = {
+      ...fixture.request,
+      changes: [
+        {
+          ...fixture.request.changes[0]!,
+          content: changedContent,
+          contentDigest: await sha256(changedContent)
+        }
+      ]
+    };
+    const { broker, issue } = credentialBroker();
+    const client = new GitHubRepositoryClient(broker, {
+      fetcher: vi.fn<typeof fetch>()
+    });
+
+    await expect(client.applyExactChangesAndOpenPullRequest(changedRequest)).rejects.toMatchObject({
+      code: "approval_required"
+    });
+    expect(issue).not.toHaveBeenCalled();
+  });
+
   it("materializes and verifies the exact tree before a deterministic non-force PR branch", async () => {
     const fixture = await applyFixture();
     const { broker, issue } = credentialBroker();

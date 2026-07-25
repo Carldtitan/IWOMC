@@ -1,4 +1,4 @@
-import { constantTimeEqual, sealJson } from "../../security/crypto.js";
+import { constantTimeEqual } from "../../security/crypto.js";
 import {
   CSRF_COOKIE,
   GITHUB_OAUTH_COOKIE,
@@ -14,14 +14,13 @@ import {
   GitHubClientError,
   exchangeGitHubOAuthCode,
   fetchGitHubUser,
-  type GitHubOAuthTokens,
   type GitHubUser
 } from "./client.js";
+import { encryptGitHubCredentials } from "./credential-lifecycle.js";
 import { GitHubOAuthError, beginGitHubOAuth, completeGitHubOAuth } from "./oauth.js";
 
 const OAUTH_TRANSACTION_SECONDS = 10 * 60;
 const PRODUCT_SESSION_SECONDS = 8 * 60 * 60;
-const GITHUB_TOKEN_PURPOSE = "environment-reconciler/github-user-token/v1";
 
 export interface GitHubAuthEnvironment {
   readonly APP_SESSION_SECRET: string;
@@ -71,27 +70,10 @@ function appendCookies(headers: Headers, cookies: readonly string[]): void {
   }
 }
 
-async function encryptTokens(
-  tokens: GitHubOAuthTokens,
-  userId: string,
-  encryptionKey: string
-): Promise<string> {
-  return sealJson(
-    {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken ?? null,
-      scope: tokens.scope,
-      tokenType: tokens.tokenType,
-      userId
-    },
-    encryptionKey,
-    GITHUB_TOKEN_PURPOSE
-  );
-}
-
 export async function handleGitHubOAuthStart(
   environment: GitHubAuthEnvironment,
-  nowEpochSeconds = Math.floor(Date.now() / 1_000)
+  nowEpochSeconds = Math.floor(Date.now() / 1_000),
+  returnTo = "/"
 ): Promise<Response> {
   const started = await beginGitHubOAuth(
     {
@@ -99,7 +81,8 @@ export async function handleGitHubOAuthStart(
       clientId: environment.GITHUB_APP_CLIENT_ID,
       sessionSecret: environment.APP_SESSION_SECRET
     },
-    nowEpochSeconds
+    nowEpochSeconds,
+    returnTo
   );
   const headers = new Headers({ Location: started.authorizationUrl });
   headers.append(
@@ -157,11 +140,12 @@ export async function handleGitHubOAuthCallback(
     );
     const githubUser = await fetchGitHubUser(tokens.accessToken, options.fetcher);
     const localUserId = await identityStore.upsertIdentity({
-      encryptedCredentials: await encryptTokens(
-        tokens,
-        githubUser.id,
-        environment.DATA_ENCRYPTION_KEY
-      ),
+      encryptedCredentials: await encryptGitHubCredentials({
+        encryptionKey: environment.DATA_ENCRYPTION_KEY,
+        githubUserId: githubUser.id,
+        issuedAtEpochSeconds: nowEpochSeconds,
+        tokens
+      }),
       githubUser,
       ...(tokens.accessTokenExpiresInSeconds === undefined
         ? {}
@@ -178,7 +162,9 @@ export async function handleGitHubOAuthCallback(
       nowEpochSeconds,
       userId: localUserId
     });
-    const headers = new Headers({ Location: new URL("/", environment.PUBLIC_APP_URL).toString() });
+    const headers = new Headers({
+      Location: new URL(completed.returnTo, environment.PUBLIC_APP_URL).toString()
+    });
     appendCookies(headers, [
       expireSecureCookie(GITHUB_OAUTH_COOKIE),
       secureCookie(PRODUCT_SESSION_COOKIE, session.sealedSession, PRODUCT_SESSION_SECONDS),
