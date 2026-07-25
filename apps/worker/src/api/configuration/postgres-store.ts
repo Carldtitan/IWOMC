@@ -395,10 +395,17 @@ function positiveInteger(value: unknown, label: string): number {
 }
 
 function stringArray(value: unknown, label: string): readonly string[] {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+  if (!Array.isArray(value)) {
     throw new Error(`Invalid ${label} returned by configuration persistence.`);
   }
-  return [...value] as string[];
+  const strings: string[] = [];
+  for (const item of value as readonly unknown[]) {
+    if (typeof item !== "string") {
+      throw new Error(`Invalid ${label} returned by configuration persistence.`);
+    }
+    strings.push(item);
+  }
+  return strings;
 }
 
 function configurationRole(value: unknown): ConfigurationRole {
