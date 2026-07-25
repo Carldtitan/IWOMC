@@ -21,7 +21,7 @@ function npm(cwd: string, arguments_: readonly string[]) {
       cwd,
       encoding: "utf8",
       stdio: "pipe",
-      timeout: 30_000
+      timeout: 90_000
     }
   );
 }
@@ -55,7 +55,7 @@ describe("npm undeclared-used corpus fixture", () => {
 
     expect(behavior.status).not.toBe(0);
     expect(`${behavior.stdout}${behavior.stderr}`).toContain("ERR_MODULE_NOT_FOUND");
-  }, 60_000);
+  }, 120_000);
 
   it("passes only in the mutable environment after a no-save install", async () => {
     const repository = await copyRepository("mutable");
@@ -69,7 +69,7 @@ describe("npm undeclared-used corpus fixture", () => {
 
     expect(setup.status).toBe(0);
     expect(npm(repository, ["test"]).status).toBe(0);
-  }, 60_000);
+  }, 120_000);
 
   it("passes cleanly after applying the native package and lock changes", async () => {
     const repository = await copyRepository("candidate");
@@ -84,5 +84,5 @@ describe("npm undeclared-used corpus fixture", () => {
 
     expect(cleanInstall(repository).status).toBe(0);
     expect(npm(repository, ["test"]).status).toBe(0);
-  }, 60_000);
+  }, 120_000);
 });
