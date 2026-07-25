@@ -232,7 +232,7 @@ Core correctness, privacy, fault-isolation, cleanup, and end-to-end tests are ma
 - [ ] 12. Implement the seven graphs and first deterministic rules
   - [x] 12.1 Create immutable node, edge, graph-set, source-location, adapter/input identity, confidence, and canonicalization types in `packages/reconciler/src/graphs/`.
   - [x] 12.2 Build declared, locked, resolved, installed, used, observed-action, and validated graph fragments from normalized inputs.
-  - [ ] 12.3 Implement deterministic rules for:
+  - [x] 12.3 Implement deterministic rules for:
     - used and installed but undeclared;
     - observed installation without matching declaration;
     - hidden global or base-image dependency;
