@@ -1,10 +1,15 @@
 import {
   buildNpmEvidenceGraphSet,
-  reconcileNpmUndeclaredDependencies,
+  reconcileDeterministicDisagreements,
   type Finding,
   type NpmCheckpointInput,
   type ReconciliationResult
 } from "@environment-reconciler/reconciler";
+
+import type {
+  ReconcileRequestedMessage,
+  ReconcileRequestReason
+} from "../queues/event-consumer.js";
 
 export type ReconciliationTrigger =
   "material-action-stabilized" | "session-end" | "pull-request-update" | "manual-scan";
@@ -94,7 +99,7 @@ export class ReconcileCheckpointService {
       throw new ReconcileCheckpointError("checkpoint_identity_mismatch");
     }
 
-    const result = reconcileNpmUndeclaredDependencies(buildNpmEvidenceGraphSet(checkpoint.input));
+    const result = reconcileDeterministicDisagreements(buildNpmEvidenceGraphSet(checkpoint.input));
     const currentIds = new Set(result.findings.map((finding) => finding.findingId));
     const previousIds = await this.#findings.activeFindingIds(input.projectId);
     const supersededFindingIds = previousIds
@@ -133,5 +138,48 @@ export class ReconcileCheckpointService {
       result,
       trigger: input.trigger
     };
+  }
+}
+
+/**
+ * Typed boundary for the checkpoint reconciliation queue. Queue delivery may
+ * repeat; all durable writes and candidate publishes carry stable identities.
+ */
+export class ReconcileCheckpointQueueConsumer {
+  readonly #service: ReconcileCheckpointService;
+
+  constructor(service: ReconcileCheckpointService) {
+    this.#service = service;
+  }
+
+  async consume(message: ReconcileRequestedMessage): Promise<ReconciliationRun> {
+    assertQueueMessage(message);
+    return await this.#service.reconcile({
+      checkpointId: message.checkpointId,
+      projectId: message.projectId,
+      trigger: triggerFromReason(message.reason),
+      workspaceId: message.workspaceId
+    });
+  }
+}
+
+function triggerFromReason(reason: ReconcileRequestReason): ReconciliationTrigger {
+  const triggers: Readonly<Record<ReconcileRequestReason, ReconciliationTrigger>> = {
+    manual_scan: "manual-scan",
+    material_action_stabilized: "material-action-stabilized",
+    pr_update: "pull-request-update",
+    session_end: "session-end"
+  };
+  return triggers[reason];
+}
+
+function assertQueueMessage(message: ReconcileRequestedMessage): void {
+  if (
+    message.checkpointId.trim() === "" ||
+    message.projectId.trim() === "" ||
+    message.workspaceId.trim() === "" ||
+    message.idempotencyKey.trim() === ""
+  ) {
+    throw new ReconcileCheckpointError("checkpoint_identity_mismatch");
   }
 }
