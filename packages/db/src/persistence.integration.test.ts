@@ -62,6 +62,7 @@ const expectedTableNames = [
   "behavior_contracts",
   "braintrust_trace_outbox",
   "browser_sessions",
+  "candidate_configuration_bindings",
   "candidate_operations",
   "candidates",
   "capability_reports",
@@ -70,6 +71,7 @@ const expectedTableNames = [
   "cleanup_leases",
   "comments",
   "concurrency_leases",
+  "configuration_revisions",
   "consent_grants",
   "deletion_jobs",
   "deletion_tombstones",
@@ -138,7 +140,7 @@ describe.sequential("PostgreSQL persistence integration", () => {
     const names = result.rows.map((row) => row.table_name);
 
     expect(names).toEqual(expect.arrayContaining([...expectedTableNames]));
-    expect(expectedTableNames).toHaveLength(57);
+    expect(expectedTableNames).toHaveLength(59);
   });
 
   it("seeds only safe setup records and remains idempotent", async () => {
